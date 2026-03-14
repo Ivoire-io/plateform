@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -27,9 +28,15 @@ export function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-1">
-          <span className="text-xl font-bold text-white">ivoire</span>
-          <span className="text-xl font-bold text-orange">.io</span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo-ivoire.io-blanc.webp"
+            alt="ivoire.io"
+            width={130}
+            height={30}
+            className="h-8 w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}

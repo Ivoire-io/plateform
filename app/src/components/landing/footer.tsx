@@ -6,7 +6,7 @@ const socials = [
   { icon: Twitter, href: "https://x.com/ivoireio", label: "Twitter" },
   { icon: Instagram, href: "https://instagram.com/ivoireio", label: "Instagram" },
   { icon: Send, href: "https://t.me/ivoireio", label: "Telegram" },
-  { icon: Github, href: "https://github.com/ivoireio", label: "GitHub" },
+  { icon: Github, href: "https://github.com/ivoire-io", label: "GitHub" },
 ];
 
 export function Footer() {

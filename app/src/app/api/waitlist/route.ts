@@ -1,6 +1,9 @@
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isValidSlug, RESERVED_SUBDOMAINS, TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
   try {
@@ -84,6 +87,37 @@ export async function POST(request: Request) {
     const { count } = await supabaseAdmin
       .from(TABLES.waitlist)
       .select("*", { count: "exact", head: true });
+
+    // Email de bienvenue (non-bloquant)
+    if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== "re_xxxxxxxxxxxxxxxxxxxxxxxx") {
+      await resend.emails.send({
+        from: "ivoire.io <noreply@ivoire.io>",
+        to: email,
+        subject: `Bienvenue sur ivoire.io ! Tu es le ${count}ème 🎉`,
+        html: `
+          <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background: #0A0A0A; color: #fff; padding: 40px; border-radius: 12px;">
+            <h1 style="color: #FF6B00; margin-bottom: 8px;">Bienvenue sur ivoire.io ! 🇨🇮</h1>
+            <p style="color: #A0A0A0; margin-bottom: 24px;">Tu es le <strong style="color: #fff;">${count}ème</strong> à rejoindre la communauté.</p>
+            
+            <div style="background: #0D1117; border: 1px solid #1A1A2E; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+              <p>Ton sous-domaine réservé :</p>
+              <p style="font-family: monospace; font-size: 20px; color: #FF6B00; margin: 8px 0;">
+                ${cleanSlug}.ivoire.io
+              </p>
+            </div>
+            
+            <p style="color: #A0A0A0;">
+              On te prévient dès que la plateforme est prête.<br>
+              En attendant, suis-nous sur les réseaux sociaux pour ne rien rater.
+            </p>
+            
+            <p style="color: #A0A0A0; font-size: 12px; margin-top: 24px; border-top: 1px solid #1A1A2E; padding-top: 16px;">
+              ivoire.io — Le hub de la tech ivoirienne
+            </p>
+          </div>
+        `,
+      }).catch(() => { /* Silencieux si Resend non configuré */ });
+    }
 
     return NextResponse.json({
       success: true,

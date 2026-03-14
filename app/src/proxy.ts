@@ -29,7 +29,7 @@ function getSubdomain(hostname: string): string | null {
   return null;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const subdomain = getSubdomain(hostname);
 

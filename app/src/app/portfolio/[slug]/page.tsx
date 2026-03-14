@@ -49,15 +49,36 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const { profile } = data;
+  const title = `${profile.full_name} — ${profile.title || "Développeur"}`;
+  const description =
+    profile.bio ||
+    `Portfolio de ${profile.full_name} sur ivoire.io — ${profile.title || "Développeur"} basé(e) à ${
+      profile.city || "Côte d'Ivoire"
+    }.`;
+  const profileUrl = `https://${profile.slug}.ivoire.io`;
+  const avatarUrl = profile.avatar_url
+    ? profile.avatar_url
+    : `https://ivoire.io/og-image.png`;
+
   return {
-    title: `${profile.full_name} — ${profile.title || "Développeur"} | ivoire.io`,
-    description:
-      profile.bio ||
-      `Portfolio de ${profile.full_name} sur ivoire.io — ${profile.title || "Développeur"} basé(e) à ${profile.city || "Côte d'Ivoire"}`,
+    title,
+    description,
+    alternates: { canonical: profileUrl },
     openGraph: {
-      title: `${profile.full_name} | ivoire.io`,
-      description: profile.bio || `Portfolio de ${profile.full_name}`,
-      url: `https://${profile.slug}.ivoire.io`,
+      title,
+      description,
+      url: profileUrl,
+      type: "profile",
+      images: [{ url: avatarUrl, width: 400, height: 400, alt: profile.full_name }],
+      siteName: "ivoire.io",
+      locale: "fr_CI",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      images: [avatarUrl],
+      site: "@ivoire_io",
     },
   };
 }
@@ -70,11 +91,40 @@ export default async function PortfolioSlugPage({ params }: PageProps) {
     notFound();
   }
 
+  const { profile, projects, experiences } = data;
+
+  // JSON-LD Person schema
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: profile.full_name,
+    url: `https://${profile.slug}.ivoire.io`,
+    jobTitle: profile.title || undefined,
+    description: profile.bio || undefined,
+    image: profile.avatar_url || undefined,
+    address: profile.city
+      ? { "@type": "PostalAddress", addressLocality: profile.city, addressCountry: "CI" }
+      : undefined,
+    knowsAbout: profile.skills || undefined,
+    sameAs: [
+      profile.github_url,
+      profile.linkedin_url,
+      profile.twitter_url,
+      profile.website_url,
+    ].filter(Boolean),
+  };
+
   return (
-    <PortfolioPage
-      profile={data.profile}
-      projects={data.projects}
-      experiences={data.experiences}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <PortfolioPage
+        profile={profile}
+        projects={projects}
+        experiences={experiences}
+      />
+    </>
   );
 }

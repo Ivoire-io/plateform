@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS ivoireio_waitlist (
   email VARCHAR(255) UNIQUE NOT NULL,
   full_name VARCHAR(100),
   desired_slug VARCHAR(50),
+  whatsapp VARCHAR(30),
   type VARCHAR(20) DEFAULT 'developer' CHECK (type IN ('developer', 'startup', 'enterprise', 'other')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

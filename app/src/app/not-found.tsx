@@ -13,7 +13,7 @@ export default function NotFound() {
           Tu veux le réclamer ?
         </p>
         <Link href="/#rejoindre">
-          <Button>Réclamer ce sous-domaine</Button>
+          <Button>Réclamer ce domaine</Button>
         </Link>
       </div>
     </div>

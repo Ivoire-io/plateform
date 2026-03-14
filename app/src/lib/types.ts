@@ -57,6 +57,7 @@ export interface WaitlistEntry {
   email: string;
   full_name: string | null;
   desired_slug: string | null;
+  whatsapp: string | null;
   type: "developer" | "startup" | "enterprise" | "other";
   created_at: string;
 }
