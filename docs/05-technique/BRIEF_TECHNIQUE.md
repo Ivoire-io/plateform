@@ -1,6 +1,7 @@
 # ⚙️ BRIEF TECHNIQUE — ivoire.io
 
 > Ce document décrit l'architecture technique, le setup initial et les étapes de développement.
+> **Mis à jour le 14 mars 2026 — MVP code complet, en attente de déploiement.**
 
 ---
 
@@ -8,16 +9,17 @@
 
 | Composant | Choix | Raison |
 |-----------|-------|--------|
-| **Framework** | Next.js 14+ (App Router) | SSR/SSG, SEO, performance, edge functions |
-| **Langage** | TypeScript | Typage, maintenabilité |
-| **Styling** | Tailwind CSS | Rapide, cohérent avec la charte graphique |
+| **Framework** | Next.js 16.1.6 (App Router, Turbopack) | SSR/SSG, SEO, performance, edge functions |
+| **Langage** | TypeScript strict | Typage, maintenabilité |
+| **Styling** | Tailwind CSS v4 (`@theme inline`) | Rapide, cohérent avec la charte graphique |
 | **Backend / BDD** | Supabase (PostgreSQL) | Auth, real-time, API REST auto, gratuit |
 | **DNS / CDN** | Cloudflare | Wildcard DNS, SSL auto, Workers, protection DDoS |
 | **Hébergement** | Vercel | Déploiement natif Next.js, edge functions |
 | **Email** | Resend | Emails transactionnels (contact, bienvenue) |
-| **Analytics** | Plausible ou PostHog | Respectueux vie privée, pas de cookies |
+| **Analytics** | Plausible (`next-plausible`) | Respectueux vie privée, pas de cookies |
 | **Icônes** | Lucide React | Open source, cohérent, léger |
 | **Fonts** | Inter + JetBrains Mono | Google Fonts, gratuit |
+| **Routing subdomain** | `src/proxy.ts` (Next.js 16) | Remplace `middleware.ts` |
 
 ---
 
@@ -48,36 +50,50 @@
 
 ---
 
-## STRUCTURE DU PROJET
+## STRUCTURE DU PROJET (réelle)
 
 ```
-ivoire-io/
+app/
 ├── src/
 │   ├── app/
-│   │   ├── (main)/              ← Pages du domaine principal (ivoire.io)
-│   │   │   ├── page.tsx         ← Landing page
-│   │   │   └── layout.tsx
-│   │   ├── (devs)/              ← Pages devs.ivoire.io
-│   │   │   ├── page.tsx         ← Annuaire
-│   │   │   └── layout.tsx
-│   │   ├── (portfolio)/         ← Pages nom.ivoire.io
-│   │   │   ├── page.tsx         ← Portfolio dynamique
-│   │   │   └── layout.tsx
-│   │   ├── api/
-│   │   │   ├── waitlist/route.ts
-│   │   │   ├── contact/route.ts
-│   │   │   └── profiles/route.ts
-│   │   ├── layout.tsx           ← Layout racine
-│   │   └── not-found.tsx
+│   │   ├── page.tsx                  ← Landing page
+│   │   ├── layout.tsx                ← Layout racine (SEO, fonts, PlausibleProvider)
+│   │   ├── globals.css               ← Tailwind v4 @theme inline
+│   │   ├── not-found.tsx             ← 404 personnalisé
+│   │   ├── devs/page.tsx             ← Annuaire devs (Server Component)
+│   │   ├── portfolio/[slug]/page.tsx ← Portfolio dynamique SSR + JSON-LD
+│   │   └── api/
+│   │       ├── waitlist/route.ts     ← POST + GET, Resend email bienvenue
+│   │       ├── contact/route.ts      ← POST, Resend notification
+│   │       ├── profiles/route.ts     ← GET avec filtres
+│   │       └── check-slug/route.ts   ← GET disponibilité temps réel
 │   ├── components/
-│   │   ├── ui/                  ← Composants réutilisables (Button, Card, Input...)
-│   │   ├── landing/             ← Sections de la landing page
-│   │   ├── portfolio/           ← Composants du portfolio
-│   │   └── devs/                ← Composants de l'annuaire
+│   │   ├── ui/button.tsx, input.tsx
+│   │   ├── landing/
+│   │   │   ├── navbar.tsx            ← Logo image, sticky scroll
+│   │   │   ├── hero.tsx              ← Check dispo temps réel + debounce
+│   │   │   ├── features.tsx
+│   │   │   ├── preview.tsx           ← Screenshot réelle portfolio
+│   │   │   ├── roadmap.tsx           ← Timeline horizontale desktop
+│   │   │   ├── waitlist.tsx          ← Formulaire validation complète
+│   │   │   └── footer.tsx
+│   │   ├── portfolio/portfolio-page.tsx
+│   │   └── devs/devs-directory.tsx
 │   ├── lib/
-│   │   ├── supabase.ts          ← Client Supabase
-│   │   ├── utils.ts             ← Utilitaires
-│   │   └── types.ts             ← Types TypeScript
+│   │   ├── supabase/client.ts, server.ts, admin.ts
+│   │   ├── utils.ts                  ← TABLES (préfixe ivoireio_), cn(), isValidSlug()
+│   │   └── types.ts
+│   └── proxy.ts                      ← Routing subdomain (Next.js 16)
+├── public/
+│   ├── favicon.png / favicon.webp
+│   ├── og-image.png                  ← OG image 1200×630
+│   ├── logo-ivoire.io-blanc.webp
+│   ├── example-porfolio-ivoire.io.webp
+│   └── site.webmanifest
+├── supabase/migrations/
+│   └── 001_initial_schema.sql        ← 5 tables + RLS + storage buckets
+└── .env.local
+```
 │   └── middleware.ts            ← Routing par subdomain
 ├── public/
 │   ├── favicon.ico
@@ -93,107 +109,78 @@ ivoire-io/
 
 ## MIDDLEWARE SUBDOMAIN ROUTING
 
-Le fichier `middleware.ts` est le cœur du système. Il détecte quel sous-domaine est appelé et redirige vers la bonne page.
+Le fichier `src/proxy.ts` (Next.js 16 — renommé depuis `middleware.ts`) est le cœur du système.
 
 ```
 Logique :
-- ivoire.io              → /app/(main)/page.tsx    (landing page)
-- devs.ivoire.io         → /app/(devs)/page.tsx    (annuaire)
-- startups.ivoire.io     → /app/(startups)/page.tsx (future)
-- [slug].ivoire.io       → /app/(portfolio)/page.tsx (portfolio du dev)
+- ivoire.io              → / (landing page)
+- devs.ivoire.io         → /devs (annuaire)
+- [slug].ivoire.io       → /portfolio/[slug] (portfolio du dev)
+- Sous-domaines réservés → /[reservé]/
 ```
 
-Sous-domaines réservés (ne peuvent pas être pris par un utilisateur) :
-- www, mail, api, admin, app, devs, startups, jobs, learn, health, data, events, invest, blog, docs, status
+Sous-domaines réservés (inaccessibles aux utilisateurs) :
+`www, mail, api, admin, app, devs, startups, jobs, learn, health, data, events, invest, blog, docs, status`
+
+---
+
+## VARIABLES D'ENVIRONNEMENT (.env.local)
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xgcmyktcgwqdeqfudkzl.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+RESEND_API_KEY=re_...         ← À remplir sur resend.com
+NEXT_PUBLIC_SITE_URL=https://ivoire.io
+NEXT_PUBLIC_APP_NAME=ivoire.io
+```
 
 ---
 
 ## BASE DE DONNÉES (Supabase)
 
-### Tables
+> Projet Supabase : `xgcmyktcgwqdeqfudkzl`
+> Migration : `supabase/migrations/001_initial_schema.sql` — **À exécuter via SQL Editor**
 
-#### `profiles`
+### Tables (préfixe `ivoireio_`)
+
+#### `ivoireio_profiles`
 ```sql
-CREATE TABLE profiles (
+CREATE TABLE ivoireio_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug VARCHAR(50) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   full_name VARCHAR(100) NOT NULL,
-  title VARCHAR(100),
-  city VARCHAR(50),
-  bio TEXT,
-  avatar_url TEXT,
-  github_url TEXT,
-  linkedin_url TEXT,
-  twitter_url TEXT,
-  website_url TEXT,
+  title VARCHAR(100), city VARCHAR(50), bio TEXT,
+  avatar_url TEXT, github_url TEXT, linkedin_url TEXT,
+  twitter_url TEXT, website_url TEXT,
   skills TEXT[] DEFAULT '{}',
   is_available BOOLEAN DEFAULT true,
   type VARCHAR(20) DEFAULT 'developer',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-
-CREATE INDEX idx_profiles_slug ON profiles(slug);
-CREATE INDEX idx_profiles_skills ON profiles USING GIN(skills);
 ```
 
-#### `projects`
-```sql
-CREATE TABLE projects (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  name VARCHAR(100) NOT NULL,
-  description TEXT,
-  image_url TEXT,
-  tech_stack TEXT[] DEFAULT '{}',
-  github_url TEXT,
-  demo_url TEXT,
-  stars INT DEFAULT 0,
-  sort_order INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+#### `ivoireio_projects`, `ivoireio_experiences` — voir migration SQL
 
-#### `experiences`
+#### `ivoireio_waitlist`
 ```sql
-CREATE TABLE experiences (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  role VARCHAR(100) NOT NULL,
-  company VARCHAR(100) NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE,
-  description TEXT,
-  sort_order INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-#### `waitlist`
-```sql
-CREATE TABLE waitlist (
+CREATE TABLE ivoireio_waitlist (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
-  full_name VARCHAR(100),
-  desired_slug VARCHAR(50),
+  full_name VARCHAR(100), desired_slug VARCHAR(50),
+  whatsapp VARCHAR(30),
   type VARCHAR(20) DEFAULT 'developer',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 
-#### `contact_messages`
-```sql
-CREATE TABLE contact_messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  sender_name VARCHAR(100) NOT NULL,
-  sender_email VARCHAR(255) NOT NULL,
-  message TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+#### `ivoireio_contact_messages` — voir migration SQL
+
+### Storage Buckets
+- `ivoireio-avatars` (public)
+- `ivoireio-projects` (public)
 
 ### Row Level Security (RLS)
 ```sql

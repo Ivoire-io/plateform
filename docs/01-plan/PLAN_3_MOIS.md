@@ -3,6 +3,7 @@
 > **Contrainte** : Clause de non-concurrence → Communication sous la marque **ivoire.io** uniquement (pas de profil personnel).
 > **Domaine** : ✅ Acheté.
 > **Objectif à 3 mois** : Landing page live + 100 inscrits + portfolios nom.ivoire.io fonctionnels + 1ère startup listée.
+> **Mis à jour le 14 mars 2026**
 
 ---
 
@@ -11,7 +12,7 @@
 ```
 MOIS 1 — FONDATIONS
 ├── S1 : Branding + Réseaux sociaux + Landing page
-├── S2 : Landing page live + début communication
+├── S2 : Landing page live + début communication      ← EN COURS
 ├── S3 : Développement MVP portfolios
 ├── S4 : Test interne + premiers invités
 
@@ -33,38 +34,80 @@ MOIS 3 — PRODUIT
 ## MOIS 1 — FONDATIONS
 
 ### Semaine 1 : Branding & Réseaux Sociaux
-- [ ] Finaliser le logo (voir `02-branding/PROMPTS_LOGO.md`)
-- [ ] Définir la charte graphique (voir `02-branding/CHARTE_GRAPHIQUE.md`)
-- [ ] Créer les comptes réseaux sociaux (voir `03-reseaux-sociaux/PAGES_RS.md`)
+- [x] Finaliser le logo
+- [x] Définir la charte graphique
+- [x] Préparer les bannières et avatars pour chaque RS
+- [x] Rédiger les posts programmés (LinkedIn, Twitter, Instagram, Facebook, Telegram)
+- [ ] Créer les comptes réseaux sociaux
   - [ ] LinkedIn (Page entreprise ivoire.io)
   - [ ] Twitter/X (@ivoireio)
   - [ ] Instagram (@ivoireio)
   - [ ] Telegram (groupe communauté)
-  - [ ] WhatsApp (groupe fondateurs)
-- [ ] Préparer les bannières et avatars pour chaque RS
-- [ ] Rédiger les 5 premiers posts programmés
 
 ### Semaine 2 : Landing Page Live
-- [ ] Setup technique (Cloudflare + Vercel + Supabase)
-- [ ] Développer la landing page (voir `04-wireframes/LANDING_PAGE.md`)
-- [ ] Formulaire de capture emails/waitlist
-- [ ] Déployer sur ivoire.io
+- [x] Setup technique (Supabase + Next.js 16)
+- [x] Développer la landing page complète (navbar, hero, features, preview, roadmap, waitlist, footer)
+- [x] Formulaire de capture emails/waitlist avec validation complète
+- [x] Vérification disponibilité domaine en temps réel
+- [x] SEO complet (OG image, JSON-LD, sitemap, webmanifest)
+- [ ] **Exécuter la migration SQL sur Supabase** ← BLOQUANT
+- [ ] **Remplir RESEND_API_KEY** dans .env.local
+- [ ] **Déployer sur Railway** (voir guide ci-dessous)
+- [ ] **Configurer DNS Cloudflare** : `CNAME ivoire.io → [domaine Railway]`, `CNAME * → [domaine Railway]`
 - [ ] Publier le premier post "Annonce" depuis la page LinkedIn ivoire.io
-- [ ] Partager dans 5 groupes WhatsApp/Telegram tech CI
+- [ ] Partager dans groupes WhatsApp/Telegram tech CI
+
+---
+
+## GUIDE DÉPLOIEMENT RAILWAY
+
+### 1. Prérequis
+- Compte sur [railway.app](https://railway.app) (plan Hobby — ~5$/mois pour supporters subdomain wildcard)
+
+### 2. Déployer depuis GitHub
+```bash
+# Push le projet sur GitHub
+cd /Users/ulrichkouame/Documents/Projets/codeur/ivoire.io
+git add . && git commit -m "feat: MVP ivoire.io"
+git push origin main
+```
+Dans Railway : New Project → Deploy from GitHub → sélectionner le repo → choisir le dossier `app/`.
+
+### 3. Variables d'environnement (Railway Dashboard → Variables)
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xgcmyktcgwqdeqfudkzl.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+RESEND_API_KEY=re_...
+NEXT_PUBLIC_SITE_URL=https://ivoire.io
+NEXT_PUBLIC_APP_NAME=ivoire.io
+```
+
+### 4. Domaines personnalisés (Railway Dashboard → Settings → Domains)
+- Ajouter `ivoire.io`
+- Ajouter `*.ivoire.io`
+- Railway affiche un CNAME cible (ex: `abc123.up.railway.app`)
+
+### 5. DNS Cloudflare
+```
+CNAME  ivoire.io   →  abc123.up.railway.app  (Proxied ✔)
+CNAME  *           →  abc123.up.railway.app  (Proxied ✔)
+```
+> Activer le mode **Full (strict)** dans Cloudflare SSL/TLS.
 
 ### Semaine 3 : Développement MVP Portfolios
-- [ ] Système d'inscription + choix du slug (nom.ivoire.io)
-- [ ] Générateur de portfolio (voir `04-wireframes/PORTFOLIO_DEV.md`)
-- [ ] Connexion GitHub API (import projets)
-- [ ] Template portfolio responsive
-- [ ] Wildcard subdomain routing fonctionnel
+- [x] Système d'inscription + choix du slug
+- [x] Page portfolio dynamique SSR (profil + projets + expériences)
+- [x] Wildcard subdomain routing fonctionnel (`proxy.ts`)
+- [ ] Interface de création/édition de profil (dashboard)
+- [ ] Upload avatar vers Supabase Storage
+- [ ] Import projets depuis GitHub API (optionnel)
 
 ### Semaine 4 : Tests & Invitations Privées
-- [ ] Tester sur 5-10 beta testeurs (devs de confiance)
+- [ ] Tester sur 5-10 beta testeurs
 - [ ] Corriger les bugs critiques
-- [ ] Inviter les 20-30 premiers inscrits de la waitlist
+- [ ] Inviter les premiers inscrits de la waitlist
 - [ ] Collecter les feedbacks
-- [ ] Publier 2-3 posts RS (teasers "bientôt disponible")
 
 ---
 
