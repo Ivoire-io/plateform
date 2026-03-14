@@ -101,21 +101,22 @@ export function PortfolioPage({
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header — sticky, minimal */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50 py-3 px-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <span className="font-mono text-sm font-semibold tracking-tight">
-            {profile.slug}.ivoire.io
-          </span>
-          <Link
-            href="https://ivoire.io"
-            className="text-xs text-muted hover:text-white/60 transition-colors"
-            aria-label="Powered by ivoire.io"
-          >
-            🇨🇮 ivoire.io
-          </Link>
-        </div>
-      </header>
+      {/* Header — sticky, minimal 
+        <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50 py-3 px-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <span className="font-mono text-sm font-semibold tracking-tight">
+              {profile.slug}.ivoire.io
+            </span>
+            <Link
+              href="https://ivoire.io"
+              className="text-xs text-muted hover:text-white/60 transition-colors"
+              aria-label="Powered by ivoire.io"
+            >
+              🇨🇮 ivoire.io
+            </Link>
+          </div>
+        </header>
+      */}
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-16">
 
@@ -406,121 +407,183 @@ export function PortfolioPage({
         )}
 
         {/* ── Contact ── */}
-        <section id="contact" className="pt-12 border-t border-border/50" aria-labelledby="contact-heading">
-          <h2 id="contact-heading" className="text-xl font-semibold text-white/90">
-            Travaillons ensemble
-          </h2>
-          <p className="text-muted mt-2 mb-8 text-sm">
-            Envoyez un message directement à {profile.full_name.split(" ")[0]}.
-          </p>
+        <section id="contact" className="pt-16 border-t border-border/50" aria-labelledby="contact-heading">
 
-          {formStatus === "success" ? (
-            <div className="flex items-start gap-4 p-5 bg-green/10 border border-green/20 rounded-2xl max-w-xl">
-              <CheckCircle size={22} className="text-green flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-white">Message envoyé !</p>
-                <p className="text-muted text-sm mt-1">
-                  {profile.full_name.split(" ")[0]} a été notifié(e) et reviendra vers vous rapidement.
-                </p>
-                <button
-                  onClick={() => setFormStatus("idle")}
-                  className="text-orange text-sm mt-3 hover:underline focus:outline-none focus-visible:underline"
-                >
-                  Envoyer un autre message
-                </button>
+          {/* Layout 2 colonnes sur desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+
+            {/* Colonne gauche — pitch */}
+            <div className="lg:pt-2">
+              <span className="inline-block text-xs font-mono text-orange tracking-widest uppercase mb-4">
+                Contact
+              </span>
+              <h2 id="contact-heading" className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+                Travaillons<br />
+                <span className="text-orange">ensemble.</span>
+              </h2>
+              <p className="text-muted mt-4 leading-relaxed">
+                Une idée, un projet, une mission ?<br />
+                Envoyez un message directement à{" "}
+                <span className="text-white/80 font-medium">{profile.full_name.split(" ")[0]}</span>.
+              </p>
+
+              {/* Direct links */}
+              <div className="mt-8 flex flex-col gap-3">
+                {profile.email && (
+                  <a
+                    href={`mailto:${profile.email}`}
+                    className="flex items-center gap-3 text-sm text-muted hover:text-white transition-colors group"
+                  >
+                    <span className="w-9 h-9 rounded-xl bg-surface border border-border flex items-center justify-center group-hover:border-orange/40 transition-colors">
+                      <Mail size={15} className="text-orange" />
+                    </span>
+                    {profile.email}
+                  </a>
+                )}
+                {profile.github_url && (
+                  <a
+                    href={profile.github_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-sm text-muted hover:text-white transition-colors group"
+                  >
+                    <span className="w-9 h-9 rounded-xl bg-surface border border-border flex items-center justify-center group-hover:border-orange/40 transition-colors">
+                      <Github size={15} className="text-orange" />
+                    </span>
+                    GitHub
+                  </a>
+                )}
+                {profile.linkedin_url && (
+                  <a
+                    href={profile.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-sm text-muted hover:text-white transition-colors group"
+                  >
+                    <span className="w-9 h-9 rounded-xl bg-surface border border-border flex items-center justify-center group-hover:border-orange/40 transition-colors">
+                      <Linkedin size={15} className="text-orange" />
+                    </span>
+                    LinkedIn
+                  </a>
+                )}
               </div>
             </div>
-          ) : (
-            <form
-              ref={formRef}
-              onSubmit={handleSubmit}
-              noValidate
-              className="max-w-xl flex flex-col gap-5 bg-surface border border-border rounded-2xl p-6"
-            >
-              {/* Honeypot — champ caché pour bloquer les bots */}
-              <input
-                type="text"
-                name="website"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                className="hidden"
-              />
 
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="contact-name" className="text-sm font-medium text-white/80">
-                  Nom <span className="text-orange" aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="contact-name"
-                  name="sender_name"
-                  type="text"
-                  placeholder="Votre nom complet"
-                  autoComplete="name"
-                  maxLength={100}
-                  required
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm placeholder:text-muted/50 focus:outline-none focus:ring-1 focus:ring-orange focus:border-orange transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="contact-email" className="text-sm font-medium text-white/80">
-                  Email <span className="text-orange" aria-hidden="true">*</span>
-                </label>
-                <input
-                  id="contact-email"
-                  name="sender_email"
-                  type="email"
-                  placeholder="votre@email.com"
-                  autoComplete="email"
-                  maxLength={200}
-                  required
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm placeholder:text-muted/50 focus:outline-none focus:ring-1 focus:ring-orange focus:border-orange transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="contact-message" className="text-sm font-medium text-white/80">
-                  Message <span className="text-orange" aria-hidden="true">*</span>
-                </label>
-                <textarea
-                  id="contact-message"
-                  name="message"
-                  placeholder="Décrivez votre projet ou votre besoin..."
-                  rows={5}
-                  maxLength={2000}
-                  required
-                  className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm placeholder:text-muted/50 focus:outline-none focus:ring-1 focus:ring-orange focus:border-orange transition-colors resize-none leading-relaxed"
-                />
-              </div>
-
-              {formStatus === "error" && formError && (
-                <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3" role="alert">
-                  <XCircle size={16} className="flex-shrink-0" />
-                  {formError}
+            {/* Colonne droite — formulaire */}
+            <div>
+              {formStatus === "success" ? (
+                <div className="flex flex-col items-center text-center gap-4 p-10 bg-surface border border-green/20 rounded-2xl">
+                  <div className="w-14 h-14 rounded-full bg-green/10 flex items-center justify-center">
+                    <CheckCircle size={28} className="text-green" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white text-lg">Message envoyé !</p>
+                    <p className="text-muted text-sm mt-1 leading-relaxed">
+                      {profile.full_name.split(" ")[0]} a été notifié(e) et reviendra<br />vers vous rapidement.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setFormStatus("idle")}
+                    className="text-orange text-sm mt-1 hover:underline focus:outline-none focus-visible:underline"
+                  >
+                    Envoyer un autre message →
+                  </button>
                 </div>
-              )}
+              ) : (
+                <form
+                  ref={formRef}
+                  onSubmit={handleSubmit}
+                  noValidate
+                  className="flex flex-col gap-4"
+                >
+                  {/* Honeypot — champ caché pour bloquer les bots */}
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="hidden"
+                  />
 
-              <Button
-                type="submit"
-                size="md"
-                className="w-full gap-2"
-                disabled={formStatus === "loading"}
-              >
-                {formStatus === "loading" ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Envoi en cours…
-                  </>
-                ) : (
-                  <>
-                    <Mail size={16} />
-                    Envoyer le message
-                  </>
-                )}
-              </Button>
-            </form>
-          )}
+                  {/* Nom + Email côte à côte */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="contact-name" className="text-xs font-semibold uppercase tracking-widest text-muted/70">
+                        Nom
+                      </label>
+                      <input
+                        id="contact-name"
+                        name="sender_name"
+                        type="text"
+                        placeholder="John Koffi"
+                        autoComplete="name"
+                        maxLength={100}
+                        required
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/40 focus:outline-none focus:ring-1 focus:ring-orange/60 focus:border-orange/60 hover:border-border/80 transition-all duration-200"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="contact-email" className="text-xs font-semibold uppercase tracking-widest text-muted/70">
+                        Email
+                      </label>
+                      <input
+                        id="contact-email"
+                        name="sender_email"
+                        type="email"
+                        placeholder="vous@exemple.com"
+                        autoComplete="email"
+                        maxLength={200}
+                        required
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/40 focus:outline-none focus:ring-1 focus:ring-orange/60 focus:border-orange/60 hover:border-border/80 transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="contact-message" className="text-xs font-semibold uppercase tracking-widest text-muted/70">
+                      Message
+                    </label>
+                    <textarea
+                      id="contact-message"
+                      name="message"
+                      placeholder="Décrivez votre projet, votre besoin ou votre mission…"
+                      rows={6}
+                      maxLength={2000}
+                      required
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/40 focus:outline-none focus:ring-1 focus:ring-orange/60 focus:border-orange/60 hover:border-border/80 transition-all duration-200 resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {formStatus === "error" && formError && (
+                    <div className="flex items-center gap-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3" role="alert">
+                      <XCircle size={16} className="flex-shrink-0" />
+                      {formError}
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    size="md"
+                    className="w-full gap-2 mt-1"
+                    disabled={formStatus === "loading"}
+                  >
+                    {formStatus === "loading" ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Envoi en cours…
+                      </>
+                    ) : (
+                      <>
+                        <Mail size={16} />
+                        Envoyer le message
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+            </div>
+          </div>
         </section>
       </main>
 
