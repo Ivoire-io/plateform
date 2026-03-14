@@ -151,12 +151,12 @@
 
 | Catégorie | Options |
 |-----------|---------|
-| Frontend | React, Next.js, Vue.js, Angular, Svelte |
-| Mobile | Flutter, React Native, Swift, Kotlin |
-| Backend | Node.js, Laravel, Django, Go, Rust |
-| Database | PostgreSQL, MongoDB, Firebase, Supabase |
-| Cloud | AWS, GCP, Azure, Vercel |
-| Autre | Python, Java, C#, PHP |
+| Frontend | Next.js |
+| Mobile | Flutter |
+| Backend | Node.js |
+| Database | Supabase |
+| Cloud | Railway, Cloudflare |
+| Autre |  |
 
 ### Villes
 
