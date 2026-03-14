@@ -1,9 +1,32 @@
 # 📐 DASHBOARD ADMIN — Spécification Complète 100%
 
 > **Rôle** : `is_admin = true` dans la table `ivoireio_profiles`  
-> **URL** : `admin.ivoire.io` (sous-domaine réservé) ou `ivoire.io/admin`  
+> **URL** : `ivoire.io/admin`  
 > **Sécurité** : RLS strict + vérification `is_admin` côté serveur sur chaque endpoint  
 > **Accès** : Uniquement les comptes manuellement promus par le propriétaire
+
+## ✅ IMPLÉMENTÉ — 14 mars 2026
+
+| Composant | Fichier | Statut |
+|-----------|---------|--------|
+| Layout sécurisé | `app/admin/layout.tsx` | ✅ |
+| Page + data fetching | `app/admin/page.tsx` | ✅ |
+| AdminShell + sidebar | `components/admin/admin-shell.tsx` | ✅ |
+| Vue générale | `tabs/overview-tab.tsx` | ✅ |
+| Utilisateurs | `tabs/users-tab.tsx` | ✅ |
+| Waitlist | `tabs/waitlist-tab.tsx` | ✅ |
+| Messages | `tabs/messages-tab.tsx` | ✅ |
+| Modération | `tabs/moderation-tab.tsx` | ✅ |
+| Analytics | `tabs/analytics-tab.tsx` | ✅ |
+| Abonnements | `tabs/subscriptions-tab.tsx` | ✅ |
+| Configuration | `tabs/config-tab.tsx` | ✅ |
+| Logs | `tabs/logs-tab.tsx` | ✅ |
+| Feature Flags | `tabs/feature-flags-tab.tsx` | ✅ |
+| Broadcasting | `tabs/broadcasting-tab.tsx` | ✅ |
+| Templates | `tabs/templates-tab.tsx` | ✅ |
+| API `/api/admin/*` | 22 routes | ✅ |
+| Helper sécurité | `lib/admin-guard.ts` | ✅ |
+| Migration SQL | `supabase/migrations/003_admin_schema.sql` | ✅ |
 
 ---
 

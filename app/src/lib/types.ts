@@ -16,7 +16,119 @@ export interface Profile {
   skills: string[];
   is_available: boolean;
   type: "developer" | "startup" | "enterprise" | "other";
+  is_admin: boolean;
+  is_suspended: boolean;
+  plan: "free" | "premium" | "enterprise";
+  admin_notes: string | null;
+  verified_badge: boolean;
   created_at: string;
+  updated_at: string;
+}
+
+// ─── Admin — Statistics ───
+
+export interface AdminStats {
+  total_profiles: number;
+  total_startups: number;
+  total_enterprises: number;
+  total_jobs: number;
+  waitlist_pending: number;
+  messages_unread: number;
+  reports_pending: number;
+  mrr: number;
+  new_this_month: number;
+}
+
+// ─── Admin — Feature Flags ───
+
+export interface FeatureFlag {
+  key: string;
+  state: "off" | "beta" | "public";
+  allowed_types: string[];
+  allowed_emails: string[];
+  coming_soon_message: string;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+// ─── Admin — Broadcast ───
+
+export interface Broadcast {
+  id: string;
+  subject: string;
+  message: string;
+  channels: string[];
+  target_types: string[];
+  target_plans: string[];
+  target_cities: string[];
+  schedule_at: string | null;
+  status: "draft" | "scheduled" | "sent" | "cancelled";
+  recipients_count: number;
+  sent_at: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+// ─── Admin — Report ───
+
+export interface Report {
+  id: string;
+  reported_profile_id: string;
+  reporter_id: string | null;
+  reason: string;
+  details: string | null;
+  status: "pending" | "reviewed" | "ignored" | "actioned";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  reported_profile?: Profile;
+}
+
+// ─── Admin — Certification ───
+
+export interface Certification {
+  id: string;
+  profile_id: string;
+  documents: string[];
+  status: "pending" | "approved" | "rejected";
+  reviewer_id: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  profile?: Profile;
+}
+
+// ─── Admin — Log ───
+
+export interface AdminLog {
+  id: string;
+  type: "profile" | "content" | "payment" | "waitlist" | "moderation" | "system" | "admin";
+  description: string;
+  actor_id: string | null;
+  target_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+// ─── Admin — Template ───
+
+export interface AdminTemplate {
+  id: number;
+  slug: string;
+  name: string;
+  icon: string;
+  state: "off" | "beta" | "active";
+  plan: "free" | "premium" | "enterprise";
+  allowed_types: string[];
+  usage_count: number;
+  created_at: string;
+}
+
+// ─── Admin — Platform config ───
+
+export interface PlatformConfig {
+  key: string;
+  value: unknown;
+  updated_by: string | null;
   updated_at: string;
 }
 

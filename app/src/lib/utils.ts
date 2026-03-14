@@ -12,6 +12,14 @@ export const TABLES = {
   experiences: "ivoireio_experiences",
   waitlist: "ivoireio_waitlist",
   contact_messages: "ivoireio_contact_messages",
+  feature_flags: "ivoireio_feature_flags",
+  flag_history: "ivoireio_flag_history",
+  broadcasts: "ivoireio_broadcasts",
+  reports: "ivoireio_reports",
+  certifications: "ivoireio_certifications",
+  admin_logs: "ivoireio_admin_logs",
+  platform_config: "ivoireio_platform_config",
+  templates: "ivoireio_templates",
 } as const;
 
 // ─── Sous-domaines réservés ───

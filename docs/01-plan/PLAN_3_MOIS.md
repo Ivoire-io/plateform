@@ -11,10 +11,10 @@
 
 ```
 MOIS 1 — FONDATIONS
-├── S1 : Branding + Réseaux sociaux + Landing page
-├── S2 : Landing page live + début communication      ← EN COURS
-├── S3 : Développement MVP portfolios
-├── S4 : Test interne + premiers invités
+├── S1 : Branding + Réseaux sociaux + Landing page                  ✅
+├── S2 : Landing page live + début communication                    ✅
+├── S3 : MVP portfolios + Dashboard Admin 14 onglets                ✅
+├── S4 : Dashboard Développeur complet + Landing améliorée  ← EN COURS
 
 MOIS 2 — LANCEMENT
 ├── S5 : Lancement public portfolios (nom.ivoire.io)
@@ -95,17 +95,28 @@ CNAME  *           →  abc123.up.railway.app  (Proxied ✔)
 ```
 > Activer le mode **Full (strict)** dans Cloudflare SSL/TLS.
 
-### Semaine 3 : Développement MVP Portfolios
+### Semaine 3 : Développement MVP Portfolios + Dashboard Admin
 - [x] Système d'inscription + choix du slug
 - [x] Page portfolio dynamique SSR (profil + projets + expériences)
 - [x] Wildcard subdomain routing fonctionnel (`proxy.ts`)
-- [ ] Interface de création/édition de profil (dashboard)
-- [ ] Upload avatar vers Supabase Storage
+- [x] Dashboard dev — onglets Profil, Projets, Expériences (MVP)
+- [x] Upload avatar vers Supabase Storage
+- [x] Migration SQL `003_admin_schema.sql` (8 nouvelles tables)
+- [x] **Dashboard Admin complet** (`/admin`) — 14 onglets + 22 routes API
+  - Vue générale, Utilisateurs, Waitlist, Startups, Messages
+  - Modération, Analytics, Abonnements, Feature Flags
+  - Broadcasting, Templates, Config, Logs, Sécurité (is_admin guard)
 - [ ] Import projets depuis GitHub API (optionnel)
 
-### Semaine 4 : Tests & Invitations Privées
+### Semaine 4 : Dashboard Développeur Complet + Landing Améliorée ← EN COURS
+- [ ] Overview tab (stats : visites, clics, messages, complétion profil)
+- [ ] Onglet Messages (réception messages contact)
+- [ ] Onglet Statistiques (courbe de visites 30j)
+- [ ] Onglet Paramètres (mot de passe, supprimer compte)
+- [ ] Sélection de template portfolio
+- [ ] Section Emploi & Candidatures
+- [ ] Améliorer landing page (social proof, stats live)
 - [ ] Tester sur 5-10 beta testeurs
-- [ ] Corriger les bugs critiques
 - [ ] Inviter les premiers inscrits de la waitlist
 - [ ] Collecter les feedbacks
 
