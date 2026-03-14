@@ -114,7 +114,81 @@ Ton portfolio → ton-nom.ivoire.io
 
 ---
 
-## 4. TELEGRAM
+## 4. FACEBOOK — Page
+
+### Informations de la page
+
+| Champ | Valeur |
+|-------|--------|
+| **Nom** | ivoire.io |
+| **Nom d'utilisateur** | @ivoireio |
+| **Catégorie** | Entreprise de technologie de l'information |
+| **Sous-catégorie** | Site web Internet |
+| **Site web** | https://ivoire.io |
+| **Email** | contact@ivoire.io |
+| **Localisation** | Abidjan, Côte d'Ivoire |
+
+### Description courte (155 caractères)
+
+```
+ivoire.io — La porte d'entrée digitale de la tech ivoirienne 🇨🇮
+Talents · Startups · Services. Réclame ton portfolio sur nom.ivoire.io
+```
+
+### Description longue (À propos)
+
+```
+ivoire.io — L'OS digital de la Côte d'Ivoire 🇨🇮
+
+La plateforme qui connecte les développeurs, startups et entreprises
+tech de Côte d'Ivoire sous un même toit.
+
+Ce qu'on propose :
+🧑‍💻 Un portfolio professionnel gratuit → ton-nom.ivoire.io
+🚀 Une vitrine pour les startups ivoiriennes
+💼 Un annuaire des meilleurs talents tech du pays
+🏢 Un label de confiance pour les entreprises tech
+
+Pourquoi ivoire.io ?
+→ Le Product Hunt des startups ivoiriennes
+→ Le GitHub des développeurs de CI
+→ La porte d'entrée de la tech d'Afrique francophone
+
+Les 100 premiers inscrits reçoivent leur sous-domaine
+gratuitement. À vie.
+
+👉 Inscris-toi : ivoire.io
+```
+
+### Photo de profil
+- L'icône circuit (logo 2) sur fond sombre, carré arrondi
+- Format : 170 x 170 px (recommandé 400x400)
+
+### Photo de couverture
+- Format : 820 x 312 px
+- Même direction que la bannière LinkedIn : logo + tagline + fond sombre + accents orange
+- Texte : "Le socle de la tech ivoirienne" + "ivoire.io"
+
+### Ligne éditoriale Facebook
+
+| Type de post | Fréquence | Exemple |
+|-------------|-----------|---------|
+| **Post texte + image** | 3x/semaine | Annonces, milestones, éducatif |
+| **Vidéo courte / Reel** | 1x/semaine | Démo, portrait dev, teaser |
+| **Partage d'article** | 1x/semaine | Actus tech CI, articles écosystème |
+| **Événement** | Au besoin | Hackathons, meetups, lives |
+| **Story** | Quotidien | Coulisses, stats, rappels |
+
+### Notes spécifiques Facebook
+- Facebook est fort en Côte d'Ivoire (audience plus large, pas que tech)
+- Adapter le ton : légèrement plus accessible que LinkedIn
+- Utiliser les groupes Facebook tech CI existants pour partager (sans spammer)
+- Activer Messenger pour les questions directes
+- Programmer les posts via Meta Business Suite (gratuit)
+
+---
+
+## 5. TELEGRAM
 
 ### Groupe communauté
 
