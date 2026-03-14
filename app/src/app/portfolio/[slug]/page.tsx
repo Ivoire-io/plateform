@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { TABLES } from "@/lib/utils";
-import type { Profile, Project, Experience } from "@/lib/types";
 import { PortfolioPage } from "@/components/portfolio/portfolio-page";
+import { createClient } from "@/lib/supabase/server";
+import type { Experience, Profile, Project } from "@/lib/types";
+import { TABLES } from "@/lib/utils";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -52,8 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${profile.full_name} — ${profile.title || "Développeur"}`;
   const description =
     profile.bio ||
-    `Portfolio de ${profile.full_name} sur ivoire.io — ${profile.title || "Développeur"} basé(e) à ${
-      profile.city || "Côte d'Ivoire"
+    `Portfolio de ${profile.full_name} sur ivoire.io — ${profile.title || "Développeur"} basé(e) à ${profile.city || "Côte d'Ivoire"
     }.`;
   const profileUrl = `https://${profile.slug}.ivoire.io`;
   const avatarUrl = profile.avatar_url
