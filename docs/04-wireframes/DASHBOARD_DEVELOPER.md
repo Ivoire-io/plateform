@@ -3,7 +3,21 @@
 > **Type** : `developer`  
 > **URL Dashboard** : `ivoire.io/dashboard`  
 > **URL Publique** : `[slug].ivoire.io`  
-> **État** : MVP implémenté — ce document couvre la version finale complète  
+> **État** : 🚧 EN COURS D'IMPLÉMENTATION (S4)
+
+## STATUT D'IMPLÉMENTATION
+
+| Section | Statut | Notes |
+|---------|--------|-------|
+| Mon Profil | ✅ Fait | Formulaire complet + avatar upload |
+| Projets | ✅ Fait | CRUD complet + drag & drop |
+| Expériences | ✅ Fait | CRUD complet |
+| Vue d'ensemble | ⏳ Prochain | Stats + complétion + activité récente |
+| Messages | ⏳ Prochain | Réception des messages contact |
+| Statistiques | ⏳ Prochain | Courbe visites 30j |
+| Sélection Template | ⏳ Prochain | Catalogue templates |
+| Emploi & Candidatures | 🔜 Futur | Section Jobs |
+| Paramètres | ⏳ Prochain | Mot de passe, supprimer compte |
 
 ---
 

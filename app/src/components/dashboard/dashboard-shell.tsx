@@ -20,15 +20,42 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { Experience, Profile, Project } from "@/lib/types";
-import { Briefcase, Clock, ExternalLink, LogOut, User } from "lucide-react";
+import {
+  BarChart2,
+  Briefcase,
+  BriefcaseBusiness,
+  Clock,
+  ExternalLink,
+  Home,
+  Layers,
+  LogOut,
+  Mail,
+  Settings,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ExperiencesTab } from "./experiences-tab";
+import { JobsTab } from "./jobs-tab";
+import { MessagesTab } from "./messages-tab";
+import { OverviewTab } from "./overview-tab";
 import { ProfileTab } from "./profile-tab";
 import { ProjectsTab } from "./projects-tab";
+import { SettingsTab } from "./settings-tab";
+import { StatsTab } from "./stats-tab";
+import { TemplateTab } from "./template-tab";
 
-type Tab = "profile" | "projects" | "experiences";
+type Tab =
+  | "overview"
+  | "profile"
+  | "template"
+  | "projects"
+  | "experiences"
+  | "messages"
+  | "stats"
+  | "jobs"
+  | "settings";
 
 interface DashboardShellProps {
   userId: string;
@@ -45,8 +72,27 @@ export function DashboardShell({
   initialProjects,
   initialExperiences,
 }: DashboardShellProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("profile");
+  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const router = useRouter();
+
+  const fetchUnread = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const res = await fetch("/api/dashboard/messages");
+      if (res.ok) {
+        const data = await res.json();
+        const count = (data.messages ?? []).filter((m: { is_read: boolean }) => !m.is_read).length;
+        setUnreadMessages(count);
+      }
+    } catch {
+      // non bloquant
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    fetchUnread();
+  }, [fetchUnread]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -55,16 +101,16 @@ export function DashboardShell({
     router.refresh();
   }
 
-  const navItems: { id: Tab; label: string; Icon: typeof User }[] = [
-    { id: "profile", label: "Mon Profil", Icon: User },
-    { id: "projects", label: "Projets", Icon: Briefcase },
-    { id: "experiences", label: "Expériences", Icon: Clock },
-  ];
-
   const tabTitles: Record<Tab, string> = {
+    overview: "Vue d'ensemble",
     profile: "Mon Profil",
+    template: "Template",
     projects: "Projets",
     experiences: "Expériences",
+    messages: "Messages",
+    stats: "Statistiques",
+    jobs: "Emploi",
+    settings: "Paramètres",
   };
 
   return (
@@ -104,21 +150,109 @@ export function DashboardShell({
         </SidebarHeader>
 
         <SidebarContent>
+          {/* GÉNÉRAL */}
           <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel>Général</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {navItems.map(({ id, label, Icon }) => (
-                  <SidebarMenuItem key={id}>
-                    <SidebarMenuButton
-                      isActive={activeTab === id}
-                      onClick={() => setActiveTab(id)}
-                    >
-                      <Icon />
-                      <span>{label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
+                    <Home />
+                    <span>Vue d&apos;ensemble</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "profile"} onClick={() => setActiveTab("profile")}>
+                    <User />
+                    <span>Mon Profil</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "template"} onClick={() => setActiveTab("template")}>
+                    <Layers />
+                    <span>Template</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* CONTENU */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Contenu</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "projects"} onClick={() => setActiveTab("projects")}>
+                    <Briefcase />
+                    <span>Projets</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "experiences"} onClick={() => setActiveTab("experiences")}>
+                    <Clock />
+                    <span>Expériences</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* INTERACTIONS */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Interactions</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => setActiveTab("messages")}>
+                    <Mail />
+                    <span>Messages</span>
+                    {unreadMessages > 0 && (
+                      <span
+                        className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full"
+                        style={{ background: "var(--color-orange)", color: "#fff" }}
+                      >
+                        {unreadMessages}
+                      </span>
+                    )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => setActiveTab("stats")}>
+                    <BarChart2 />
+                    <span>Statistiques</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* EMPLOI */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Emploi</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => setActiveTab("jobs")}>
+                    <BriefcaseBusiness />
+                    <span>Offres & Candidatures</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* COMPTE */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Compte</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
+                    <Settings />
+                    <span>Paramètres</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -178,14 +312,38 @@ export function DashboardShell({
             </div>
           )}
 
+          {profile && activeTab === "overview" && (
+            <OverviewTab
+              profile={profile}
+              projects={initialProjects}
+              experiences={initialExperiences}
+              unreadMessages={unreadMessages}
+              onNavigate={(tab) => setActiveTab(tab as Tab)}
+            />
+          )}
           {profile && activeTab === "profile" && (
             <ProfileTab profile={profile} userId={userId} />
+          )}
+          {profile && activeTab === "template" && (
+            <TemplateTab profile={profile} />
           )}
           {profile && activeTab === "projects" && (
             <ProjectsTab profileId={profile.id} initialProjects={initialProjects} />
           )}
           {profile && activeTab === "experiences" && (
             <ExperiencesTab profileId={profile.id} initialExperiences={initialExperiences} />
+          )}
+          {profile && activeTab === "messages" && (
+            <MessagesTab />
+          )}
+          {profile && activeTab === "stats" && (
+            <StatsTab />
+          )}
+          {profile && activeTab === "jobs" && (
+            <JobsTab profile={profile} />
+          )}
+          {profile && activeTab === "settings" && (
+            <SettingsTab profile={profile} userEmail={userEmail} />
           )}
         </div>
       </SidebarInset>
