@@ -12,7 +12,7 @@ export default function NotFound() {
           <br />
           Tu veux le réclamer ?
         </p>
-        <Link href={`${process.env.NEXT_PUBLIC_BASE_URL}/#rejoindre`}>
+        <Link href="https://ivoire.io/#rejoindre">
           <Button>Réclamer ce domaine</Button>
         </Link>
       </div>

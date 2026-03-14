@@ -38,11 +38,11 @@ MOIS 3 — PRODUIT
 - [x] Définir la charte graphique
 - [x] Préparer les bannières et avatars pour chaque RS
 - [x] Rédiger les posts programmés (LinkedIn, Twitter, Instagram, Facebook, Telegram)
-- [ ] Créer les comptes réseaux sociaux
-  - [ ] LinkedIn (Page entreprise ivoire.io)
-  - [ ] Twitter/X (@ivoireio)
-  - [ ] Instagram (@ivoireio)
-  - [ ] Telegram (groupe communauté)
+- [x] Créer les comptes réseaux sociaux
+  - [x] LinkedIn (Page entreprise ivoire.io)
+  - [x] Twitter/X (@ivoireio)
+  - [x] Instagram (@ivoireio)
+  - [x] Telegram (groupe communauté)
 
 ### Semaine 2 : Landing Page Live
 - [x] Setup technique (Supabase + Next.js 16)
@@ -50,10 +50,10 @@ MOIS 3 — PRODUIT
 - [x] Formulaire de capture emails/waitlist avec validation complète
 - [x] Vérification disponibilité domaine en temps réel
 - [x] SEO complet (OG image, JSON-LD, sitemap, webmanifest)
-- [ ] **Exécuter la migration SQL sur Supabase** ← BLOQUANT
-- [ ] **Remplir RESEND_API_KEY** dans .env.local
-- [ ] **Déployer sur Railway** (voir guide ci-dessous)
-- [ ] **Configurer DNS Cloudflare** : `CNAME ivoire.io → [domaine Railway]`, `CNAME * → [domaine Railway]`
+- [x] **Exécuter la migration SQL sur Supabase** ← BLOQUANT
+- [x] **Remplir RESEND_API_KEY** dans .env.local
+- [x] **Déployer sur Railway** (voir guide ci-dessous)
+- [x] **Configurer DNS Cloudflare** : `CNAME ivoire.io → [domaine Railway]`, `CNAME * → [domaine Railway]`
 - [ ] Publier le premier post "Annonce" depuis la page LinkedIn ivoire.io
 - [ ] Partager dans groupes WhatsApp/Telegram tech CI
 
