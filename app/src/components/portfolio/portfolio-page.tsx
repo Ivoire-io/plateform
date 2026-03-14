@@ -230,13 +230,13 @@ export function PortfolioPage({
               {/* CTAs */}
               <div className="flex flex-wrap gap-3 mt-6">
                 <a href="#contact">
-                  <Button size="md" className="gap-2">
+                  <Button size="default" className="gap-2">
                     <Mail size={16} />
                     Me contacter
                   </Button>
                 </a>
                 <a href="#contact">
-                  <Button variant="secondary" size="md" className="gap-2 !border-orange/40 !text-orange hover:!bg-orange/10">
+                  <Button variant="outline" size="default" className="gap-2 border-orange/40 text-orange hover:bg-orange/10 hover:text-orange">
                     M&apos;embaucher
                   </Button>
                 </a>
@@ -564,7 +564,7 @@ export function PortfolioPage({
 
                   <Button
                     type="submit"
-                    size="md"
+                    size="default"
                     className="w-full gap-2 mt-1"
                     disabled={formStatus === "loading"}
                   >
@@ -587,16 +587,15 @@ export function PortfolioPage({
         </section>
       </main>
 
-      {/* Footer — discret */}
-      <footer className="py-8 px-4 text-center mt-8">
-        <p className="text-muted/40 text-xs">
-          <Link
-            href="https://ivoire.io"
-            className="hover:text-muted transition-colors"
-          >
-            ivoire.io 🇨🇮
-          </Link>
-        </p>
+      {/* Footer — discret avec CTA viral */}
+      <footer className="py-10 px-4 text-center border-t border-border/30 mt-8">
+        <Link
+          href="https://ivoire.io"
+          className="inline-flex items-center gap-2 text-muted/40 text-xs hover:text-muted/70 transition-colors group"
+        >
+          <span>Crée ton portfolio gratuitement sur</span>
+          <span className="font-mono group-hover:text-orange transition-colors">ivoire.io 🇨🇮</span>
+        </Link>
       </footer>
     </div>
   );

@@ -6,6 +6,7 @@ const RESERVED_SUBDOMAINS = new Set([
   "www", "mail", "api", "admin", "app", "devs", "startups",
   "jobs", "learn", "health", "data", "events", "invest",
   "blog", "docs", "status",
+  "dashboard", "login", "auth", "logout",
 ]);
 
 function getSubdomain(hostname: string): string | null {

@@ -155,7 +155,7 @@ export function HeroSection() {
             )}
           </div>
           <Button
-            size="md"
+            size="default"
             onClick={handleClaim}
             disabled={status === "taken" || status === "reserved"}
             className="w-full sm:w-auto"

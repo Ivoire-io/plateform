@@ -1,7 +1,11 @@
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import PlausibleProvider from "next-plausible";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Geist, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 const inter = Inter({
   variable: "--font-inter",
@@ -109,7 +113,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="fr">
+    <html lang="fr" className={cn("font-sans", geist.variable)}>
       <head>
         <script
           type="application/ld+json"
@@ -120,7 +124,9 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <PlausibleProvider domain="ivoire.io">
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </PlausibleProvider>
       </body>
     </html>

@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: #0A0A0A;
@@ -9,8 +13,42 @@
   --color-orange: #FF6B00;
   --color-orange-hover: #E65F00;
   --color-green: #00A651;
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 * {
@@ -33,4 +71,73 @@ html {
 ::selection {
   background: var(--color-orange);
   color: white;
+}
+
+/* ─── ivoire.io dark theme — seul mode supporté ─── */
+:root {
+  /* Couleurs de base */
+  --background: #0A0A0A;
+  --foreground: #FFFFFF;
+
+  /* Card / Popover → surface */
+  --card: #0D1117;
+  --card-foreground: #FFFFFF;
+  --popover: #0D1117;
+  --popover-foreground: #FFFFFF;
+
+  /* Primary → orange ivoire.io */
+  --primary: #FF6B00;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary → surface légèrement plus claire */
+  --secondary: #161B22;
+  --secondary-foreground: #FFFFFF;
+
+  /* Muted */
+  --muted: #1A1A2E;
+  --muted-foreground: #A0A0A0;
+
+  /* Accent */
+  --accent: #1A1A2E;
+  --accent-foreground: #FFFFFF;
+
+  /* Destructive */
+  --destructive: oklch(0.577 0.245 27.325);
+
+  /* Borders / Inputs */
+  --border: #1A1A2E;
+  --input: #161B22;
+  --ring: #FF6B00;
+
+  /* Radius */
+  --radius: 0.625rem;
+
+  /* Charts (inchangés) */
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+
+  /* Sidebar */
+  --sidebar: #0D1117;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #FF6B00;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1A1A2E;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #1A1A2E;
+  --sidebar-ring: #FF6B00;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

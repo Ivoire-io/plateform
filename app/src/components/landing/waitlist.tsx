@@ -388,7 +388,7 @@ export function WaitlistSection() {
                   <>
                     {' '}{slug}
                   </>
-                ) : 'mon '}
+                ) : ' mon '}
                 .ivoire.io
               </>
             )}
