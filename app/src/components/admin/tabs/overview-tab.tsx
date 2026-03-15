@@ -15,42 +15,99 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { AdminTab } from "../admin-shell";
 
 interface AdminOverviewTabProps {
   onNavigate: (tab: AdminTab) => void;
 }
 
-const METRICS = [
-  { label: "Profils total", value: "1 247", sub: "+87 ce mois", icon: Users, tab: "users" as AdminTab, color: "#3b82f6" },
-  { label: "Startups listées", value: "34", sub: "+3 ce mois", icon: TrendingUp, tab: "startups" as AdminTab, color: "#8b5cf6" },
-  { label: "Entreprises certifiées", value: "12", sub: "+1 ce mois", icon: Briefcase, tab: "startups" as AdminTab, color: "#06b6d4" },
-  { label: "Offres actives", value: "6", sub: "", icon: Briefcase, tab: "jobs" as AdminTab, color: "#10b981" },
-  { label: "Waitlist en attente", value: "89", sub: "", icon: Clock, tab: "waitlist" as AdminTab, color: "#f59e0b" },
-  { label: "Messages non lus", value: "23", sub: "", icon: MessageSquare, tab: "messages" as AdminTab, color: "#6366f1" },
-  { label: "Signalements", value: "2", sub: "en attente", icon: AlertTriangle, tab: "moderation" as AdminTab, color: "#ef4444" },
-  { label: "MRR", value: "$2.4K", sub: "↑ +18%", icon: CreditCard, tab: "subscriptions" as AdminTab, color: "var(--color-orange)" },
-];
+interface StatsData {
+  totalProfiles: number;
+  startups: number;
+  enterprises: number;
+  waitlistPending: number;
+  messages: number;
+  reports: number;
+  suspended: number;
+  newThisMonth: number;
+  mrr: number;
+}
 
-const ACTIVITY = [
-  { dot: "🟢", text: "ulrich.ivoire.io — Profil créé", time: "2h", type: "profile" },
-  { dot: "🟢", text: "fatou.ivoire.io — Profil créé", time: "5h", type: "profile" },
-  { dot: "🔵", text: "TechCI — Startup ajoutée", time: "hier", type: "content" },
-  { dot: "🟡", text: "jean@test.ci — Inscrit waitlist", time: "hier", type: "waitlist" },
-  { dot: "🔴", text: "spammer@mail.com — Compte signalé", time: "hier", type: "moderation" },
-  { dot: "💳", text: "Acme Corp — Abonnement Enterprise", time: "2j", type: "payment" },
-  { dot: "🏅", text: "InfoTech CI — Badge certifié", time: "3j", type: "admin" },
-];
+interface LogEntry {
+  id: string;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  created_at: string;
+  admin?: { full_name: string } | null;
+}
 
-const PROFILE_DIST = [
-  { label: "🧑‍💻 Développeurs", pct: 78, count: 973, color: "#3b82f6" },
-  { label: "🚀 Startups", pct: 12, count: 150, color: "#8b5cf6" },
-  { label: "🏢 Entreprises", pct: 5, count: 62, color: "#10b981" },
-  { label: "👤 Autres", pct: 5, count: 62, color: "#a0a0a0" },
-];
+function formatLogEntry(log: LogEntry): { dot: string; text: string; time: string } {
+  const action = log.action ?? "";
+  const time = new Date(log.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+
+  const map: Record<string, { dot: string; prefix: string }> = {
+    profile_created: { dot: "🟢", prefix: "Profil créé" },
+    profile_suspended: { dot: "🔴", prefix: "Profil suspendu" },
+    profile_activated: { dot: "🟢", prefix: "Profil réactivé" },
+    profile_banned: { dot: "🔴", prefix: "Compte banni" },
+    badge_granted: { dot: "🏅", prefix: "Badge accordé" },
+    admin_promoted: { dot: "🛡️", prefix: "Admin promu" },
+    waitlist_invited: { dot: "🟡", prefix: "Invitation waitlist" },
+    report_resolved: { dot: "✅", prefix: "Signalement résolu" },
+    plan_changed: { dot: "💳", prefix: "Plan modifié" },
+  };
+
+  const entry = map[action] ?? { dot: "⚪", prefix: action };
+  const target = log.target_id ? ` — ${log.target_id.slice(0, 8)}` : "";
+  return { dot: entry.dot, text: `${entry.prefix}${target}`, time };
+}
 
 export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
+  const [stats, setStats] = useState<StatsData | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "2-digit" });
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetch("/api/admin/stats").then((r) => r.json()),
+      fetch("/api/admin/logs?period=7d&limit=7").then((r) => r.json()),
+    ])
+      .then(([s, l]) => {
+        setStats(s);
+        setLogs(l.logs ?? []);
+      })
+      .catch(() => { })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalProfiles = stats?.totalProfiles ?? 0;
+  const startups = stats?.startups ?? 0;
+  const enterprises = stats?.enterprises ?? 0;
+  const developers = Math.max(0, totalProfiles - startups - enterprises);
+
+  const profileDist = totalProfiles > 0
+    ? [
+      { label: "🧑‍💻 Développeurs", count: developers, pct: Math.round((developers / totalProfiles) * 100), color: "#3b82f6" },
+      { label: "🚀 Startups", count: startups, pct: Math.round((startups / totalProfiles) * 100), color: "#8b5cf6" },
+      { label: "🏢 Entreprises", count: enterprises, pct: Math.round((enterprises / totalProfiles) * 100), color: "#10b981" },
+      { label: "👤 Autres", count: Math.max(0, totalProfiles - developers - startups - enterprises), pct: Math.max(0, 100 - Math.round((developers / totalProfiles) * 100) - Math.round((startups / totalProfiles) * 100) - Math.round((enterprises / totalProfiles) * 100)), color: "#a0a0a0" },
+    ]
+    : [];
+
+  const metrics = [
+    { label: "Profils total", value: loading ? "…" : totalProfiles.toLocaleString("fr-FR"), sub: stats ? `+${stats.newThisMonth} ce mois` : "", icon: Users, tab: "users" as AdminTab, color: "#3b82f6" },
+    { label: "Startups listées", value: loading ? "…" : startups.toString(), sub: "", icon: TrendingUp, tab: "startups" as AdminTab, color: "#8b5cf6" },
+    { label: "Entreprises", value: loading ? "…" : enterprises.toString(), sub: "", icon: Briefcase, tab: "startups" as AdminTab, color: "#06b6d4" },
+    { label: "Waitlist en attente", value: loading ? "…" : (stats?.waitlistPending ?? 0).toString(), sub: "", icon: Clock, tab: "waitlist" as AdminTab, color: "#f59e0b" },
+    { label: "Messages non lus", value: loading ? "…" : (stats?.messages ?? 0).toString(), sub: "", icon: MessageSquare, tab: "messages" as AdminTab, color: "#6366f1" },
+    { label: "Signalements", value: loading ? "…" : (stats?.reports ?? 0).toString(), sub: "en attente", icon: AlertTriangle, tab: "moderation" as AdminTab, color: "#ef4444" },
+    { label: "Comptes suspendus", value: loading ? "…" : (stats?.suspended ?? 0).toString(), sub: "", icon: ShieldAlert, tab: "users" as AdminTab, color: "#f97316" },
+    { label: "MRR", value: stats?.mrr ? `$${stats.mrr.toLocaleString("fr-FR")}` : "$0", sub: "Stripe non actif", icon: CreditCard, tab: "subscriptions" as AdminTab, color: "var(--color-orange)" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -64,7 +121,7 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
 
       {/* Métriques clés */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {METRICS.map((m) => (
+        {metrics.map((m) => (
           <Card
             key={m.label}
             className="cursor-pointer hover:border-orange-500/40 transition-colors"
@@ -94,20 +151,26 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {PROFILE_DIST.map((p) => (
-              <div key={p.label}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span>{p.label}</span>
-                  <span className="text-muted-foreground">{p.pct}% ({p.count})</span>
+            {loading ? (
+              <div className="text-xs text-muted-foreground py-4 text-center">Chargement…</div>
+            ) : profileDist.length === 0 ? (
+              <div className="text-xs text-muted-foreground py-4 text-center">Aucun profil</div>
+            ) : (
+              profileDist.map((p) => (
+                <div key={p.label}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span>{p.label}</span>
+                    <span className="text-muted-foreground">{p.pct}% ({p.count})</span>
+                  </div>
+                  <div className="h-2 rounded-full" style={{ background: "var(--color-border)" }}>
+                    <div
+                      className="h-2 rounded-full transition-all"
+                      style={{ width: `${p.pct}%`, background: p.color }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2 rounded-full" style={{ background: "var(--color-border)" }}>
-                  <div
-                    className="h-2 rounded-full transition-all"
-                    style={{ width: `${p.pct}%`, background: p.color }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -120,13 +183,22 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {ACTIVITY.map((a, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs">
-                <span className="text-base leading-none">{a.dot}</span>
-                <span className="flex-1 truncate">{a.text}</span>
-                <span className="text-muted-foreground shrink-0">{a.time}</span>
-              </div>
-            ))}
+            {loading ? (
+              <div className="text-xs text-muted-foreground py-4 text-center">Chargement…</div>
+            ) : logs.length === 0 ? (
+              <div className="text-xs text-muted-foreground py-4 text-center">Aucune activité récente</div>
+            ) : (
+              logs.map((log) => {
+                const { dot, text, time } = formatLogEntry(log);
+                return (
+                  <div key={log.id} className="flex items-center gap-2 text-xs">
+                    <span className="text-base leading-none">{dot}</span>
+                    <span className="flex-1 truncate">{text}</span>
+                    <span className="text-muted-foreground shrink-0">{time}</span>
+                  </div>
+                );
+              })
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -140,70 +212,84 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
       </div>
 
       {/* Actions urgentes */}
-      <Card
-        style={{
-          background: "color-mix(in srgb, #ef4444 8%, var(--color-surface))",
-          border: "1px solid color-mix(in srgb, #ef4444 25%, transparent)",
-        }}
-      >
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-red-400" />
-            Actions Urgentes
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-red-400">🚨 2 signalements en attente de revue</span>
-            <Button size="sm" variant="ghost" className="h-6 text-xs text-red-400 hover:text-red-300" onClick={() => onNavigate("moderation")}>Traiter →</Button>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-yellow-400">✅ 4 entreprises en attente de certification</span>
-            <Button size="sm" variant="ghost" className="h-6 text-xs text-yellow-400 hover:text-yellow-300" onClick={() => onNavigate("moderation")}>Certifier →</Button>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-blue-400">⏳ 89 inscrits waitlist à convertir</span>
-            <Button size="sm" variant="ghost" className="h-6 text-xs text-blue-400 hover:text-blue-300" onClick={() => onNavigate("waitlist")}>Inviter →</Button>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">📨 23 messages contact non répondus</span>
-            <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => onNavigate("messages")}>Voir →</Button>
-          </div>
-        </CardContent>
-      </Card>
+      {stats && (stats.reports > 0 || stats.waitlistPending > 0 || stats.messages > 0) && (
+        <Card
+          style={{
+            background: "color-mix(in srgb, #ef4444 8%, var(--color-surface))",
+            border: "1px solid color-mix(in srgb, #ef4444 25%, transparent)",
+          }}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-red-400" />
+              Actions en Attente
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {stats.reports > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-red-400">🚨 {stats.reports} signalement{stats.reports > 1 ? "s" : ""} en attente</span>
+                <Button size="sm" variant="ghost" className="h-6 text-xs text-red-400 hover:text-red-300" onClick={() => onNavigate("moderation")}>Traiter →</Button>
+              </div>
+            )}
+            {stats.waitlistPending > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-blue-400">⏳ {stats.waitlistPending} inscrit{stats.waitlistPending > 1 ? "s" : ""} waitlist à convertir</span>
+                <Button size="sm" variant="ghost" className="h-6 text-xs text-blue-400 hover:text-blue-300" onClick={() => onNavigate("waitlist")}>Inviter →</Button>
+              </div>
+            )}
+            {stats.messages > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">📨 {stats.messages} message{stats.messages > 1 ? "s" : ""} contact non répondus</span>
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => onNavigate("messages")}>Voir →</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Inscriptions sparkline (simulée) */}
+      {/* Activité — nouveaux profils ce mois */}
       <Card style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">Inscriptions — 30 derniers jours</CardTitle>
+          <CardTitle className="text-sm font-semibold flex items-center justify-between">
+            <span>Nouvelles inscriptions ce mois</span>
+            {stats && (
+              <Badge variant="outline" className="text-xs h-5">
+                +{stats.newThisMonth} ce mois
+              </Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end gap-1 h-20">
-            {[12, 8, 15, 20, 18, 25, 22, 30, 28, 35, 24, 18, 22, 29, 33, 27, 20, 24, 28, 32, 25, 18, 15, 22, 28, 30, 27, 24, 20, 25].map(
-              (v, i) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-sm transition-all hover:opacity-80"
-                  style={{
-                    height: `${(v / 35) * 100}%`,
-                    background: i > 25 ? "var(--color-orange)" : "color-mix(in srgb,var(--color-orange) 40%,transparent)",
-                  }}
-                />
-              )
-            )}
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground mt-2">
-            <span>14/02</span>
-            <span>28/02</span>
-            <span>14/03</span>
-          </div>
-          <div className="flex gap-4 mt-3 text-xs">
-            <span>
-              <span className="inline-block w-2 h-2 rounded-sm mr-1" style={{ background: "var(--color-orange)" }} />
-              Total
-            </span>
-            <Badge variant="outline" className="text-xs h-5">+87 ce mois</Badge>
-          </div>
+          {loading ? (
+            <div className="h-20 flex items-center justify-center text-xs text-muted-foreground">Chargement…</div>
+          ) : (
+            <>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold" style={{ color: "var(--color-orange)" }}>
+                    {stats?.newThisMonth ?? 0}
+                  </span>
+                  <span className="text-xs text-muted-foreground">nouveaux profils</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-blue-400">{totalProfiles}</span>
+                  <span className="text-xs text-muted-foreground">total</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-purple-400">{startups}</span>
+                  <span className="text-xs text-muted-foreground">startups</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-emerald-400">{enterprises}</span>
+                  <span className="text-xs text-muted-foreground">entreprises</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Les graphiques d&apos;évolution quotidienne seront disponibles une fois l&apos;analytics activé.
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

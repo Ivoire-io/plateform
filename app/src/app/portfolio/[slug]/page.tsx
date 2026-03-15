@@ -1,4 +1,5 @@
 import { PortfolioPage } from "@/components/portfolio/portfolio-page";
+import { PortfolioTracker } from "@/components/portfolio/portfolio-tracker";
 import { createClient } from "@/lib/supabase/server";
 import type { Experience, Profile, Project } from "@/lib/types";
 import { TABLES } from "@/lib/utils";
@@ -115,6 +116,7 @@ export default async function PortfolioSlugPage({ params }: PageProps) {
 
   return (
     <>
+      <PortfolioTracker profileId={profile.id} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

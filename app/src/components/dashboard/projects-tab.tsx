@@ -244,28 +244,29 @@ export function ProjectsTab({ initialProjects }: ProjectsTabProps) {
           </SheetHeader>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="project-name">
-                  Nom <span style={{ color: "var(--color-orange)" }}>*</span>
-                </Label>
-                <Input
-                  id="project-name"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="MonApp"
-                  maxLength={100}
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>Technologies <span className="text-muted-foreground font-normal">(séparées par des virgules)</span></Label>
-                <Input
-                  value={form.tech_stack}
-                  onChange={(e) => setForm((f) => ({ ...f, tech_stack: e.target.value }))}
-                  placeholder="Flutter, Dart, Firebase"
-                />
-              </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="project-name">
+                Nom <span style={{ color: "var(--color-orange)" }}>*</span>
+              </Label>
+              <Input
+                id="project-name"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="MonApp"
+                maxLength={100}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>
+                Technologies
+                <span className="text-xs font-normal text-muted-foreground ml-1.5">(séparées par des virgules)</span>
+              </Label>
+              <Input
+                value={form.tech_stack}
+                onChange={(e) => setForm((f) => ({ ...f, tech_stack: e.target.value }))}
+                placeholder="Flutter, Dart, Firebase"
+              />
             </div>
 
             <div className="flex flex-col gap-2">

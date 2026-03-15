@@ -39,9 +39,10 @@ import {
   ShieldAlert,
   Users,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AdminAnalyticsTab } from "./tabs/analytics-tab";
 import { AdminBroadcastingTab } from "./tabs/broadcasting-tab";
@@ -124,7 +125,25 @@ function NavItem({ id, label, Icon, badge, activeTab, setActiveTab }: NavItemPro
 
 export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => { setMounted(true); }, []);
+  const [stats, setStats] = useState<{
+    totalProfiles: number;
+    waitlistPending: number;
+    startups: number;
+    messages: number;
+    reports: number;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/stats")
+      .then((r) => r.json())
+      .then((d) => setStats(d))
+      .catch(() => { });
+  }, []);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -135,7 +154,7 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
 
   return (
     <SidebarProvider>
-      <Toaster position="top-right" richColors theme="dark" />
+      <Toaster position="top-right" richColors theme={mounted && resolvedTheme === "light" ? "light" : "dark"} />
 
       {/* ─── Sidebar Admin ─── */}
       <Sidebar>
@@ -190,8 +209,8 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Utilisateurs</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="users" label="Profils" Icon={Users} badge={1247} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="waitlist" label="Waitlist" Icon={Clock} badge={89} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="users" label="Profils" Icon={Users} badge={stats?.totalProfiles || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="waitlist" label="Waitlist" Icon={Clock} badge={stats?.waitlistPending || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -201,9 +220,9 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Contenu</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="startups" label="Startups" Icon={Activity} badge={34} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="jobs" label="Offres d&apos;emploi" Icon={Briefcase} badge={12} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="messages" label="Messages" Icon={MessageSquare} badge={23} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="startups" label="Startups" Icon={Activity} badge={stats?.startups || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="jobs" label="Offres d&apos;emploi" Icon={Briefcase} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="messages" label="Messages" Icon={MessageSquare} badge={stats?.messages || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -213,7 +232,7 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Modération</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="moderation" label="Signalements" Icon={AlertTriangle} badge={2} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="moderation" label="Signalements" Icon={AlertTriangle} badge={stats?.reports || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

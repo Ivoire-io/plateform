@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 Mo
-const BUCKET = "avatars";
+const BUCKET = "ivoireio-avatars";
 
 // POST /api/dashboard/avatar — upload avatar vers Supabase Storage
 // Corps : multipart/form-data avec le champ "avatar"
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   if (uploadError) {
     console.error("[avatar upload]", uploadError);
     return NextResponse.json(
-      { success: false, error: "Erreur lors de l'upload. Vérifiez que le bucket 'avatars' existe dans Supabase Storage." },
+      { success: false, error: "Erreur lors de l'upload. Vérifiez que le bucket 'ivoireio-avatars' existe dans Supabase Storage." },
       { status: 500 }
     );
   }

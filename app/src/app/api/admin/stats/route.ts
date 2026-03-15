@@ -20,8 +20,8 @@ export async function GET() {
     { count: suspended },
   ] = await Promise.all([
     supabase.from(TABLES.profiles).select("*", { count: "exact", head: true }),
-    supabase.from(TABLES.profiles).select("*", { count: "exact", head: true }).eq("profile_type", "startup"),
-    supabase.from(TABLES.profiles).select("*", { count: "exact", head: true }).eq("profile_type", "enterprise"),
+    supabase.from(TABLES.profiles).select("*", { count: "exact", head: true }).eq("type", "startup"),
+    supabase.from(TABLES.profiles).select("*", { count: "exact", head: true }).eq("type", "enterprise"),
     supabase.from(TABLES.waitlist).select("*", { count: "exact", head: true }),
     supabase.from(TABLES.waitlist).select("*", { count: "exact", head: true }).eq("invited", false),
     supabase.from(TABLES.contact_messages).select("*", { count: "exact", head: true }),

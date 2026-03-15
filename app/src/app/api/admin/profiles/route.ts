@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       `full_name.ilike.%${search}%,slug.ilike.%${search}%,bio.ilike.%${search}%`
     );
   }
-  if (type) query = query.eq("profile_type", type);
+  if (type) query = query.eq("type", type);
   if (status === "suspended") query = query.eq("is_suspended", true);
   if (status === "active") query = query.eq("is_suspended", false);
   if (plan) query = query.eq("plan", plan);

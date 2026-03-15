@@ -33,7 +33,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   // Champs autorisés à modifier par l'admin
   const allowed = [
-    "full_name", "bio", "profile_type", "plan", "admin_notes",
+    "full_name", "bio", "type", "plan", "admin_notes",
     "verified_badge", "is_admin",
   ];
   const updates: Record<string, unknown> = {};

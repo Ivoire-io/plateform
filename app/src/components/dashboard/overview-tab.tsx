@@ -12,12 +12,14 @@ import {
   Copy,
   Eye,
   Link2,
+  Loader2,
   MessageSquare,
   PenLine,
   Share2,
   Star,
   TrendingUp,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface OverviewTabProps {
@@ -26,6 +28,22 @@ interface OverviewTabProps {
   experiences: Experience[];
   unreadMessages: number;
   onNavigate: (tab: string) => void;
+}
+
+interface StatsData {
+  stats: {
+    views: { total: number; unique: number; trend: number };
+    clicks: { total: number; trend: number };
+    messages: { total: number; unread: number; trend: number };
+  };
+  chart: { label: string; views: number }[];
+  recentMessages: {
+    id: string;
+    name: string;
+    message: string;
+    created_at: string;
+    read: boolean;
+  }[];
 }
 
 function calcCompletion(profile: Profile, projects: Project[]): {
@@ -58,6 +76,21 @@ export function OverviewTab({
   const firstName = (profile.full_name ?? "").split(" ")[0] || "Développeur";
   const { score, items } = calcCompletion(profile, projects);
 
+  const [statsData, setStatsData] = useState<StatsData | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/dashboard/stats?period=30j")
+      .then((r) => r.json())
+      .then((data) => {
+        setStatsData(data);
+      })
+      .catch(() => {
+        // silencieux — les cards afficheront 0
+      })
+      .finally(() => setStatsLoading(false));
+  }, []);
+
   async function copyLink() {
     const url = `https://${profile.slug}.ivoire.io`;
     try {
@@ -68,23 +101,39 @@ export function OverviewTab({
     }
   }
 
-  // Mock weekly sparkline (5 bars)
-  const sparkBars = [28, 42, 35, 55, 48];
-  const maxBar = Math.max(...sparkBars);
+  const viewsTotal = statsData?.stats.views.total ?? 0;
+  const viewsTrend = statsData?.stats.views.trend ?? 0;
+  const clicksTotal = statsData?.stats.clicks.total ?? 0;
+  const clicksTrend = statsData?.stats.clicks.trend ?? 0;
+
+  // Sparkline : 5 dernières semaines agrégées depuis le chart journalier
+  const chartRaw = statsData?.chart ?? [];
+  let sparkBars: number[];
+  if (chartRaw.length >= 5) {
+    // Grouper les 30 jours en 5 semaines de 6 jours
+    sparkBars = [0, 1, 2, 3, 4].map((wi) => {
+      const slice = chartRaw.slice(wi * 6, wi * 6 + 6);
+      return slice.reduce((acc, d) => acc + d.views, 0);
+    });
+  } else {
+    // Pas encore assez de données
+    sparkBars = [0, 0, 0, 0, 0];
+  }
+  const maxBar = Math.max(...sparkBars, 1);
 
   const statCards = [
     {
       icon: <Eye className="w-5 h-5" />,
       label: "Visites ce mois",
-      value: 342,
-      trend: "+18%",
+      value: viewsTotal,
+      trend: viewsTrend !== 0 ? `${viewsTrend > 0 ? "+" : ""}${viewsTrend}%` : null,
       color: "var(--color-orange)",
     },
     {
       icon: <Link2 className="w-5 h-5" />,
       label: "Clics liens",
-      value: 28,
-      trend: "+9%",
+      value: clicksTotal,
+      trend: clicksTrend !== 0 ? `${clicksTrend > 0 ? "+" : ""}${clicksTrend}%` : null,
       color: "#3b82f6",
     },
     {
@@ -111,19 +160,27 @@ export function OverviewTab({
     },
     {
       icon: <Star className="w-5 h-5" />,
-      label: "Favoris reçus",
-      value: 12,
-      trend: "+3",
+      label: "Visiteurs uniques",
+      value: statsData?.stats.views.unique ?? 0,
+      trend: null,
       color: "#ec4899",
     },
   ];
 
-  const recentActivity = [
-    { icon: "📨", text: "Nouveau message de Marie K.", time: "Il y a 2h" },
-    { icon: "👁️", text: "12 nouvelles visites aujourd'hui", time: "Il y a 4h" },
-    { icon: "⭐", text: "2 personnes ont mis ton profil en favori", time: "Hier" },
-    { icon: "🔗", text: "5 clics sur tes liens ce matin", time: "Hier" },
-  ];
+  // Activité récente : derniers messages reçus
+  const recentMessages = statsData?.recentMessages ?? [];
+  const recentActivity = recentMessages.length > 0
+    ? recentMessages.map((m) => ({
+      icon: m.read ? "📩" : "📨",
+      text: `Message de ${m.name} : « ${m.message.substring(0, 60)}${m.message.length > 60 ? "…" : ""} »`,
+      time: new Date(m.created_at).toLocaleString("fr", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }))
+    : [{ icon: "👋", text: "Pas encore d'activité récente. Partagez votre portfolio !", time: "" }];
 
   return (
     <div className="flex flex-col gap-6">
@@ -140,22 +197,27 @@ export function OverviewTab({
             <CardContent className="p-4 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <span style={{ color: card.color }}>{card.icon}</span>
-                {card.trend && (
+                {statsLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                ) : card.trend ? (
                   <span className="text-xs font-medium text-green-500 flex items-center gap-0.5">
                     <TrendingUp className="w-3 h-3" />
                     {card.trend}
                   </span>
-                )}
-                {card.badge && (
+                ) : card.badge ? (
                   <Badge
                     className="text-xs px-1.5 py-0"
                     style={{ background: card.color, color: "#fff" }}
                   >
                     {card.value}
                   </Badge>
-                )}
+                ) : null}
               </div>
-              <div className="text-3xl font-bold">{card.value}</div>
+              <div className="text-3xl font-bold">
+                {statsLoading && !["Messages non lus", "Projets publiés", "Expériences listées"].includes(card.label) ? (
+                  <span className="text-muted-foreground text-lg">…</span>
+                ) : card.value}
+              </div>
               <div className="text-xs text-muted-foreground">{card.label}</div>
             </CardContent>
           </Card>
@@ -189,8 +251,8 @@ export function OverviewTab({
                 <li key={item.label} className="flex items-center gap-2 text-sm">
                   <span
                     className={`flex items-center justify-center w-4 h-4 rounded-full shrink-0 ${item.done
-                        ? "bg-green-500/20 text-green-500"
-                        : "bg-red-500/20 text-red-500"
+                      ? "bg-green-500/20 text-green-500"
+                      : "bg-red-500/20 text-red-500"
                       }`}
                   >
                     {item.done ? <Check className="w-2.5 h-2.5" /> : <span className="text-[9px] font-bold">!</span>}
@@ -230,6 +292,7 @@ export function OverviewTab({
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <BarChart2 className="w-4 h-4" style={{ color: "var(--color-orange)" }} />
               Visites (30 derniers jours)
+              {statsLoading && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -252,6 +315,11 @@ export function OverviewTab({
                 </div>
               ))}
             </div>
+            {!statsLoading && sparkBars.every((v) => v === 0) && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Les visites s&apos;afficheront dès que votre portfolio reçoit du trafic.
+              </p>
+            )}
             <button
               onClick={() => onNavigate("stats")}
               className="mt-3 text-xs w-full text-center hover:underline"
@@ -269,17 +337,26 @@ export function OverviewTab({
           <CardTitle className="text-sm font-semibold">Activité récente</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="flex flex-col gap-3">
-            {recentActivity.map((item, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
-                <span className="text-base shrink-0">{item.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p>{item.text}</p>
-                  <p className="text-xs text-muted-foreground">{item.time}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {statsLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Chargement…
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {recentActivity.map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm">
+                  <span className="text-base shrink-0">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p>{item.text}</p>
+                    {item.time && (
+                      <p className="text-xs text-muted-foreground">{item.time}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
 

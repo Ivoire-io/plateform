@@ -30,9 +30,12 @@ import {
   Layers,
   LogOut,
   Mail,
+  Moon,
   Settings,
+  Sun,
   User,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -74,7 +77,11 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+
+  useEffect(() => { setMounted(true); }, []);
 
   const fetchUnread = useCallback(async () => {
     if (!profile) return;
@@ -115,7 +122,7 @@ export function DashboardShell({
 
   return (
     <SidebarProvider>
-      <Toaster position="top-right" richColors theme="dark" />
+      <Toaster position="top-right" richColors theme={mounted && resolvedTheme === "light" ? "light" : "dark"} />
 
       {/* ─── Sidebar ─── */}
       <Sidebar>
@@ -296,6 +303,20 @@ export function DashboardShell({
             <span className="text-muted-foreground mx-1">/</span>
             <span className="font-medium">{tabTitles[activeTab]}</span>
           </nav>
+          <div className="ml-auto">
+            <button
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-border hover:border-orange-400 transition-colors"
+              title={mounted ? (resolvedTheme === "dark" ? "Passer en mode clair" : "Passer en mode sombre") : "Thème"}
+              suppressHydrationWarning
+            >
+              {!mounted || resolvedTheme === "dark" ? (
+                <Sun className="w-4 h-4" style={{ color: "var(--color-orange)" }} />
+              ) : (
+                <Moon className="w-4 h-4" style={{ color: "var(--color-orange)" }} />
+              )}
+            </button>
+          </div>
         </header>
 
         <div className="flex flex-1 flex-col gap-6 p-6">

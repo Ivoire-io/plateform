@@ -2,6 +2,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import PlausibleProvider from "next-plausible";
+import { ThemeProvider } from "next-themes";
 import { Geist, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -113,7 +114,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="fr" className={cn("font-sans", geist.variable)}>
+    <html lang="fr" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -123,11 +124,13 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <PlausibleProvider domain="ivoire.io">
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-        </PlausibleProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <PlausibleProvider domain="ivoire.io">
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+          </PlausibleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
