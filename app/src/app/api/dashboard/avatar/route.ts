@@ -83,11 +83,9 @@ export async function POST(request: Request) {
 
   const { data: { publicUrl } } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(storagePath);
 
-  // Ajouter un cache-buster pour éviter les images en cache après changement
-  const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+  // Stocker l'URL propre en base (sans cache-buster)
+  await supabase.from(TABLES.profiles).update({ avatar_url: publicUrl }).eq("id", user.id);
 
-  // Mettre à jour le profil
-  await supabase.from(TABLES.profiles).update({ avatar_url: avatarUrl }).eq("id", user.id);
-
-  return NextResponse.json({ success: true, url: avatarUrl });
+  // Retourner l'URL avec cache-buster au client pour affichage immédiat après upload
+  return NextResponse.json({ success: true, url: `${publicUrl}?t=${Date.now()}` });
 }

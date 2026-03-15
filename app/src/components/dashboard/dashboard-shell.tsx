@@ -71,17 +71,21 @@ interface DashboardShellProps {
 export function DashboardShell({
   userId,
   userEmail,
-  profile,
+  profile: initialProfile,
   initialProjects,
   initialExperiences,
 }: DashboardShellProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [profile, setProfile] = useState(initialProfile);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   useEffect(() => { setMounted(true); }, []);
+
+  // Sync profile state when server data refreshes (après router.refresh())
+  useEffect(() => { setProfile(initialProfile); }, [initialProfile]);
 
   const fetchUnread = useCallback(async () => {
     if (!profile) return;
@@ -343,7 +347,10 @@ export function DashboardShell({
             />
           )}
           {profile && activeTab === "profile" && (
-            <ProfileTab profile={profile} userId={userId} />
+            <ProfileTab
+              profile={profile}
+              userId={userId}
+            />
           )}
           {profile && activeTab === "template" && (
             <TemplateTab profile={profile} />

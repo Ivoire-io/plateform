@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Profile } from "@/lib/types";
 import { Camera, Loader2, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,6 +19,7 @@ interface ProfileTabProps {
 
 export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
   const [profile, setProfile] = useState(initialProfile);
+  const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -101,13 +103,20 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
     const json = await res.json();
     setIsSaving(false);
     if (json.success) {
+      const saved: Profile = json.data;
+      setProfile(saved);
+      router.refresh(); // re-sync les données serveur
       toast.success("Profil enregistré !", { id: toastId });
     } else {
       toast.error(json.error ?? "Erreur lors de la sauvegarde.", { id: toastId });
     }
   }
 
-  const displayAvatar = avatarPreview ?? profile.avatar_url;
+  // Nettoyer l'URL stockée en DB si elle contient un ?t= stale
+  const cleanAvatarUrl = profile.avatar_url
+    ? profile.avatar_url.split("?")[0]
+    : null;
+  const displayAvatar = avatarPreview ?? cleanAvatarUrl;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -176,15 +185,18 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
             <button
               onClick={() => setProfile((p) => ({ ...p, is_available: !p.is_available }))}
               className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-medium ${profile.is_available
-                  ? "border-green-500/30 text-green-500"
-                  : "border-border text-muted-foreground"
+                ? "border-green-500/30 text-green-500"
+                : "border-border text-muted-foreground"
                 }`}
               style={{ background: profile.is_available ? "color-mix(in srgb, #00A651 10%, transparent)" : "var(--color-card)" }}
               aria-pressed={profile.is_available}
             >
               <span>{profile.is_available ? "Disponible" : "Non disponible"}</span>
               <div className={`relative w-9 h-5 rounded-full transition-colors ${profile.is_available ? "bg-green-500" : "bg-border"}`}>
-                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${profile.is_available ? "translate-x-4" : "translate-x-0.5"}`} />
+                <span
+                  className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+                  style={{ transform: `translateY(-50%) translateX(${profile.is_available ? "0px" : "-14px"})` }}
+                />
               </div>
             </button>
           </div>
