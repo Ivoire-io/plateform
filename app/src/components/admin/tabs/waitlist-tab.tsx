@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/select";
 import { Download, Mail, Search, Trash2, UserCheck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface WaitlistEntry {
@@ -17,15 +17,11 @@ interface WaitlistEntry {
   type: string;
   whatsapp: string | null;
   created_at: string;
+  invited?: boolean;
+  invited_at?: string | null;
+  converted_profile_id?: string | null;
+  converted_at?: string | null;
 }
-
-const MOCK_WAITLIST: WaitlistEntry[] = [
-  { id: "1", full_name: "Jean Koné", email: "j@mail.ci", desired_slug: "jean", type: "developer", whatsapp: "+225 07 08 09 10", created_at: "2026-03-13" },
-  { id: "2", full_name: "Acme Corp", email: "h@acme.ci", desired_slug: "acme", type: "enterprise", whatsapp: null, created_at: "2026-03-12" },
-  { id: "3", full_name: "Marie Diallo", email: "m@test.ci", desired_slug: "marie", type: "developer", whatsapp: "+225 05 06 07 08", created_at: "2026-03-10" },
-  { id: "4", full_name: "TechSmart CI", email: "ts@techsmart.ci", desired_slug: "techsmart", type: "startup", whatsapp: "+225 01 02 03 04", created_at: "2026-03-08" },
-  { id: "5", full_name: "Awa Traoré", email: "awa@mail.ci", desired_slug: "awa", type: "developer", whatsapp: null, created_at: "2026-03-07" },
-];
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   developer: { label: "Dev", color: "#3b82f6" },
@@ -37,29 +33,91 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
 export function AdminWaitlistTab() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState<WaitlistEntry[]>([]);
 
-  const filtered = MOCK_WAITLIST.filter((w) => {
-    const matchSearch = !search || (w.full_name ?? "").toLowerCase().includes(search.toLowerCase()) || w.email.toLowerCase().includes(search.toLowerCase());
-    const matchType = typeFilter === "all" || w.type === typeFilter;
-    return matchSearch && matchType;
-  });
+  async function loadWaitlist() {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (typeFilter !== "all") params.set("type", typeFilter);
+      // On charge tout, puis on filtre côté client pour le search (simple et rapide)
+      const res = await fetch(`/api/admin/waitlist?${params.toString()}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Erreur chargement waitlist");
+      setEntries(data.entries ?? []);
+    } catch {
+      toast.error("Erreur lors du chargement de la waitlist");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  function handleInvite(entry: WaitlistEntry) {
-    toast.success(`Invitation envoyée à ${entry.full_name ?? entry.email}`);
+  useEffect(() => {
+    loadWaitlist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter]);
+
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return entries.filter((w) => {
+      const matchSearch =
+        !s ||
+        (w.full_name ?? "").toLowerCase().includes(s) ||
+        w.email.toLowerCase().includes(s) ||
+        (w.desired_slug ?? "").toLowerCase().includes(s);
+      const matchType = typeFilter === "all" || w.type === typeFilter;
+      return matchSearch && matchType;
+    });
+  }, [entries, search, typeFilter]);
+
+  const total = entries.length;
+  const invited = entries.filter((e) => e.invited).length;
+  const pending = total - invited;
+  const conversionRate = total > 0 ? Math.round((invited / total) * 100) : 0;
+
+  async function handleInvite(entry: WaitlistEntry) {
+    try {
+      const res = await fetch(`/api/admin/waitlist/${entry.id}/invite`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "invite_failed");
+      if (data?.data?.email_sent) {
+        toast.success(`Accès envoyés à ${entry.full_name ?? entry.email}`);
+      } else {
+        toast.success(`Accès créés pour ${entry.full_name ?? entry.email}`);
+        if (data?.data?.action_link) {
+          toast.info("Resend non configuré: lien d’accès disponible dans la réponse API.");
+        }
+      }
+      loadWaitlist();
+    } catch {
+      toast.error("Erreur lors de l’invitation");
+    }
   }
 
   function handleDelete(entry: WaitlistEntry) {
     toast.error(`${entry.full_name ?? entry.email} retiré de la waitlist`);
   }
 
-  function handleInviteAll() {
-    toast.success(`Invitations envoyées à tous les ${filtered.length} inscrits`);
+  async function handleInviteAll() {
+    try {
+      const res = await fetch("/api/admin/waitlist/invite-all", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "invite_all_failed");
+      toast.success(`Conversions: ${data?.data?.converted ?? 0} / ${data?.data?.requested ?? 0}`);
+      if (data?.data?.note) toast.info(data.data.note);
+      loadWaitlist();
+    } catch {
+      toast.error("Erreur lors de l’invitation en masse");
+    }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-xl font-bold">Waitlist (89 en attente)</h2>
+        <h2 className="text-xl font-bold">
+          Waitlist ({loading ? "…" : pending} en attente)
+        </h2>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" className="gap-2" style={{ background: "var(--color-green)", color: "white" }} onClick={handleInviteAll}>
             <UserCheck className="h-4 w-4" /> Inviter tous
@@ -104,7 +162,11 @@ export function AdminWaitlistTab() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((entry) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">Chargement…</td>
+                  </tr>
+                ) : filtered.map((entry) => (
                   <tr key={entry.id} className="border-b border-border/50 hover:bg-white/2 transition-colors">
                     <td className="p-3 pl-4 font-medium">{entry.full_name ?? "—"}</td>
                     <td className="p-3 text-xs text-muted-foreground">{entry.email}</td>
@@ -140,7 +202,7 @@ export function AdminWaitlistTab() {
               </tbody>
             </table>
           </div>
-          {filtered.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <div className="py-12 text-center text-sm text-muted-foreground">Aucun inscrit trouvé</div>
           )}
         </CardContent>
@@ -154,19 +216,19 @@ export function AdminWaitlistTab() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-xl font-bold">312</div>
+              <div className="text-xl font-bold">{loading ? "…" : total}</div>
               <div className="text-xs text-muted-foreground">Total inscrits</div>
             </div>
             <div>
-              <div className="text-xl font-bold text-green-400">223</div>
+              <div className="text-xl font-bold text-green-400">{loading ? "…" : invited}</div>
               <div className="text-xs text-muted-foreground">Invités</div>
             </div>
             <div>
-              <div className="text-xl font-bold" style={{ color: "var(--color-orange)" }}>89</div>
+              <div className="text-xl font-bold" style={{ color: "var(--color-orange)" }}>{loading ? "…" : pending}</div>
               <div className="text-xs text-muted-foreground">En attente</div>
             </div>
             <div>
-              <div className="text-xl font-bold text-blue-400">67%</div>
+              <div className="text-xl font-bold text-blue-400">{loading ? "…" : `${conversionRate}%`}</div>
               <div className="text-xs text-muted-foreground">Taux conversion</div>
             </div>
           </div>

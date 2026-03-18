@@ -17,9 +17,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AdminTab } from "../admin-shell";
+import { useRouter } from "next/navigation";
 
 interface AdminOverviewTabProps {
-  onNavigate: (tab: AdminTab) => void;
+  onNavigate?: (tab: AdminTab) => void;
 }
 
 interface StatsData {
@@ -65,6 +66,7 @@ function formatLogEntry(log: LogEntry): { dot: string; text: string; time: strin
 }
 
 export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
+  const router = useRouter();
   const [stats, setStats] = useState<StatsData | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +111,11 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
     { label: "MRR", value: stats?.mrr ? `$${stats.mrr.toLocaleString("fr-FR")}` : "$0", sub: "Stripe non actif", icon: CreditCard, tab: "subscriptions" as AdminTab, color: "var(--color-orange)" },
   ];
 
+  function navigate(tab: AdminTab) {
+    if (onNavigate) return onNavigate(tab);
+    router.push(`/admin/${tab}`);
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -126,7 +133,7 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
             key={m.label}
             className="cursor-pointer hover:border-orange-500/40 transition-colors"
             style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}
-            onClick={() => onNavigate(m.tab)}
+            onClick={() => navigate(m.tab)}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-2">
@@ -203,7 +210,7 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
               variant="ghost"
               size="sm"
               className="w-full mt-1 h-7 text-xs"
-              onClick={() => onNavigate("logs")}
+              onClick={() => navigate("logs")}
             >
               Voir tous les logs →
             </Button>
@@ -229,19 +236,19 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
             {stats.reports > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-red-400">🚨 {stats.reports} signalement{stats.reports > 1 ? "s" : ""} en attente</span>
-                <Button size="sm" variant="ghost" className="h-6 text-xs text-red-400 hover:text-red-300" onClick={() => onNavigate("moderation")}>Traiter →</Button>
+                <Button size="sm" variant="ghost" className="h-6 text-xs text-red-400 hover:text-red-300" onClick={() => navigate("moderation")}>Traiter →</Button>
               </div>
             )}
             {stats.waitlistPending > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-blue-400">⏳ {stats.waitlistPending} inscrit{stats.waitlistPending > 1 ? "s" : ""} waitlist à convertir</span>
-                <Button size="sm" variant="ghost" className="h-6 text-xs text-blue-400 hover:text-blue-300" onClick={() => onNavigate("waitlist")}>Inviter →</Button>
+                <Button size="sm" variant="ghost" className="h-6 text-xs text-blue-400 hover:text-blue-300" onClick={() => navigate("waitlist")}>Inviter →</Button>
               </div>
             )}
             {stats.messages > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">📨 {stats.messages} message{stats.messages > 1 ? "s" : ""} contact non répondus</span>
-                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => onNavigate("messages")}>Voir →</Button>
+                <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => navigate("messages")}>Voir →</Button>
               </div>
             )}
           </CardContent>

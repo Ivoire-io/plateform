@@ -1,75 +1,40 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
+import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
-// Retourne la date de début selon la période
 function getPeriodStart(period: string): string {
   const now = new Date();
   switch (period) {
-    case "7j":
-      now.setDate(now.getDate() - 7);
-      break;
-    case "30j":
-      now.setDate(now.getDate() - 30);
-      break;
-    case "90j":
-      now.setDate(now.getDate() - 90);
-      break;
-    case "1an":
-      now.setFullYear(now.getFullYear() - 1);
-      break;
-    default:
-      now.setDate(now.getDate() - 30);
+    case "7j": now.setDate(now.getDate() - 7); break;
+    case "30j": now.setDate(now.getDate() - 30); break;
+    case "90j": now.setDate(now.getDate() - 90); break;
+    case "1an": now.setFullYear(now.getFullYear() - 1); break;
+    default: now.setDate(now.getDate() - 30);
   }
   return now.toISOString();
 }
 
-// Retourne la date de début de la période précédente (pour le calcul du trend)
 function getPreviousPeriodStart(period: string): { start: string; end: string } {
   const end = new Date(getPeriodStart(period));
   const start = new Date(end);
   switch (period) {
-    case "7j":
-      start.setDate(start.getDate() - 7);
-      break;
-    case "30j":
-      start.setDate(start.getDate() - 30);
-      break;
-    case "90j":
-      start.setDate(start.getDate() - 90);
-      break;
-    case "1an":
-      start.setFullYear(start.getFullYear() - 1);
-      break;
-    default:
-      start.setDate(start.getDate() - 30);
+    case "7j": start.setDate(start.getDate() - 7); break;
+    case "30j": start.setDate(start.getDate() - 30); break;
+    case "90j": start.setDate(start.getDate() - 90); break;
+    case "1an": start.setFullYear(start.getFullYear() - 1); break;
+    default: start.setDate(start.getDate() - 30);
   }
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
-// Calcule le trend en % (ex: +12.5 si hausse, -5.2 si baisse)
 function calcTrend(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
   return Math.round(((current - previous) / previous) * 100 * 10) / 10;
 }
 
 export async function GET(request: NextRequest) {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
@@ -77,13 +42,11 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const period = searchParams.get("period") ?? "30j";
-
   const periodStart = getPeriodStart(period);
   const prevPeriod = getPreviousPeriodStart(period);
 
-  // ── Récupérer le profile_id du user courant ──
   const { data: profile } = await supabase
-    .from("ivoireio_profiles")
+    .from(TABLES.profiles)
     .select("id")
     .eq("id", user.id)
     .single();
@@ -94,117 +57,77 @@ export async function GET(request: NextRequest) {
 
   const profileId = profile.id;
 
-  // ── Requêtes parallèles ──
+  // Requêtes optimisées : combine les queries redundantes, utilise count() quand possible
   const [
-    viewsCurrent,
-    viewsPrevious,
-    clicksCurrent,
-    clicksPrevious,
-    messagesCurrent,
-    messagesPrevious,
-    viewsForChart,
-    clicksByType,
+    currentViews,      // visitor_ip_hash + created_at → total, unique, chart
+    prevViews,         // visitor_ip_hash → total + unique trends
+    currentClicks,     // link_type → total + topLinks
+    prevClicksCount,   // count only
+    currentMsgCount,   // count only
+    prevMsgCount,      // count only
     recentMessages,
+    unreadMsgCount,
   ] = await Promise.all([
-    // Vues période courante
-    supabase
-      .from("ivoireio_portfolio_views")
-      .select("id, visitor_ip_hash")
-      .eq("profile_id", profileId)
-      .gte("created_at", periodStart),
+    supabase.from(TABLES.portfolio_views)
+      .select("visitor_ip_hash, created_at")
+      .eq("profile_id", profileId).gte("created_at", periodStart),
 
-    // Vues période précédente
-    supabase
-      .from("ivoireio_portfolio_views")
-      .select("id, visitor_ip_hash")
-      .eq("profile_id", profileId)
-      .gte("created_at", prevPeriod.start)
-      .lt("created_at", prevPeriod.end),
+    supabase.from(TABLES.portfolio_views)
+      .select("visitor_ip_hash")
+      .eq("profile_id", profileId).gte("created_at", prevPeriod.start).lt("created_at", prevPeriod.end),
 
-    // Clics période courante
-    supabase
-      .from("ivoireio_link_clicks")
-      .select("id, link_type")
-      .eq("profile_id", profileId)
-      .gte("created_at", periodStart),
-
-    // Clics période précédente
-    supabase
-      .from("ivoireio_link_clicks")
-      .select("id")
-      .eq("profile_id", profileId)
-      .gte("created_at", prevPeriod.start)
-      .lt("created_at", prevPeriod.end),
-
-    // Messages période courante
-    supabase
-      .from("ivoireio_contact_messages")
-      .select("id")
-      .eq("profile_id", profileId)
-      .gte("created_at", periodStart),
-
-    // Messages période précédente
-    supabase
-      .from("ivoireio_contact_messages")
-      .select("id")
-      .eq("profile_id", profileId)
-      .gte("created_at", prevPeriod.start)
-      .lt("created_at", prevPeriod.end),
-
-    // Vues par jour pour le graphique (période courante)
-    supabase
-      .from("ivoireio_portfolio_views")
-      .select("created_at")
-      .eq("profile_id", profileId)
-      .gte("created_at", periodStart)
-      .order("created_at", { ascending: true }),
-
-    // Clics par type pour le TOP LIENS
-    supabase
-      .from("ivoireio_link_clicks")
+    supabase.from(TABLES.link_clicks)
       .select("link_type")
-      .eq("profile_id", profileId)
-      .gte("created_at", periodStart),
+      .eq("profile_id", profileId).gte("created_at", periodStart),
 
-    // Derniers messages pour le résumé
-    supabase
-      .from("ivoireio_contact_messages")
-      .select("id, name, email, message, created_at, read")
-      .eq("profile_id", profileId)
-      .order("created_at", { ascending: false })
-      .limit(5),
+    supabase.from(TABLES.link_clicks)
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profileId).gte("created_at", prevPeriod.start).lt("created_at", prevPeriod.end),
+
+    supabase.from(TABLES.contact_messages)
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profileId).gte("created_at", periodStart),
+
+    supabase.from(TABLES.contact_messages)
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profileId).gte("created_at", prevPeriod.start).lt("created_at", prevPeriod.end),
+
+    supabase.from(TABLES.contact_messages)
+      .select("id, sender_name, sender_email, message, created_at, is_read")
+      .eq("profile_id", profileId).order("created_at", { ascending: false }).limit(5),
+
+    supabase.from(TABLES.contact_messages)
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profileId).eq("is_read", false),
   ]);
 
-  // ── Calculs ──
-  const totalViews = viewsCurrent.data?.length ?? 0;
-  const uniqueViews = new Set(
-    viewsCurrent.data?.map((v) => v.visitor_ip_hash).filter(Boolean)
-  ).size;
-  const prevViews = viewsPrevious.data?.length ?? 0;
-  const prevUniqueViews = new Set(
-    viewsPrevious.data?.map((v) => v.visitor_ip_hash).filter(Boolean)
-  ).size;
+  const viewsData = currentViews.data ?? [];
+  const totalViews = viewsData.length;
+  const uniqueViews = new Set(viewsData.map((v) => v.visitor_ip_hash).filter(Boolean)).size;
 
-  const totalClicks = clicksCurrent.data?.length ?? 0;
-  const prevClicks = clicksPrevious.data?.length ?? 0;
+  const prevViewsData = prevViews.data ?? [];
+  const prevTotalViews = prevViewsData.length;
+  const prevUniqueViews = new Set(prevViewsData.map((v) => v.visitor_ip_hash).filter(Boolean)).size;
 
-  const totalMessages = messagesCurrent.data?.length ?? 0;
-  const prevMessages = messagesPrevious.data?.length ?? 0;
+  const clicksData = currentClicks.data ?? [];
+  const totalClicks = clicksData.length;
+  const prevClicks = prevClicksCount.count ?? 0;
 
-  // Graphique : regrouper les vues par jour
+  const totalMessages = currentMsgCount.count ?? 0;
+  const prevMessages = prevMsgCount.count ?? 0;
+
+  // Chart : regrouper les vues par jour depuis currentViews
   const viewsByDay: Record<string, number> = {};
-  for (const v of viewsForChart.data ?? []) {
-    const day = v.created_at.substring(0, 10); // YYYY-MM-DD
+  for (const v of viewsData) {
+    const day = v.created_at.substring(0, 10);
     viewsByDay[day] = (viewsByDay[day] ?? 0) + 1;
   }
 
-  // Remplir les jours manquants (pour avoir un graphique continu)
   const chartDays = period === "1an" ? 52 : period === "90j" ? 13 : period === "30j" ? 30 : 7;
   const isWeekly = period === "1an" || period === "90j";
   const chartData: { label: string; views: number }[] = [];
 
   if (isWeekly) {
-    // Grouper par semaine
     const weeklyData: Record<string, number> = {};
     for (const [day, count] of Object.entries(viewsByDay)) {
       const date = new Date(day);
@@ -213,13 +136,12 @@ export async function GET(request: NextRequest) {
       const weekKey = weekStart.toISOString().substring(0, 10);
       weeklyData[weekKey] = (weeklyData[weekKey] ?? 0) + count;
     }
-    // Générer les chartDays dernières semaines
     for (let i = chartDays - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i * 7);
-      d.setDate(d.getDate() - d.getDay()); // début de semaine
+      d.setDate(d.getDate() - d.getDay());
       const key = d.toISOString().substring(0, 10);
-      const shortLabel = `S${Math.ceil((d.getDate() + d.getDay()) / 7)}`; // S1, S2, etc.
+      const shortLabel = `S${Math.ceil((d.getDate() + d.getDay()) / 7)}`;
       chartData.push({
         label: period === "1an" ? `${d.toLocaleString("fr", { month: "short" })} S${Math.ceil(d.getDate() / 7)}` : shortLabel,
         views: weeklyData[key] ?? 0,
@@ -239,21 +161,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // TOP LIENS par type
+  // Top liens par type
   const clickCountsByType: Record<string, number> = {};
-  for (const c of clicksByType.data ?? []) {
+  for (const c of clicksData) {
     clickCountsByType[c.link_type] = (clickCountsByType[c.link_type] ?? 0) + 1;
   }
   const topLinks = Object.entries(clickCountsByType)
     .sort((a, b) => b[1] - a[1])
     .map(([type, count]) => ({ type, count }));
-
-  // Messages non lus (global, pas filtré par période pour le badge)
-  const { count: unreadCount } = await supabase
-    .from("ivoireio_contact_messages")
-    .select("id", { count: "exact", head: true })
-    .eq("profile_id", profileId)
-    .eq("read", false);
 
   return NextResponse.json({
     period,
@@ -261,7 +176,7 @@ export async function GET(request: NextRequest) {
       views: {
         total: totalViews,
         unique: uniqueViews,
-        trend: calcTrend(totalViews, prevViews),
+        trend: calcTrend(totalViews, prevTotalViews),
         uniqueTrend: calcTrend(uniqueViews, prevUniqueViews),
       },
       clicks: {
@@ -270,7 +185,7 @@ export async function GET(request: NextRequest) {
       },
       messages: {
         total: totalMessages,
-        unread: unreadCount ?? 0,
+        unread: unreadMsgCount.count ?? 0,
         trend: calcTrend(totalMessages, prevMessages),
       },
     },

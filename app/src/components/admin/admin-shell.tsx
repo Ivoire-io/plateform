@@ -41,21 +41,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-import { AdminAnalyticsTab } from "./tabs/analytics-tab";
-import { AdminBroadcastingTab } from "./tabs/broadcasting-tab";
-import { AdminConfigTab } from "./tabs/config-tab";
-import { AdminFeatureFlagsTab } from "./tabs/feature-flags-tab";
-import { AdminLogsTab } from "./tabs/logs-tab";
-import { AdminMessagesTab } from "./tabs/messages-tab";
-import { AdminModerationTab } from "./tabs/moderation-tab";
-import { AdminOverviewTab } from "./tabs/overview-tab";
-import { AdminSubscriptionsTab } from "./tabs/subscriptions-tab";
-import { AdminTemplatesTab } from "./tabs/templates-tab";
-import { AdminUsersTab } from "./tabs/users-tab";
-import { AdminWaitlistTab } from "./tabs/waitlist-tab";
 
 export type AdminTab =
   | "overview"
@@ -76,6 +63,7 @@ export type AdminTab =
 interface AdminShellProps {
   adminEmail: string;
   adminProfile: Profile | null;
+  children: React.ReactNode;
 }
 
 const tabTitles: Record<AdminTab, string> = {
@@ -99,15 +87,15 @@ interface NavItemProps {
   id: AdminTab;
   label: string;
   Icon: React.ElementType;
+  href: string;
   badge?: number;
   activeTab: AdminTab;
-  setActiveTab: (tab: AdminTab) => void;
 }
 
-function NavItem({ id, label, Icon, badge, activeTab, setActiveTab }: NavItemProps) {
+function NavItem({ id, label, Icon, href, badge, activeTab }: NavItemProps) {
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton isActive={activeTab === id} onClick={() => setActiveTab(id)}>
+      <SidebarMenuButton isActive={activeTab === id} render={<Link href={href} />}>
         <Icon className="h-4 w-4" />
         <span>{label}</span>
         {badge ? (
@@ -123,11 +111,35 @@ function NavItem({ id, label, Icon, badge, activeTab, setActiveTab }: NavItemPro
   );
 }
 
-export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
-  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+function tabFromPath(pathname: string): AdminTab {
+  const p = pathname.replace(/\/+$/, "");
+  if (p === "/admin" || p === "") return "overview";
+  const segment = p.split("/")[2] ?? "overview";
+  const allowed: Set<AdminTab> = new Set([
+    "overview",
+    "users",
+    "waitlist",
+    "startups",
+    "jobs",
+    "messages",
+    "moderation",
+    "analytics",
+    "subscriptions",
+    "config",
+    "logs",
+    "flags",
+    "broadcasting",
+    "templates",
+  ]);
+  return allowed.has(segment as AdminTab) ? (segment as AdminTab) : "overview";
+}
+
+export function AdminShell({ adminEmail, adminProfile, children }: AdminShellProps) {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { resolvedTheme } = useTheme();
+  const activeTab = tabFromPath(pathname || "/admin");
 
   useEffect(() => { setMounted(true); }, []);
   const [stats, setStats] = useState<{
@@ -199,7 +211,7 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Vue Générale</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="overview" label="Dashboard" Icon={LayoutDashboard} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="overview" label="Dashboard" Icon={LayoutDashboard} href="/admin/overview" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -209,8 +221,8 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Utilisateurs</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="users" label="Profils" Icon={Users} badge={stats?.totalProfiles || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="waitlist" label="Waitlist" Icon={Clock} badge={stats?.waitlistPending || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="users" label="Profils" Icon={Users} href="/admin/users" badge={stats?.totalProfiles || undefined} activeTab={activeTab} />
+                <NavItem id="waitlist" label="Waitlist" Icon={Clock} href="/admin/waitlist" badge={stats?.waitlistPending || undefined} activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -220,9 +232,9 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Contenu</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="startups" label="Startups" Icon={Activity} badge={stats?.startups || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="jobs" label="Offres d&apos;emploi" Icon={Briefcase} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="messages" label="Messages" Icon={MessageSquare} badge={stats?.messages || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="startups" label="Startups" Icon={Activity} href="/admin/startups" badge={stats?.startups || undefined} activeTab={activeTab} />
+                <NavItem id="jobs" label="Offres d&apos;emploi" Icon={Briefcase} href="/admin/jobs" activeTab={activeTab} />
+                <NavItem id="messages" label="Messages" Icon={MessageSquare} href="/admin/messages" badge={stats?.messages || undefined} activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -232,7 +244,7 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Modération</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="moderation" label="Signalements" Icon={AlertTriangle} badge={stats?.reports || undefined} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="moderation" label="Signalements" Icon={AlertTriangle} href="/admin/moderation" badge={stats?.reports || undefined} activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -242,8 +254,8 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Business</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="analytics" label="Analytics" Icon={BarChart3} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="subscriptions" label="Abonnements" Icon={CreditCard} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="analytics" label="Analytics" Icon={BarChart3} href="/admin/analytics" activeTab={activeTab} />
+                <NavItem id="subscriptions" label="Abonnements" Icon={CreditCard} href="/admin/subscriptions" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -253,9 +265,9 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Contrôle</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="flags" label="Feature Flags" Icon={Flag} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="broadcasting" label="Broadcasting" Icon={Bell} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="templates" label="Templates" Icon={Palette} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="flags" label="Feature Flags" Icon={Flag} href="/admin/flags" activeTab={activeTab} />
+                <NavItem id="broadcasting" label="Broadcasting" Icon={Bell} href="/admin/broadcasting" activeTab={activeTab} />
+                <NavItem id="templates" label="Templates" Icon={Palette} href="/admin/templates" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -265,8 +277,8 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
             <SidebarGroupLabel>Système</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem id="config" label="Configuration" Icon={Settings} activeTab={activeTab} setActiveTab={setActiveTab} />
-                <NavItem id="logs" label="Logs d&apos;activité" Icon={ShieldAlert} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <NavItem id="config" label="Configuration" Icon={Settings} href="/admin/config" activeTab={activeTab} />
+                <NavItem id="logs" label="Logs d&apos;activité" Icon={ShieldAlert} href="/admin/logs" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -313,20 +325,7 @@ export function AdminShell({ adminEmail, adminProfile }: AdminShellProps) {
         </header>
 
         <div className="flex flex-1 flex-col gap-6 p-6">
-          {activeTab === "overview" && <AdminOverviewTab onNavigate={setActiveTab} />}
-          {activeTab === "users" && <AdminUsersTab />}
-          {activeTab === "waitlist" && <AdminWaitlistTab />}
-          {activeTab === "startups" && <AdminUsersTab filterType="startup" />}
-          {activeTab === "jobs" && <AdminUsersTab filterType="enterprise" showJobsMode />}
-          {activeTab === "messages" && <AdminMessagesTab />}
-          {activeTab === "moderation" && <AdminModerationTab />}
-          {activeTab === "analytics" && <AdminAnalyticsTab />}
-          {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
-          {activeTab === "config" && <AdminConfigTab />}
-          {activeTab === "logs" && <AdminLogsTab />}
-          {activeTab === "flags" && <AdminFeatureFlagsTab />}
-          {activeTab === "broadcasting" && <AdminBroadcastingTab />}
-          {activeTab === "templates" && <AdminTemplatesTab />}
+          {children}
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -171,6 +171,10 @@ export interface WaitlistEntry {
   desired_slug: string | null;
   whatsapp: string | null;
   type: "developer" | "startup" | "enterprise" | "other";
+  invited?: boolean;
+  invited_at?: string | null;
+  converted_profile_id?: string | null;
+  converted_at?: string | null;
   created_at: string;
 }
 

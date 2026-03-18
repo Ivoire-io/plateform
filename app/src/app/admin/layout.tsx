@@ -1,3 +1,4 @@
+import { AdminShell } from "@/components/admin/admin-shell";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
 import { redirect } from "next/navigation";
@@ -11,11 +12,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   const { data: profile } = await supabase
     .from(TABLES.profiles)
-    .select("is_admin")
+    .select("*")
     .eq("id", user.id)
     .single();
 
   if (!profile?.is_admin) redirect("/dashboard");
 
-  return <>{children}</>;
+  return (
+    <AdminShell adminEmail={user.email ?? ""} adminProfile={profile}>
+      {children}
+    </AdminShell>
+  );
 }

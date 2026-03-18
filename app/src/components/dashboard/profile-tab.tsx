@@ -8,26 +8,72 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Profile } from "@/lib/types";
 import { Camera, Loader2, Plus, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface ProfileTabProps {
   profile: Profile;
-  userId: string;
+  onProfileUpdate: (fields: Partial<Profile>) => void;
 }
 
-export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
-  const [profile, setProfile] = useState(initialProfile);
-  const router = useRouter();
-  const [isSaving, setIsSaving] = useState(false);
+interface FormState {
+  full_name: string;
+  title: string;
+  city: string;
+  bio: string;
+  github_url: string;
+  linkedin_url: string;
+  twitter_url: string;
+  website_url: string;
+  skills: string[];
+  is_available: boolean;
+}
 
+function initForm(profile: Profile): FormState {
+  return {
+    full_name: profile.full_name,
+    title: profile.title ?? "",
+    city: profile.city ?? "",
+    bio: profile.bio ?? "",
+    github_url: profile.github_url ?? "",
+    linkedin_url: profile.linkedin_url ?? "",
+    twitter_url: profile.twitter_url ?? "",
+    website_url: profile.website_url ?? "",
+    skills: [...profile.skills],
+    is_available: profile.is_available,
+  };
+}
+
+function arraysEqual(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+export function ProfileTab({ profile, onProfileUpdate }: ProfileTabProps) {
+  const [form, setForm] = useState(() => initForm(profile));
+  const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
-
   const [newSkill, setNewSkill] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Dirty tracking : seuls les champs modifiés seront envoyés au serveur
+  const dirtyFields = useMemo(() => {
+    const dirty: Record<string, unknown> = {};
+    if (form.full_name !== profile.full_name) dirty.full_name = form.full_name;
+    if ((form.title || null) !== profile.title) dirty.title = form.title || null;
+    if ((form.city || null) !== profile.city) dirty.city = form.city || null;
+    if ((form.bio || null) !== profile.bio) dirty.bio = form.bio || null;
+    if ((form.github_url || null) !== profile.github_url) dirty.github_url = form.github_url || null;
+    if ((form.linkedin_url || null) !== profile.linkedin_url) dirty.linkedin_url = form.linkedin_url || null;
+    if ((form.twitter_url || null) !== profile.twitter_url) dirty.twitter_url = form.twitter_url || null;
+    if ((form.website_url || null) !== profile.website_url) dirty.website_url = form.website_url || null;
+    if (!arraysEqual(form.skills, profile.skills)) dirty.skills = form.skills;
+    if (form.is_available !== profile.is_available) dirty.is_available = form.is_available;
+    return dirty;
+  }, [form, profile]);
+
+  const isDirty = Object.keys(dirtyFields).length > 0;
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -49,18 +95,23 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
     if (!avatarFile) return;
     setAvatarUploading(true);
     const toastId = toast.loading("Upload en cours…");
-    const form = new FormData();
-    form.append("avatar", avatarFile);
-    const res = await fetch("/api/dashboard/avatar", { method: "POST", body: form });
-    const json = await res.json();
-    setAvatarUploading(false);
-    if (json.success) {
-      setProfile((p) => ({ ...p, avatar_url: json.url }));
-      setAvatarFile(null);
-      if (avatarPreview) { URL.revokeObjectURL(avatarPreview); setAvatarPreview(null); }
-      toast.success("Photo mise à jour !", { id: toastId });
-    } else {
-      toast.error(json.error ?? "Erreur lors de l'upload.", { id: toastId });
+    const fd = new FormData();
+    fd.append("avatar", avatarFile);
+    try {
+      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.success) {
+        onProfileUpdate({ avatar_url: json.url });
+        setAvatarFile(null);
+        if (avatarPreview) { URL.revokeObjectURL(avatarPreview); setAvatarPreview(null); }
+        toast.success("Photo mise à jour !", { id: toastId });
+      } else {
+        toast.error(json.error ?? "Erreur lors de l'upload.", { id: toastId });
+      }
+    } catch {
+      toast.error("Erreur réseau.", { id: toastId });
+    } finally {
+      setAvatarUploading(false);
     }
   }
 
@@ -72,47 +123,53 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
 
   function addSkill() {
     const s = newSkill.trim().slice(0, 50);
-    if (!s || profile.skills.includes(s)) { setNewSkill(""); return; }
-    setProfile((p) => ({ ...p, skills: [...p.skills, s] }));
+    if (!s || form.skills.includes(s)) { setNewSkill(""); return; }
+    setForm((prev) => ({ ...prev, skills: [...prev.skills, s] }));
     setNewSkill("");
   }
 
   function removeSkill(skill: string) {
-    setProfile((p) => ({ ...p, skills: p.skills.filter((s) => s !== skill) }));
+    setForm((prev) => ({ ...prev, skills: prev.skills.filter((sk) => sk !== skill) }));
   }
 
   async function handleSave() {
+    if (!isDirty) {
+      toast.info("Aucune modification à enregistrer.");
+      return;
+    }
     setIsSaving(true);
     const toastId = toast.loading("Sauvegarde…");
-    const res = await fetch("/api/dashboard/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name: profile.full_name,
-        title: profile.title,
-        city: profile.city,
-        bio: profile.bio,
-        github_url: profile.github_url,
-        linkedin_url: profile.linkedin_url,
-        twitter_url: profile.twitter_url,
-        website_url: profile.website_url,
-        skills: profile.skills,
-        is_available: profile.is_available,
-      }),
-    });
-    const json = await res.json();
-    setIsSaving(false);
-    if (json.success) {
-      const saved: Profile = json.data;
-      setProfile(saved);
-      router.refresh(); // re-sync les données serveur
-      toast.success("Profil enregistré !", { id: toastId });
-    } else {
-      toast.error(json.error ?? "Erreur lors de la sauvegarde.", { id: toastId });
+    try {
+      const res = await fetch("/api/dashboard/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dirtyFields),
+      });
+      const json = await res.json();
+      if (json.success) {
+        // Sync le formulaire avec les valeurs sanitisées du serveur
+        const saved = json.data as Record<string, unknown>;
+        setForm((prev) => {
+          const next = { ...prev };
+          for (const [key, value] of Object.entries(saved)) {
+            if (key === "skills") next.skills = value as string[];
+            else if (key === "is_available") next.is_available = value as boolean;
+            else if (key in next) (next as Record<string, unknown>)[key] = typeof value === "string" ? value : "";
+          }
+          return next;
+        });
+        onProfileUpdate(saved as Partial<Profile>);
+        toast.success("Profil enregistré !", { id: toastId });
+      } else {
+        toast.error(json.error ?? "Erreur lors de la sauvegarde.", { id: toastId });
+      }
+    } catch {
+      toast.error("Erreur réseau.", { id: toastId });
+    } finally {
+      setIsSaving(false);
     }
   }
 
-  // Nettoyer l'URL stockée en DB si elle contient un ?t= stale
   const cleanAvatarUrl = profile.avatar_url
     ? profile.avatar_url.split("?")[0]
     : null;
@@ -133,7 +190,7 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
                 className="text-2xl font-bold"
                 style={{ background: "var(--color-surface)", color: "var(--color-orange)" }}
               >
-                {profile.full_name.charAt(0).toUpperCase()}
+                {form.full_name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <button
@@ -183,19 +240,19 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
           {/* Toggle disponibilité */}
           <div className="w-full max-w-[200px]">
             <button
-              onClick={() => setProfile((p) => ({ ...p, is_available: !p.is_available }))}
-              className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-medium ${profile.is_available
+              onClick={() => setForm((prev) => ({ ...prev, is_available: !prev.is_available }))}
+              className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-medium ${form.is_available
                 ? "border-green-500/30 text-green-500"
                 : "border-border text-muted-foreground"
                 }`}
-              style={{ background: profile.is_available ? "color-mix(in srgb, #00A651 10%, transparent)" : "var(--color-card)" }}
-              aria-pressed={profile.is_available}
+              style={{ background: form.is_available ? "color-mix(in srgb, #00A651 10%, transparent)" : "var(--color-card)" }}
+              aria-pressed={form.is_available}
             >
-              <span>{profile.is_available ? "Disponible" : "Non disponible"}</span>
-              <div className={`relative w-9 h-5 rounded-full transition-colors ${profile.is_available ? "bg-green-500" : "bg-border"}`}>
+              <span>{form.is_available ? "Disponible" : "Non disponible"}</span>
+              <div className={`relative w-9 h-5 rounded-full transition-colors ${form.is_available ? "bg-green-500" : "bg-border"}`}>
                 <span
                   className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
-                  style={{ transform: `translateY(-50%) translateX(${profile.is_available ? "0px" : "-14px"})` }}
+                  style={{ transform: `translateY(-50%) translateX(${form.is_available ? "0px" : "-14px"})` }}
                 />
               </div>
             </button>
@@ -208,7 +265,12 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
       {/* ─── Carte Formulaire ─── */}
       <Card className="lg:col-span-2">
         <CardHeader className="border-b border-border/50">
-          <CardTitle>Informations du profil</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Informations du profil</CardTitle>
+            {isDirty && (
+              <span className="text-xs text-orange-500 font-medium">● Modifications non enregistrées</span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="pt-5 flex flex-col gap-5">
 
@@ -216,8 +278,8 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
             <div className="flex flex-col gap-2">
               <Label>Nom complet <span style={{ color: "var(--color-orange)" }}>*</span></Label>
               <Input
-                value={profile.full_name}
-                onChange={(e) => setProfile((p) => ({ ...p, full_name: e.target.value }))}
+                value={form.full_name}
+                onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
                 placeholder="Ulrich Kouamé"
                 maxLength={100}
               />
@@ -225,8 +287,8 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
             <div className="flex flex-col gap-2">
               <Label>Titre / Poste</Label>
               <Input
-                value={profile.title ?? ""}
-                onChange={(e) => setProfile((p) => ({ ...p, title: e.target.value }))}
+                value={form.title}
+                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
                 placeholder="Lead Developer"
                 maxLength={100}
               />
@@ -236,8 +298,8 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
           <div className="flex flex-col gap-2">
             <Label>Ville</Label>
             <Input
-              value={profile.city ?? ""}
-              onChange={(e) => setProfile((p) => ({ ...p, city: e.target.value }))}
+              value={form.city}
+              onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
               placeholder="Abidjan"
               maxLength={50}
             />
@@ -246,11 +308,11 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <Label>Bio</Label>
-              <span className="text-muted-foreground/40 text-xs">{(profile.bio ?? "").length}/300</span>
+              <span className="text-muted-foreground/40 text-xs">{form.bio.length}/300</span>
             </div>
             <textarea
-              value={profile.bio ?? ""}
-              onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
+              value={form.bio}
+              onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
               placeholder="Décrivez-vous en 1-3 phrases…"
               rows={3}
               maxLength={300}
@@ -268,8 +330,8 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
               <div key={key} className="flex flex-col gap-2">
                 <Label>{label}</Label>
                 <Input
-                  value={(profile[key] as string | null) ?? ""}
-                  onChange={(e) => setProfile((p) => ({ ...p, [key]: e.target.value }))}
+                  value={form[key]}
+                  onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
                   placeholder={placeholder}
                   type="url"
                 />
@@ -280,9 +342,9 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
           {/* Compétences */}
           <div className="flex flex-col gap-3">
             <Label>Compétences</Label>
-            {profile.skills.length > 0 && (
+            {form.skills.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {profile.skills.map((skill) => (
+                {form.skills.map((skill) => (
                   <Badge key={skill} variant="secondary" className="gap-1.5 pl-3 pr-2 py-1 font-mono text-xs">
                     {skill}
                     <button
@@ -313,13 +375,13 @@ export function ProfileTab({ profile: initialProfile }: ProfileTabProps) {
 
           <Button
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || !isDirty}
             className="gap-2 w-fit text-white"
-            style={{ background: "var(--color-orange)" }}
+            style={{ background: isDirty ? "var(--color-orange)" : undefined }}
           >
             {isSaving
               ? <><Loader2 size={15} className="animate-spin" /> Sauvegarde…</>
-              : "Enregistrer le profil"}
+              : isDirty ? "Enregistrer le profil" : "Aucune modification"}
           </Button>
         </CardContent>
       </Card>

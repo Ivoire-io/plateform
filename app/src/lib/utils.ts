@@ -12,6 +12,8 @@ export const TABLES = {
   experiences: "ivoireio_experiences",
   waitlist: "ivoireio_waitlist",
   contact_messages: "ivoireio_contact_messages",
+  portfolio_views: "ivoireio_portfolio_views",
+  link_clicks: "ivoireio_link_clicks",
   feature_flags: "ivoireio_feature_flags",
   flag_history: "ivoireio_flag_history",
   broadcasts: "ivoireio_broadcasts",

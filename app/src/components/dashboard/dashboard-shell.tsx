@@ -84,8 +84,11 @@ export function DashboardShell({
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Sync profile state when server data refreshes (après router.refresh())
-  useEffect(() => { setProfile(initialProfile); }, [initialProfile]);
+  // Callback pour les mises à jour partielles du profil (depuis ProfileTab, avatar, etc.)
+  // Met à jour l'état local sans re-fetch SSR
+  function handleProfileUpdate(fields: Partial<typeof initialProfile & Record<string, unknown>>) {
+    setProfile((prev) => prev ? { ...prev, ...fields } as typeof prev : prev);
+  }
 
   const fetchUnread = useCallback(async () => {
     if (!profile) return;
@@ -349,7 +352,7 @@ export function DashboardShell({
           {profile && activeTab === "profile" && (
             <ProfileTab
               profile={profile}
-              userId={userId}
+              onProfileUpdate={handleProfileUpdate}
             />
           )}
           {profile && activeTab === "template" && (
