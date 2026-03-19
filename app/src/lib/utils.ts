@@ -43,6 +43,7 @@ export function getSubdomain(hostname: string): string | null {
   const parts = cleanHost.split(".");
   if (parts.length === 1) return null;
   if (cleanHost.endsWith("lvh.me")) return parts.length >= 3 ? parts[0] : null;
+  if (cleanHost.endsWith(".localhost")) return parts[0];
   if (parts.length >= 3) {
     const sub = parts[0];
     return sub === "www" ? null : sub;

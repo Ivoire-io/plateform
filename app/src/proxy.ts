@@ -20,6 +20,11 @@ function getSubdomain(hostname: string): string | null {
     return parts.length >= 3 ? parts[0] : null;
   }
 
+  // localhost pour le dev local (ulrich.localhost:3000)
+  if (cleanHost.endsWith(".localhost")) {
+    return parts[0];
+  }
+
   // ivoire.io → 2 parts = pas de sous-domaine
   // slug.ivoire.io → 3 parts = sous-domaine
   if (parts.length >= 3) {
