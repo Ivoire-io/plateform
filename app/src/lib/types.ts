@@ -21,6 +21,13 @@ export interface Profile {
   plan: "free" | "premium" | "enterprise";
   admin_notes: string | null;
   verified_badge: boolean;
+  // Notifications & confidentialité
+  notif_messages: boolean;
+  notif_weekly_report: boolean;
+  notif_news: boolean;
+  privacy_visible_in_directory: boolean;
+  privacy_show_email: boolean;
+  template_id: string;
   created_at: string;
   updated_at: string;
 }

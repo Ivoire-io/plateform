@@ -1,8 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
-import { TABLES } from "@/lib/utils";
-import type { Profile } from "@/lib/types";
 import { DevsDirectory } from "@/components/devs/devs-directory";
+import { createClient } from "@/lib/supabase/server";
+import type { Profile } from "@/lib/types";
+import { TABLES } from "@/lib/utils";
 import type { Metadata } from "next";
+
+// Toujours rendu dynamiquement — les préférences de confidentialité doivent être lues en temps réel
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Annuaire des développeurs — devs.ivoire.io",
@@ -17,6 +20,7 @@ export default async function DevsPage() {
     .from(TABLES.profiles)
     .select("*")
     .eq("type", "developer")
+    .eq("privacy_visible_in_directory", true)
     .order("created_at", { ascending: false });
 
   return <DevsDirectory profiles={(profiles || []) as Profile[]} />;

@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         "id, slug, full_name, title, city, avatar_url, skills, is_available, type, created_at"
       )
       .eq("type", type)
+      .eq("privacy_visible_in_directory", true)
       .order("created_at", { ascending: false })
       .limit(limit);
 

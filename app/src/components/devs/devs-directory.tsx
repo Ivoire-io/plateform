@@ -3,7 +3,7 @@
 import type { Profile } from "@/lib/types";
 import { Filter, MapPin, Search } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface DevsDirectoryProps {
   profiles: Profile[];
@@ -14,6 +14,21 @@ export function DevsDirectory({ profiles }: DevsDirectoryProps) {
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [isLocal, setIsLocal] = useState(false);
+  const [localPort, setLocalPort] = useState("3000");
+
+  useEffect(() => {
+    const h = window.location.hostname;
+    if (h.endsWith(".localhost") || h === "localhost") {
+      setIsLocal(true);
+      setLocalPort(window.location.port || "3000");
+    }
+  }, []);
+
+  function profileUrl(slug: string) {
+    if (isLocal) return `http://${slug}.localhost:${localPort}?from=devs`;
+    return `https://${slug}.ivoire.io?from=devs`;
+  }
 
   // Extraire toutes les compétences et villes uniques
   const allSkills = useMemo(() => {
@@ -116,8 +131,8 @@ export function DevsDirectory({ profiles }: DevsDirectoryProps) {
           <button
             onClick={() => setOnlyAvailable(!onlyAvailable)}
             className={`px-4 py-3 rounded-lg border text-sm transition-all cursor-pointer whitespace-nowrap ${onlyAvailable
-                ? "border-green bg-green/10 text-green"
-                : "border-border text-muted hover:border-border/80"
+              ? "border-green bg-green/10 text-green"
+              : "border-border text-muted hover:border-border/80"
               }`}
           >
             <Filter size={14} className="inline mr-1" />
@@ -138,7 +153,7 @@ export function DevsDirectory({ profiles }: DevsDirectoryProps) {
             {filteredProfiles.map((profile) => (
               <a
                 key={profile.id}
-                href={`https://${profile.slug}.ivoire.io`}
+                href={profileUrl(profile.slug)}
                 className="bg-surface border border-border rounded-2xl p-6 hover:border-orange/30 transition-colors group block"
               >
                 <div className="flex items-start gap-4">

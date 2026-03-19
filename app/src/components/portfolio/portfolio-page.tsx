@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import type { Experience, Profile, Project } from "@/lib/types";
 import {
+  ArrowLeft,
   CheckCircle,
   ExternalLink,
   Github,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface PortfolioPageProps {
   profile: Profile;
@@ -44,6 +45,19 @@ export function PortfolioPage({
   const [formStatus, setFormStatus] = useState<FormStatus>("idle");
   const [formError, setFormError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const [fromDevs, setFromDevs] = useState(false);
+  const [devsUrl, setDevsUrl] = useState("https://devs.ivoire.io");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("from") === "devs") {
+      setFromDevs(true);
+      const h = window.location.hostname;
+      if (h.endsWith(".localhost")) {
+        setDevsUrl(`http://devs.localhost:${window.location.port}`);
+      }
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -101,22 +115,31 @@ export function PortfolioPage({
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header — sticky, minimal 
-        <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50 py-3 px-4">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
+      {/* Header — sticky, minimal */}
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50 py-3 px-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          {fromDevs ? (
+            <Link
+              href={devsUrl}
+              className="flex items-center gap-1.5 text-xs text-muted hover:text-white transition-colors"
+            >
+              <ArrowLeft size={14} />
+              Retour à l&apos;annuaire
+            </Link>
+          ) : (
             <span className="font-mono text-sm font-semibold tracking-tight">
               {profile.slug}.ivoire.io
             </span>
-            <Link
-              href="https://ivoire.io"
-              className="text-xs text-muted hover:text-white/60 transition-colors"
-              aria-label="Powered by ivoire.io"
-            >
-              🇨🇮 ivoire.io
-            </Link>
-          </div>
-        </header>
-      */}
+          )}
+          <Link
+            href="https://ivoire.io"
+            className="text-xs text-muted hover:text-white/60 transition-colors"
+            aria-label="Powered by ivoire.io"
+          >
+            🇨🇮 ivoire.io
+          </Link>
+        </div>
+      </header>
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-16">
 
