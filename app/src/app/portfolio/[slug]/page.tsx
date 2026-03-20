@@ -1,4 +1,4 @@
-import { PortfolioPage } from "@/components/portfolio/portfolio-page";
+import { PortfolioRenderer } from "@/components/portfolio/portfolio-renderer";
 import { PortfolioTracker } from "@/components/portfolio/portfolio-tracker";
 import { createClient } from "@/lib/supabase/server";
 import type { Experience, Profile, Project } from "@/lib/types";
@@ -121,7 +121,7 @@ export default async function PortfolioSlugPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <PortfolioPage
+      <PortfolioRenderer
         profile={profile}
         projects={projects}
         experiences={experiences}

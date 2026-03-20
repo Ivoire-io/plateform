@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/landing/hero";
 import { Navbar } from "@/components/landing/navbar";
 import { PreviewSection } from "@/components/landing/preview";
 import { RoadmapSection } from "@/components/landing/roadmap";
+import { SocialProof } from "@/components/landing/social-proof";
 import { WaitlistSection } from "@/components/landing/waitlist";
 
 export default function Home() {
@@ -12,6 +13,7 @@ export default function Home() {
       <Navbar />
       <main>
         <HeroSection />
+        <SocialProof />
         <FeaturesSection />
         <PreviewSection />
         <RoadmapSection />

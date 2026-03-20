@@ -22,6 +22,8 @@ export const TABLES = {
   admin_logs: "ivoireio_admin_logs",
   platform_config: "ivoireio_platform_config",
   templates: "ivoireio_templates",
+  startups: "ivoireio_startups",
+  startup_upvotes: "ivoireio_startup_upvotes",
 } as const;
 
 // ─── Sous-domaines réservés ───

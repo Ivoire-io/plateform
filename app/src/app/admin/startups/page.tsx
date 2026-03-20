@@ -1,6 +1,6 @@
-import { AdminUsersTab } from "@/components/admin/tabs/users-tab";
+import { AdminStartupsTab } from "@/components/admin/tabs/startups-tab";
 
 export default function AdminStartupsPage() {
-  return <AdminUsersTab filterType="startup" />;
+  return <AdminStartupsTab />;
 }
 

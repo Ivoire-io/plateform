@@ -201,6 +201,43 @@ export interface ContactMessage {
 
 export type SubdomainType = "main" | "devs" | "startups" | "portfolio";
 
+// ─── Startups ───
+
+export interface Startup {
+  id: string;
+  profile_id: string;
+  name: string;
+  slug: string;
+  tagline: string;
+  description: string | null;
+  logo_url: string | null;
+  cover_url: string | null;
+  website_url: string | null;
+  sector: string;
+  stage: string;
+  city: string | null;
+  team_size: number;
+  founded_year: number | null;
+  tech_stack: string[];
+  social_links: Record<string, string>;
+  is_hiring: boolean;
+  status: "pending" | "approved" | "rejected" | "suspended";
+  upvotes_count: number;
+  created_at: string;
+  updated_at: string;
+  // Joined
+  profile?: Pick<Profile, "full_name" | "slug" | "avatar_url">;
+}
+
+export interface StartupUpvote {
+  id: string;
+  startup_id: string;
+  voter_ip_hash: string;
+  voter_profile_id: string | null;
+  vote_date: string;
+  created_at: string;
+}
+
 // ─── API responses ───
 
 export interface ApiResponse<T = unknown> {
