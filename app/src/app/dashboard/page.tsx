@@ -5,6 +5,9 @@ import { TABLES } from "@/lib/utils";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+// Toujours rendu dynamiquement — données de profil fraîches à chaque visite
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Dashboard — ivoire.io",
   robots: { index: false, follow: false },

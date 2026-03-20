@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Profile } from "@/lib/types";
 import { Camera, Loader2, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface ProfileTabProps {
   profile: Profile;
   onProfileUpdate: (fields: Partial<Profile>) => void;
+  onRefresh?: () => void;
 }
 
 interface FormState {
@@ -49,6 +51,7 @@ function arraysEqual(a: string[], b: string[]): boolean {
 }
 
 export function ProfileTab({ profile, onProfileUpdate }: ProfileTabProps) {
+  const router = useRouter();
   const [form, setForm] = useState(() => initForm(profile));
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -160,6 +163,7 @@ export function ProfileTab({ profile, onProfileUpdate }: ProfileTabProps) {
         });
         onProfileUpdate(saved as Partial<Profile>);
         toast.success("Profil enregistré !", { id: toastId });
+        router.refresh();
       } else {
         toast.error(json.error ?? "Erreur lors de la sauvegarde.", { id: toastId });
       }
