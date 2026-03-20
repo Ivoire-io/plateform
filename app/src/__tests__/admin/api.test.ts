@@ -7,6 +7,12 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// ─── Mock supabaseAdmin (utilisé par la route waitlist admin) ────────────
+const mockAdminFrom = vi.fn();
+vi.mock("@/lib/supabase/admin", () => ({
+  supabaseAdmin: { from: (...args: unknown[]) => mockAdminFrom(...args) },
+}));
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function makeRequest(url: string, options?: RequestInit) {
@@ -403,5 +409,84 @@ describe("GET /api/admin/logs", () => {
     expect(json).toHaveProperty("logs");
     expect(json).toHaveProperty("total");
     expect(Array.isArray(json.logs)).toBe(true);
+  });
+});
+
+// ─── Suite : /api/admin/waitlist ─────────────────────────────────────────
+
+describe("GET /api/admin/waitlist", () => {
+  beforeEach(() => {
+    mockAdminGuard.mockResolvedValue({
+      authorized: true,
+      userId: "admin-1",
+      response: new Response(),
+    } as unknown as Awaited<ReturnType<typeof adminGuard>>);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+  });
+
+  it("renvoie 403 si non autorisé", async () => {
+    mockAdminGuard.mockResolvedValueOnce({
+      authorized: false,
+      userId: "",
+      response: new Response(null, { status: 403 }),
+    } as unknown as Awaited<ReturnType<typeof adminGuard>>);
+
+    const { GET } = await import("@/app/api/admin/waitlist/route");
+    const req = new NextRequest("http://localhost/api/admin/waitlist");
+    const res = await GET(req);
+    expect(res.status).toBe(403);
+  });
+
+  it("retourne les entrées waitlist via supabaseAdmin (contourne RLS)", async () => {
+    const fakeEntries = [
+      {
+        id: "w1",
+        email: "kouame@test.com",
+        full_name: "Kouame Test",
+        desired_slug: "kouame",
+        type: "developer",
+        invited: false,
+        created_at: "2026-03-20T10:00:00Z",
+      },
+    ];
+
+    const chain: Record<string, unknown> = {};
+    for (const m of ["select", "eq", "order"]) {
+      chain[m] = vi.fn().mockReturnValue(chain);
+    }
+    chain.then = (resolve: (v: { data: typeof fakeEntries; error: null; count: number }) => void) =>
+      Promise.resolve(resolve({ data: fakeEntries, error: null, count: 1 }));
+    mockAdminFrom.mockReturnValue(chain);
+
+    const { GET } = await import("@/app/api/admin/waitlist/route");
+    const req = new NextRequest("http://localhost/api/admin/waitlist");
+    const res = await GET(req);
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.entries).toHaveLength(1);
+    expect(json.entries[0].email).toBe("kouame@test.com");
+    expect(json.total).toBe(1);
+  });
+
+  it("filtre par type", async () => {
+    const chain: Record<string, unknown> = {};
+    for (const m of ["select", "eq", "order"]) {
+      chain[m] = vi.fn().mockReturnValue(chain);
+    }
+    chain.then = (resolve: (v: { data: unknown[]; error: null; count: number }) => void) =>
+      Promise.resolve(resolve({ data: [], error: null, count: 0 }));
+    mockAdminFrom.mockReturnValue(chain);
+
+    const { GET } = await import("@/app/api/admin/waitlist/route");
+    const req = new NextRequest("http://localhost/api/admin/waitlist?type=startup");
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    expect(chain.eq).toHaveBeenCalledWith("type", "startup");
   });
 });

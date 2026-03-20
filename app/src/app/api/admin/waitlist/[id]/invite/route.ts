@@ -1,6 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { isValidSlug, RESERVED_SUBDOMAINS, TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
@@ -12,10 +11,9 @@ export async function POST(_req: NextRequest, { params }: Params) {
   if (!guard.authorized) return guard.response;
 
   const { id } = await params;
-  const supabase = await createClient();
 
-  // Récupère l'entrée waitlist
-  const { data: entry, error: fetchError } = await supabase
+  // Récupère l'entrée waitlist via service role (RLS bypass — adminGuard déjà validé)
+  const { data: entry, error: fetchError } = await supabaseAdmin
     .from(TABLES.waitlist)
     .select("email, invited, full_name, desired_slug, type, converted_profile_id")
     .eq("id", id)

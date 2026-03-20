@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -11,9 +11,7 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type") ?? "";
   const invited = searchParams.get("invited");
 
-  const supabase = await createClient();
-
-  let query = supabase
+  let query = supabaseAdmin
     .from(TABLES.waitlist)
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false });

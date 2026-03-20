@@ -1,6 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { isValidSlug, RESERVED_SUBDOMAINS, TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
@@ -9,10 +8,8 @@ export async function POST(_req: NextRequest) {
   const guard = await adminGuard();
   if (!guard.authorized) return guard.response;
 
-  const supabase = await createClient();
-
-  // Récupère tous les non-invités
-  const { data: pending, error: fetchError } = await supabase
+  // Récupère tous les non-invités via service role (RLS bypass — adminGuard déjà validé)
+  const { data: pending, error: fetchError } = await supabaseAdmin
     .from(TABLES.waitlist)
     .select("id, email, full_name, desired_slug, type")
     .eq("invited", false);
