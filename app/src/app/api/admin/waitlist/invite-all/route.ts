@@ -84,7 +84,7 @@ export async function POST(_req: NextRequest) {
         );
       if (upsertError) throw new Error(upsertError.message);
 
-      const { error: werr } = await supabase
+      const { error: werr } = await supabaseAdmin
         .from(TABLES.waitlist)
         .update({
           invited: true,

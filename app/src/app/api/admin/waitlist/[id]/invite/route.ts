@@ -100,7 +100,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
   // Marquer comme invité + converti
   const now = new Date().toISOString();
-  const { error: waitlistUpdateError } = await supabase
+  const { error: waitlistUpdateError } = await supabaseAdmin
     .from(TABLES.waitlist)
     .update({
       invited: true,

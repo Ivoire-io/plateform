@@ -7,7 +7,7 @@
 
 **ivoire.io** est une plateforme web Next.js ambitieuse positionnée comme **l'OS Digital de la Côte d'Ivoire** — un hub centralisé pour connecter développeurs, startups et services à travers le pays.
 
-**État global : 🟢 Environ 80% du MVP accompli**
+**État global : 🟢 Environ 85% du MVP accompli**
 
 ---
 
@@ -15,10 +15,11 @@
 
 ### Infrastructure & Configuration
 - Stack complète : Next.js 16, React 19, TypeScript 5, Tailwind v4, Supabase, Resend
-- Schéma base de données : **18 tables**, 6 migrations appliquées, RLS configuré
+- Schéma base de données : **18 tables**, 7 migrations appliquées, RLS configuré
 - 2 buckets Supabase Storage (`ivoireio-avatars`, `ivoireio-projects`)
 - Middleware subdomain routing (`proxy.ts`) — `[slug].ivoire.io` → portfolio
 - SEO Root layout (OG, JSON-LD, sitemap, webmanifest, Twitter Card)
+- **Déploiement Railway + DNS Cloudflare** ✅ — en ligne, SSL Full Strict, wildcard subdomain
 
 ### Landing Page (`ivoire.io`)
 - Page complète : Navbar, Hero, **Social Proof (compteur live)**, Features, Preview, Roadmap, Waitlist, Footer
@@ -76,7 +77,7 @@
 - Auth Supabase (email + OAuth)
 - Emails transactionnels Resend (waitlist + contact)
 - 22+ types TypeScript complets (ajout `Startup`, `StartupUpvote`)
-- **Suite de tests complète : 108 tests passants** (12 fichiers)
+- **Suite de tests complète : 111 tests passants** (12 fichiers)
 - Branding complet (charte graphique, posts RS préprogrammés)
 
 ### Tests ✅
@@ -112,7 +113,6 @@
 
 | Élément | Priorité |
 |---------|----------|
-| **Déploiement Railway + DNS Cloudflare** | 🔴 BLOQUANT |
 | Invites waitlist aux inscrits | 🔴 Priorité immédiate |
 | Module Jobs enrichi (`jobs.ivoire.io`) | 🟠 S10 |
 | Système paiement Wave / Orange Money | 🟠 S11 |
@@ -130,10 +130,10 @@
 
 ---
 
-### 🚀 S5 — Lancement portfolios publics
-1. Déployer sur **Railway** (dossier `app/`, variables env Railway Dashboard)
-2. Configurer DNS **Cloudflare** : `CNAME ivoire.io` + `CNAME *` → domaine Railway + SSL Full Strict
-3. Vérifier subdomain routing en prod : `test.ivoire.io`, `devs.ivoire.io`
+### 🚀 S5 — Lancement portfolios publics ✅
+1. ~~Déployer sur **Railway** (dossier `app/`, variables env Railway Dashboard)~~ ✅
+2. ~~Configurer DNS **Cloudflare** : `CNAME ivoire.io` + `CNAME *` → domaine Railway + SSL Full Strict~~ ✅
+3. ~~Vérifier subdomain routing en prod : `test.ivoire.io`, `devs.ivoire.io`~~ ✅
 4. Annoncer le lancement sur LinkedIn ivoire.io + groupes WhatsApp/Telegram tech CI
 
 ---
