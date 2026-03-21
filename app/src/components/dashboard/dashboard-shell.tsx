@@ -20,7 +20,6 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { Experience, Profile, Project } from "@/lib/types";
-import { toast } from "sonner";
 import {
   BarChart2,
   Blocks,
@@ -48,6 +47,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { DevOutsourcingTab } from "./dev-outsourcing-tab";
 import { ExperiencesTab } from "./experiences-tab";
 import { FundraisingTab } from "./fundraising-tab";
@@ -86,8 +86,8 @@ type Tab =
   | "dev-outsourcing";
 
 const tabTitles: Record<Tab, string> = {
-  overview: "Vue d'ensemble",
-  profile: "Mon Profil",
+  overview: "Tableau de bord",
+  profile: "Éditer mon profil",
   template: "Template",
   projects: "Projets",
   experiences: "Experiences",
@@ -246,7 +246,7 @@ export function DashboardShell({
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => navigateTab("overview")}>
-                        <Home /><span>Vue d&apos;ensemble</span>
+                        <Home /><span>Tableau de bord</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
@@ -375,12 +375,12 @@ export function DashboardShell({
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => navigateTab("overview")}>
-                        <Home /><span>Vue d&apos;ensemble</span>
+                        <Home /><span>Tableau de bord</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton isActive={activeTab === "profile"} onClick={() => navigateTab("profile")}>
-                        <User /><span>Mon Profil</span>
+                        <User /><span>Éditer mon profil</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>

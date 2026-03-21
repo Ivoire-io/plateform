@@ -180,215 +180,228 @@ export function ProfileTab({ profile, onProfileUpdate }: ProfileTabProps) {
   const displayAvatar = avatarPreview ?? cleanAvatarUrl;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold">Éditer mon profil</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">
+          Ces informations apparaissent sur ton portfolio public accessible à{" "}
+          <span className="font-medium" style={{ color: "var(--color-orange)" }}>
+            {profile.slug}.ivoire.io
+          </span>
+        </p>
+      </div>
 
-      {/* ─── Carte Avatar ─── */}
-      <Card className="flex flex-col items-center">
-        <CardContent className="flex flex-col items-center gap-5 pt-6 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Avatar avec bouton caméra */}
-          <div className="relative">
-            <Avatar className="size-24 ring-2 ring-orange/30 ring-offset-2 ring-offset-background">
-              {displayAvatar && <AvatarImage src={displayAvatar} alt="Photo de profil" />}
-              <AvatarFallback
-                className="text-2xl font-bold"
-                style={{ background: "var(--color-surface)", color: "var(--color-orange)" }}
-              >
-                {form.full_name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 size-8 rounded-full text-white flex items-center justify-center shadow-md transition-colors"
-              style={{ background: "var(--color-orange)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-orange-hover)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--color-orange)")}
-              aria-label="Changer la photo"
-            >
-              <Camera size={14} />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handleAvatarChange}
-              className="hidden"
-              aria-hidden
-            />
-          </div>
+        {/* ─── Carte Avatar ─── */}
+        <Card className="flex flex-col items-center">
+          <CardContent className="flex flex-col items-center gap-5 pt-6 w-full">
 
-          <p className="text-muted-foreground text-xs text-center">JPG, PNG, WebP · max 2 Mo</p>
-
-          {avatarFile && (
-            <div className="flex flex-col gap-2 w-full max-w-[180px]">
-              <Button
-                onClick={uploadAvatar}
-                size="sm"
-                className="w-full gap-2 text-white"
-                style={{ background: "var(--color-orange)" }}
-                disabled={avatarUploading}
-              >
-                {avatarUploading
-                  ? <><Loader2 size={13} className="animate-spin" /> Upload…</>
-                  : "Enregistrer la photo"}
-              </Button>
+            {/* Avatar avec bouton caméra */}
+            <div className="relative">
+              <Avatar className="size-24 ring-2 ring-orange/30 ring-offset-2 ring-offset-background">
+                {displayAvatar && <AvatarImage src={displayAvatar} alt="Photo de profil" />}
+                <AvatarFallback
+                  className="text-2xl font-bold"
+                  style={{ background: "var(--color-surface)", color: "var(--color-orange)" }}
+                >
+                  {form.full_name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               <button
-                onClick={cancelAvatarPreview}
-                className="text-muted-foreground text-xs text-center hover:text-foreground transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 size-8 rounded-full text-white flex items-center justify-center shadow-md transition-colors"
+                style={{ background: "var(--color-orange)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-orange-hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "var(--color-orange)")}
+                aria-label="Changer la photo"
               >
-                Annuler
+                <Camera size={14} />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleAvatarChange}
+                className="hidden"
+                aria-hidden
+              />
+            </div>
+
+            <p className="text-muted-foreground text-xs text-center">JPG, PNG, WebP · max 2 Mo</p>
+
+            {avatarFile && (
+              <div className="flex flex-col gap-2 w-full max-w-[180px]">
+                <Button
+                  onClick={uploadAvatar}
+                  size="sm"
+                  className="w-full gap-2 text-white"
+                  style={{ background: "var(--color-orange)" }}
+                  disabled={avatarUploading}
+                >
+                  {avatarUploading
+                    ? <><Loader2 size={13} className="animate-spin" /> Upload…</>
+                    : "Enregistrer la photo"}
+                </Button>
+                <button
+                  onClick={cancelAvatarPreview}
+                  className="text-muted-foreground text-xs text-center hover:text-foreground transition-colors"
+                >
+                  Annuler
+                </button>
+              </div>
+            )}
+
+            {/* Toggle disponibilité */}
+            <div className="w-full max-w-[200px]">
+              <button
+                onClick={() => setForm((prev) => ({ ...prev, is_available: !prev.is_available }))}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-medium ${form.is_available
+                  ? "border-green-500/30 text-green-500"
+                  : "border-border text-muted-foreground"
+                  }`}
+                style={{ background: form.is_available ? "color-mix(in srgb, #00A651 10%, transparent)" : "var(--color-card)" }}
+                aria-pressed={form.is_available}
+              >
+                <span>{form.is_available ? "Disponible" : "Non disponible"}</span>
+                <div className={`relative w-9 h-5 rounded-full transition-colors ${form.is_available ? "bg-green-500" : "bg-border"}`}>
+                  <span
+                    className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
+                    style={{ transform: `translateY(-50%) translateX(${form.is_available ? "0px" : "-14px"})` }}
+                  />
+                </div>
               </button>
             </div>
-          )}
 
-          {/* Toggle disponibilité */}
-          <div className="w-full max-w-[200px]">
-            <button
-              onClick={() => setForm((prev) => ({ ...prev, is_available: !prev.is_available }))}
-              className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-medium ${form.is_available
-                ? "border-green-500/30 text-green-500"
-                : "border-border text-muted-foreground"
-                }`}
-              style={{ background: form.is_available ? "color-mix(in srgb, #00A651 10%, transparent)" : "var(--color-card)" }}
-              aria-pressed={form.is_available}
-            >
-              <span>{form.is_available ? "Disponible" : "Non disponible"}</span>
-              <div className={`relative w-9 h-5 rounded-full transition-colors ${form.is_available ? "bg-green-500" : "bg-border"}`}>
-                <span
-                  className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow transition-all duration-200"
-                  style={{ transform: `translateY(-50%) translateX(${form.is_available ? "0px" : "-14px"})` }}
-                />
-              </div>
-            </button>
-          </div>
+            <p className="text-muted-foreground/50 text-xs font-mono">{profile.slug}.ivoire.io</p>
+          </CardContent>
+        </Card>
 
-          <p className="text-muted-foreground/50 text-xs font-mono">{profile.slug}.ivoire.io</p>
-        </CardContent>
-      </Card>
-
-      {/* ─── Carte Formulaire ─── */}
-      <Card className="lg:col-span-2">
-        <CardHeader className="border-b border-border/50">
-          <div className="flex items-center justify-between">
-            <CardTitle>Informations du profil</CardTitle>
-            {isDirty && (
-              <span className="text-xs text-orange-500 font-medium">● Modifications non enregistrées</span>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="pt-5 flex flex-col gap-5">
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label>Nom complet <span style={{ color: "var(--color-orange)" }}>*</span></Label>
-              <Input
-                value={form.full_name}
-                onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
-                placeholder="Ulrich Kouamé"
-                maxLength={100}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>Titre / Poste</Label>
-              <Input
-                value={form.title}
-                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder="Lead Developer"
-                maxLength={100}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label>Ville</Label>
-            <Input
-              value={form.city}
-              onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
-              placeholder="Abidjan"
-              maxLength={50}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
+        {/* ─── Carte Formulaire ─── */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="border-b border-border/50">
             <div className="flex items-center justify-between">
-              <Label>Bio</Label>
-              <span className="text-muted-foreground/40 text-xs">{form.bio.length}/300</span>
+              <CardTitle>Informations du profil</CardTitle>
+              {isDirty && (
+                <span className="text-xs text-orange-500 font-medium">● Modifications non enregistrées</span>
+              )}
             </div>
-            <textarea
-              value={form.bio}
-              onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
-              placeholder="Décrivez-vous en 1-3 phrases…"
-              rows={3}
-              maxLength={300}
-              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/60 focus:border-primary/60 transition-all resize-none leading-relaxed"
-            />
-          </div>
+          </CardHeader>
+          <CardContent className="pt-5 flex flex-col gap-5">
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {([
-              { key: "github_url", label: "GitHub", placeholder: "https://github.com/username" },
-              { key: "linkedin_url", label: "LinkedIn", placeholder: "https://linkedin.com/in/username" },
-              { key: "twitter_url", label: "Twitter / X", placeholder: "https://x.com/username" },
-              { key: "website_url", label: "Site web", placeholder: "https://monsite.dev" },
-            ] as const).map(({ key, label, placeholder }) => (
-              <div key={key} className="flex flex-col gap-2">
-                <Label>{label}</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label>Nom complet <span style={{ color: "var(--color-orange)" }}>*</span></Label>
                 <Input
-                  value={form[key]}
-                  onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                  placeholder={placeholder}
-                  type="url"
+                  value={form.full_name}
+                  onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="Ulrich Kouamé"
+                  maxLength={100}
                 />
               </div>
-            ))}
-          </div>
-
-          {/* Compétences */}
-          <div className="flex flex-col gap-3">
-            <Label>Compétences</Label>
-            {form.skills.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {form.skills.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="gap-1.5 pl-3 pr-2 py-1 font-mono text-xs">
-                    {skill}
-                    <button
-                      onClick={() => removeSkill(skill)}
-                      className="text-muted-foreground/50 hover:text-destructive transition-colors"
-                      aria-label={`Supprimer ${skill}`}
-                    >
-                      <X size={11} />
-                    </button>
-                  </Badge>
-                ))}
+              <div className="flex flex-col gap-2">
+                <Label>Titre / Poste</Label>
+                <Input
+                  value={form.title}
+                  onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder="Lead Developer"
+                  maxLength={100}
+                />
               </div>
-            )}
-            <div className="flex gap-2">
-              <Input
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
-                placeholder="ex: Flutter, React, Go…"
-                maxLength={50}
-                className="flex-1"
-              />
-              <Button onClick={addSkill} variant="outline" size="sm" className="gap-1.5 shrink-0">
-                <Plus size={14} /> Ajouter
-              </Button>
             </div>
-          </div>
 
-          <Button
-            onClick={handleSave}
-            disabled={isSaving || !isDirty}
-            className="gap-2 w-fit text-white"
-            style={{ background: isDirty ? "var(--color-orange)" : undefined }}
-          >
-            {isSaving
-              ? <><Loader2 size={15} className="animate-spin" /> Sauvegarde…</>
-              : isDirty ? "Enregistrer le profil" : "Aucune modification"}
-          </Button>
-        </CardContent>
-      </Card>
+            <div className="flex flex-col gap-2">
+              <Label>Ville</Label>
+              <Input
+                value={form.city}
+                onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
+                placeholder="Abidjan"
+                maxLength={50}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <Label>Bio</Label>
+                <span className="text-muted-foreground/40 text-xs">{form.bio.length}/300</span>
+              </div>
+              <textarea
+                value={form.bio}
+                onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
+                placeholder="Décrivez-vous en 1-3 phrases…"
+                rows={3}
+                maxLength={300}
+                className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/60 focus:border-primary/60 transition-all resize-none leading-relaxed"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {([
+                { key: "github_url", label: "GitHub", placeholder: "https://github.com/username" },
+                { key: "linkedin_url", label: "LinkedIn", placeholder: "https://linkedin.com/in/username" },
+                { key: "twitter_url", label: "Twitter / X", placeholder: "https://x.com/username" },
+                { key: "website_url", label: "Site web", placeholder: "https://monsite.dev" },
+              ] as const).map(({ key, label, placeholder }) => (
+                <div key={key} className="flex flex-col gap-2">
+                  <Label>{label}</Label>
+                  <Input
+                    value={form[key]}
+                    onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    type="url"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Compétences */}
+            <div className="flex flex-col gap-3">
+              <Label>Compétences</Label>
+              {form.skills.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {form.skills.map((skill) => (
+                    <Badge key={skill} variant="secondary" className="gap-1.5 pl-3 pr-2 py-1 font-mono text-xs">
+                      {skill}
+                      <button
+                        onClick={() => removeSkill(skill)}
+                        className="text-muted-foreground/50 hover:text-destructive transition-colors"
+                        aria-label={`Supprimer ${skill}`}
+                      >
+                        <X size={11} />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
+                  placeholder="ex: Flutter, React, Go…"
+                  maxLength={50}
+                  className="flex-1"
+                />
+                <Button onClick={addSkill} variant="outline" size="sm" className="gap-1.5 shrink-0">
+                  <Plus size={14} /> Ajouter
+                </Button>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !isDirty}
+              className="gap-2 w-fit text-white"
+              style={{ background: isDirty ? "var(--color-orange)" : undefined }}
+            >
+              {isSaving
+                ? <><Loader2 size={15} className="animate-spin" /> Sauvegarde…</>
+                : isDirty ? "Enregistrer le profil" : "Aucune modification"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

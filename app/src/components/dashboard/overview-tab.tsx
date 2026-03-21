@@ -51,20 +51,32 @@ interface StatsData {
 
 function calcCompletion(profile: Profile, projects: Project[]): {
   score: number;
-  items: { label: string; done: boolean; action: string }[];
+  items: { label: string; done: boolean; action: string; tab: string }[];
 } {
-  const items = [
-    { label: "Photo de profil", done: !!profile.avatar_url, action: "Ajouter une photo" },
-    { label: "Bio", done: !!profile.bio && profile.bio.length > 20, action: "Écrire ta bio" },
-    { label: "Titre & ville", done: !!(profile.title && profile.city), action: "Ajouter titre et ville" },
-    { label: "Compétences (3 min.)", done: profile.skills.length >= 3, action: "Ajouter des compétences" },
-    {
-      label: "Liens sociaux (1 min.)",
-      done: !!(profile.github_url || profile.linkedin_url || profile.twitter_url || profile.website_url),
-      action: "Ajouter un lien social",
-    },
-    { label: "Projets (1 min.)", done: projects.length >= 1, action: "Ajouter un projet" },
-  ];
+  const isStartup = profile.type === "startup";
+
+  const items = isStartup
+    ? [
+        { label: "Logo de la startup", done: !!profile.avatar_url, action: "Ajouter un logo", tab: "startup" },
+        { label: "Description / pitch", done: !!profile.bio && profile.bio.length > 20, action: "Écrire votre pitch", tab: "startup" },
+        { label: "Ville & localisation", done: !!profile.city, action: "Indiquer votre ville", tab: "startup" },
+        { label: "Site web", done: !!profile.website_url, action: "Ajouter votre site web", tab: "startup" },
+        { label: "Secteur & stade", done: !!profile.title, action: "Choisir secteur et stade", tab: "startup" },
+      ]
+    : [
+        { label: "Photo de profil", done: !!profile.avatar_url, action: "Ajouter une photo", tab: "profile" },
+        { label: "Bio", done: !!profile.bio && profile.bio.length > 20, action: "Écrire ta bio", tab: "profile" },
+        { label: "Titre & ville", done: !!(profile.title && profile.city), action: "Ajouter titre et ville", tab: "profile" },
+        { label: "Compétences (3 min.)", done: profile.skills.length >= 3, action: "Ajouter des compétences", tab: "profile" },
+        {
+          label: "Liens sociaux (1 min.)",
+          done: !!(profile.github_url || profile.linkedin_url || profile.twitter_url || profile.website_url),
+          action: "Ajouter un lien social",
+          tab: "profile",
+        },
+        { label: "Projets (1 min.)", done: projects.length >= 1, action: "Ajouter un projet", tab: "projects" },
+      ];
+
   const done = items.filter((i) => i.done).length;
   return { score: Math.round((done / items.length) * 100), items };
 }
@@ -161,26 +173,30 @@ export function OverviewTab({
       badge: unreadMessages > 0,
     },
     {
-      icon: <Briefcase className="w-5 h-5" />,
-      label: "Projets publiés",
-      value: projects.length,
-      trend: null,
-      color: "#22c55e",
-    },
-    {
-      icon: <Clock className="w-5 h-5" />,
-      label: "Expériences listées",
-      value: experiences.length,
-      trend: null,
-      color: "#f59e0b",
-    },
-    {
       icon: <Star className="w-5 h-5" />,
       label: "Visiteurs uniques",
       value: statsData?.stats.views.unique ?? 0,
       trend: null,
       color: "#ec4899",
     },
+    ...(!isStartup
+      ? [
+          {
+            icon: <Briefcase className="w-5 h-5" />,
+            label: "Projets publiés",
+            value: projects.length,
+            trend: null,
+            color: "#22c55e",
+          },
+          {
+            icon: <Clock className="w-5 h-5" />,
+            label: "Expériences listées",
+            value: experiences.length,
+            trend: null,
+            color: "#f59e0b",
+          },
+        ]
+      : []),
   ];
 
   // Activité récente : derniers messages reçus
@@ -207,7 +223,7 @@ export function OverviewTab({
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-2 ${isStartup ? "md:grid-cols-4" : "md:grid-cols-3"} gap-4`}>
         {statCards.map((card) => (
           <Card key={card.label} className="relative overflow-hidden">
             <CardContent className="p-4 flex flex-col gap-2">
@@ -313,10 +329,12 @@ export function OverviewTab({
           </Card>
         )}
 
-        {/* Profile completion */}
+        {/* Profile / Startup completion */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Complétion du profil</CardTitle>
+            <CardTitle className="text-sm font-semibold">
+              {isStartup ? "Checklist de la startup" : "Checklist du profil"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex items-center justify-between text-sm">
@@ -350,7 +368,7 @@ export function OverviewTab({
                   ) : (
                     <span
                       className="cursor-pointer hover:underline text-red-400"
-                      onClick={() => onNavigate("profile")}
+                      onClick={() => onNavigate(item.tab)}
                     >
                       {item.action}
                     </span>
@@ -359,16 +377,18 @@ export function OverviewTab({
               ))}
             </ul>
             <p className="text-xs text-muted-foreground mt-1">
-              💡 Conseil : Les profils complets reçoivent 3x plus de visites
+              {isStartup
+                ? "💡 Les startups avec une fiche complète attirent plus d'investisseurs et de devs"
+                : "💡 Conseil : Les profils complets reçoivent 3x plus de visites"}
             </p>
             {score < 100 && (
               <Button
                 size="sm"
                 className="w-full mt-1"
                 style={{ background: "var(--color-orange)", color: "#fff" }}
-                onClick={() => onNavigate("profile")}
+                onClick={() => onNavigate(isStartup ? "startup" : "profile")}
               >
-                Compléter mon profil →
+                {isStartup ? "Compléter ma startup →" : "Éditer mon profil →"}
               </Button>
             )}
           </CardContent>
@@ -498,7 +518,7 @@ export function OverviewTab({
                   style={{ borderColor: "var(--color-border)" }}
                 >
                   <PenLine className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
-                  <span>Modifier profil</span>
+                  <span>Éditer mon profil</span>
                 </button>
                 <button
                   onClick={() => onNavigate("projects")}

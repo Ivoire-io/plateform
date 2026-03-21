@@ -53,20 +53,6 @@ interface SubscriptionData {
   plan_limits: Record<string, PlanLimits>;
 }
 
-interface PricingPlan {
-  tier: PlanTier;
-  name: string;
-  price: number;
-  period: string;
-  periodLabel: string;
-  tagline: string;
-  description: string;
-  icon: React.ReactNode;
-  features: string[];
-  highlight?: boolean;
-  color?: string;
-}
-
 const PLANS: PricingPlan[] = [
   {
     tier: "free",
