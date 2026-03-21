@@ -28,27 +28,33 @@ import {
   ExternalLink,
   Home,
   Layers,
+  Lightbulb,
   LogOut,
   Mail,
   Moon,
   Rocket,
   Settings,
   Sun,
+  TrendingUp,
   User,
+  Users,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ExperiencesTab } from "./experiences-tab";
+import { FundraisingTab } from "./fundraising-tab";
 import { JobsTab } from "./jobs-tab";
 import { MessagesTab } from "./messages-tab";
 import { OverviewTab } from "./overview-tab";
+import { ProductsTab } from "./products-tab";
 import { ProfileTab } from "./profile-tab";
 import { ProjectsTab } from "./projects-tab";
 import { SettingsTab } from "./settings-tab";
 import { StartupTab } from "./startup-tab";
 import { StatsTab } from "./stats-tab";
+import { TeamTab } from "./team-tab";
 import { TemplateTab } from "./template-tab";
 
 type Tab =
@@ -61,6 +67,9 @@ type Tab =
   | "stats"
   | "jobs"
   | "startup"
+  | "team"
+  | "products"
+  | "fundraising"
   | "settings";
 
 interface DashboardShellProps {
@@ -128,6 +137,9 @@ export function DashboardShell({
     stats: "Statistiques",
     jobs: "Emploi",
     startup: "Ma Startup",
+    team: "Équipe",
+    products: "Produits",
+    fundraising: "Levée de fonds",
     settings: "Paramètres",
   };
 
@@ -168,120 +180,212 @@ export function DashboardShell({
         </SidebarHeader>
 
         <SidebarContent>
-          {/* GÉNÉRAL */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Général</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
-                    <Home />
-                    <span>Vue d&apos;ensemble</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "profile"} onClick={() => setActiveTab("profile")}>
-                    <User />
-                    <span>Mon Profil</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "template"} onClick={() => setActiveTab("template")}>
-                    <Layers />
-                    <span>Template</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {profile?.type === "startup" ? (
+            /* ════════════════════════════════════════
+               SIDEBAR STARTUP — navigation dédiée
+               ════════════════════════════════════════ */
+            <>
+              {/* GÉNÉRAL */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Général</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
+                        <Home /><span>Vue d&apos;ensemble</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "startup"} onClick={() => setActiveTab("startup")}>
+                        <Rocket /><span>Ma Startup</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "template"} onClick={() => setActiveTab("template")}>
+                        <Layers /><span>Template</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-          {/* CONTENU */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Contenu</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "projects"} onClick={() => setActiveTab("projects")}>
-                    <Briefcase />
-                    <span>Projets</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "experiences"} onClick={() => setActiveTab("experiences")}>
-                    <Clock />
-                    <span>Expériences</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                {profile?.type === "startup" && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton isActive={activeTab === "startup"} onClick={() => setActiveTab("startup")}>
-                      <Rocket />
-                      <span>Ma Startup</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+              {/* ÉQUIPE & PRODUITS */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Équipe &amp; Produits</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "team"} onClick={() => setActiveTab("team")}>
+                        <Users /><span>Équipe</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "products"} onClick={() => setActiveTab("products")}>
+                        <Lightbulb /><span>Produits</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-          {/* INTERACTIONS */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Interactions</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => setActiveTab("messages")}>
-                    <Mail />
-                    <span>Messages</span>
-                    {unreadMessages > 0 && (
-                      <span
-                        className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full"
-                        style={{ background: "var(--color-orange)", color: "#fff" }}
-                      >
-                        {unreadMessages}
-                      </span>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => setActiveTab("stats")}>
-                    <BarChart2 />
-                    <span>Statistiques</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+              {/* CROISSANCE */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Croissance</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => setActiveTab("messages")}>
+                        <Mail /><span>Messages</span>
+                        {unreadMessages > 0 && (
+                          <span className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "var(--color-orange)", color: "#fff" }}>
+                            {unreadMessages}
+                          </span>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => setActiveTab("stats")}>
+                        <BarChart2 /><span>Statistiques</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "fundraising"} onClick={() => setActiveTab("fundraising")}>
+                        <TrendingUp /><span>Levée de fonds</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-          {/* EMPLOI */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Emploi</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => setActiveTab("jobs")}>
-                    <BriefcaseBusiness />
-                    <span>Offres & Candidatures</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+              {/* RECRUTEMENT */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Recrutement</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => setActiveTab("jobs")}>
+                        <BriefcaseBusiness /><span>Offres &amp; Pipeline</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
 
-          {/* COMPTE */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Compte</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
-                    <Settings />
-                    <span>Paramètres</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+              {/* COMPTE */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Compte</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
+                        <Settings /><span>Paramètres</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          ) : (
+            /* ════════════════════════════════════════
+               SIDEBAR DÉVELOPPEUR / AUTRE
+               ════════════════════════════════════════ */
+            <>
+              {/* GÉNÉRAL */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Général</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
+                        <Home /><span>Vue d&apos;ensemble</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "profile"} onClick={() => setActiveTab("profile")}>
+                        <User /><span>Mon Profil</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "template"} onClick={() => setActiveTab("template")}>
+                        <Layers /><span>Template</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* CONTENU */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Contenu</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "projects"} onClick={() => setActiveTab("projects")}>
+                        <Briefcase /><span>Projets</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "experiences"} onClick={() => setActiveTab("experiences")}>
+                        <Clock /><span>Expériences</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* INTERACTIONS */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Interactions</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => setActiveTab("messages")}>
+                        <Mail /><span>Messages</span>
+                        {unreadMessages > 0 && (
+                          <span className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "var(--color-orange)", color: "#fff" }}>
+                            {unreadMessages}
+                          </span>
+                        )}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => setActiveTab("stats")}>
+                        <BarChart2 /><span>Statistiques</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* EMPLOI */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Emploi</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => setActiveTab("jobs")}>
+                        <BriefcaseBusiness /><span>Offres &amp; Candidatures</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              {/* COMPTE */}
+              <SidebarGroup>
+                <SidebarGroupLabel>Compte</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
+                        <Settings /><span>Paramètres</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )}
         </SidebarContent>
 
         <SidebarFooter>
@@ -291,14 +395,16 @@ export function DashboardShell({
                 <SidebarMenuButton
                   render={
                     <a
-                      href={`https://${profile.slug}.ivoire.io`}
+                      href={profile.type === "startup"
+                        ? `https://${profile.slug}.ivoire.io`
+                        : `https://${profile.slug}.ivoire.io`}
                       target="_blank"
                       rel="noopener noreferrer"
                     />
                   }
                 >
                   <ExternalLink />
-                  <span>Voir mon portfolio</span>
+                  <span>{profile.type === "startup" ? "Voir ma vitrine" : "Voir mon portfolio"}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -387,6 +493,15 @@ export function DashboardShell({
           )}
           {profile && activeTab === "startup" && profile.type === "startup" && (
             <StartupTab />
+          )}
+          {profile && activeTab === "team" && profile.type === "startup" && (
+            <TeamTab />
+          )}
+          {profile && activeTab === "products" && profile.type === "startup" && (
+            <ProductsTab />
+          )}
+          {profile && activeTab === "fundraising" && profile.type === "startup" && (
+            <FundraisingTab />
           )}
           {profile && activeTab === "settings" && (
             <SettingsTab profile={profile} userEmail={userEmail} />

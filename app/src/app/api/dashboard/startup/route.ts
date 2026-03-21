@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, slug, tagline, description, website_url, sector, stage, city, team_size, founded_year, tech_stack } = body;
+    const { name, slug, tagline, description, website_url, sector, stage, city, team_size, founded_year, tech_stack, social_links, problem_statement, looking_for } = body;
 
     if (!name || !slug || !tagline) {
       return NextResponse.json({ error: "Nom, slug et tagline sont requis." }, { status: 400 });
@@ -60,6 +60,9 @@ export async function POST(request: Request) {
         team_size: team_size || 1,
         founded_year: founded_year || null,
         tech_stack: tech_stack || [],
+        social_links: social_links || {},
+        problem_statement: problem_statement || null,
+        looking_for: looking_for || [],
       })
       .select()
       .single();
@@ -80,7 +83,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, tagline, description, website_url, sector, stage, city, team_size, founded_year, tech_stack, is_hiring } = body;
+    const { name, tagline, description, website_url, sector, stage, city, team_size, founded_year, tech_stack, is_hiring, social_links, problem_statement, looking_for } = body;
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (name !== undefined) updates.name = name;
@@ -94,6 +97,9 @@ export async function PATCH(request: Request) {
     if (founded_year !== undefined) updates.founded_year = founded_year;
     if (tech_stack !== undefined) updates.tech_stack = tech_stack;
     if (is_hiring !== undefined) updates.is_hiring = is_hiring;
+    if (social_links !== undefined) updates.social_links = social_links;
+    if (problem_statement !== undefined) updates.problem_statement = problem_statement;
+    if (looking_for !== undefined) updates.looking_for = looking_for;
 
     const { data, error } = await supabase
       .from(TABLES.startups)
