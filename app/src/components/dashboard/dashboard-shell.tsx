@@ -31,6 +31,7 @@ import {
   LogOut,
   Mail,
   Moon,
+  Rocket,
   Settings,
   Sun,
   User,
@@ -46,6 +47,7 @@ import { OverviewTab } from "./overview-tab";
 import { ProfileTab } from "./profile-tab";
 import { ProjectsTab } from "./projects-tab";
 import { SettingsTab } from "./settings-tab";
+import { StartupTab } from "./startup-tab";
 import { StatsTab } from "./stats-tab";
 import { TemplateTab } from "./template-tab";
 
@@ -58,6 +60,7 @@ type Tab =
   | "messages"
   | "stats"
   | "jobs"
+  | "startup"
   | "settings";
 
 interface DashboardShellProps {
@@ -124,6 +127,7 @@ export function DashboardShell({
     messages: "Messages",
     stats: "Statistiques",
     jobs: "Emploi",
+    startup: "Ma Startup",
     settings: "Paramètres",
   };
 
@@ -208,6 +212,14 @@ export function DashboardShell({
                     <span>Expériences</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {profile?.type === "startup" && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton isActive={activeTab === "startup"} onClick={() => setActiveTab("startup")}>
+                      <Rocket />
+                      <span>Ma Startup</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -372,6 +384,9 @@ export function DashboardShell({
           )}
           {profile && activeTab === "jobs" && (
             <JobsTab profile={profile} />
+          )}
+          {profile && activeTab === "startup" && profile.type === "startup" && (
+            <StartupTab />
           )}
           {profile && activeTab === "settings" && (
             <SettingsTab profile={profile} userEmail={userEmail} />

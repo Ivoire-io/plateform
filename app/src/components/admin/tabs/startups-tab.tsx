@@ -57,10 +57,11 @@ export function AdminStartupsTab() {
 
       const res = await fetch(`/api/admin/startups?${params}`);
       const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Erreur serveur");
       setStartups(json.startups || []);
       setTotal(json.total || 0);
-    } catch {
-      toast.error("Erreur de chargement.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur de chargement.");
     } finally {
       setLoading(false);
     }

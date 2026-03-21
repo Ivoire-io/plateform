@@ -15,9 +15,9 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { AdminTab } from "../admin-shell";
-import { useRouter } from "next/navigation";
 
 interface AdminOverviewTabProps {
   onNavigate?: (tab: AdminTab) => void;
@@ -25,7 +25,8 @@ interface AdminOverviewTabProps {
 
 interface StatsData {
   totalProfiles: number;
-  startups: number;
+  startups: number;         // fiches startups en attente (badge sidebar)
+  startupProfiles: number;  // profils de type startup
   enterprises: number;
   waitlistPending: number;
   messages: number;
@@ -87,22 +88,23 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
   }, []);
 
   const totalProfiles = stats?.totalProfiles ?? 0;
-  const startups = stats?.startups ?? 0;
+  const startupProfiles = stats?.startupProfiles ?? 0;
   const enterprises = stats?.enterprises ?? 0;
-  const developers = Math.max(0, totalProfiles - startups - enterprises);
+  const developers = Math.max(0, totalProfiles - startupProfiles - enterprises);
+  const startupsPending = stats?.startups ?? 0; // fiches startups en attente
 
   const profileDist = totalProfiles > 0
     ? [
       { label: "🧑‍💻 Développeurs", count: developers, pct: Math.round((developers / totalProfiles) * 100), color: "#3b82f6" },
-      { label: "🚀 Startups", count: startups, pct: Math.round((startups / totalProfiles) * 100), color: "#8b5cf6" },
+      { label: "🚀 Startups", count: startupProfiles, pct: Math.round((startupProfiles / totalProfiles) * 100), color: "#8b5cf6" },
       { label: "🏢 Entreprises", count: enterprises, pct: Math.round((enterprises / totalProfiles) * 100), color: "#10b981" },
-      { label: "👤 Autres", count: Math.max(0, totalProfiles - developers - startups - enterprises), pct: Math.max(0, 100 - Math.round((developers / totalProfiles) * 100) - Math.round((startups / totalProfiles) * 100) - Math.round((enterprises / totalProfiles) * 100)), color: "#a0a0a0" },
+      { label: "👤 Autres", count: Math.max(0, totalProfiles - developers - startupProfiles - enterprises), pct: Math.max(0, 100 - Math.round((developers / totalProfiles) * 100) - Math.round((startupProfiles / totalProfiles) * 100) - Math.round((enterprises / totalProfiles) * 100)), color: "#a0a0a0" },
     ]
     : [];
 
   const metrics = [
     { label: "Profils total", value: loading ? "…" : totalProfiles.toLocaleString("fr-FR"), sub: stats ? `+${stats.newThisMonth} ce mois` : "", icon: Users, tab: "users" as AdminTab, color: "#3b82f6" },
-    { label: "Startups listées", value: loading ? "…" : startups.toString(), sub: "", icon: TrendingUp, tab: "startups" as AdminTab, color: "#8b5cf6" },
+    { label: "Startups en attente", value: loading ? "…" : startupsPending.toString(), sub: `${startupProfiles} profils startup`, icon: TrendingUp, tab: "startups" as AdminTab, color: "#8b5cf6" },
     { label: "Entreprises", value: loading ? "…" : enterprises.toString(), sub: "", icon: Briefcase, tab: "startups" as AdminTab, color: "#06b6d4" },
     { label: "Waitlist en attente", value: loading ? "…" : (stats?.waitlistPending ?? 0).toString(), sub: "", icon: Clock, tab: "waitlist" as AdminTab, color: "#f59e0b" },
     { label: "Messages non lus", value: loading ? "…" : (stats?.messages ?? 0).toString(), sub: "", icon: MessageSquare, tab: "messages" as AdminTab, color: "#6366f1" },
@@ -284,7 +286,7 @@ export function AdminOverviewTab({ onNavigate }: AdminOverviewTabProps) {
                   <span className="text-xs text-muted-foreground">total</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-2xl font-bold text-purple-400">{startups}</span>
+                  <span className="text-2xl font-bold text-purple-400">{startupProfiles}</span>
                   <span className="text-xs text-muted-foreground">startups</span>
                 </div>
                 <div className="flex flex-col">

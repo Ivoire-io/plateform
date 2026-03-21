@@ -40,62 +40,104 @@ export async function POST(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Invalid desired_slug" }, { status: 400 });
   }
 
-  // Vérifie si le slug est libre (réservé en waitlist, mais on revalide)
-  const { data: slugOwner, error: slugOwnerError } = await supabaseAdmin
+  // Vérifie si un profil existe déjà pour cet email (cas d'une tentative précédente partielle)
+  const { data: existingProfile, error: existingProfileError } = await supabaseAdmin
     .from(TABLES.profiles)
-    .select("id")
-    .eq("slug", desiredSlug)
+    .select("id, slug, email")
+    .eq("email", email)
     .maybeSingle();
 
-  if (slugOwnerError) {
-    return NextResponse.json({ error: slugOwnerError.message }, { status: 500 });
-  }
-  if (slugOwner) {
-    return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
+  if (existingProfileError) {
+    return NextResponse.json({ error: existingProfileError.message }, { status: 500 });
   }
 
-  // Génère un magic link Supabase (et récupère/initialise l'utilisateur auth)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ivoire.io";
-  const redirectTo = `${siteUrl.replace(/\/+$/, "")}/auth/callback`;
+  let userId: string;
+  let actionLink: string | undefined;
 
-  const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-    options: { redirectTo },
-  });
+  if (existingProfile) {
+    // Profil déjà créé (tentative précédente partiellement réussie) — reprise idempotente
+    // Si le slug a changé entre-temps et qu'il appartient à quelqu'un d'autre, on bloque
+    if (existingProfile.slug !== desiredSlug) {
+      const { data: slugOwner } = await supabaseAdmin
+        .from(TABLES.profiles)
+        .select("id")
+        .eq("slug", desiredSlug)
+        .maybeSingle();
+      if (slugOwner && slugOwner.id !== existingProfile.id) {
+        return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
+      }
+    }
+    userId = existingProfile.id;
 
-  if (linkError || !linkData?.user?.id) {
-    return NextResponse.json(
-      { error: linkError?.message || "Unable to generate access link" },
-      { status: 500 }
-    );
-  }
+    // Génère un nouveau magic link pour cet utilisateur existant
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ivoire.io";
+    const redirectTo = `${siteUrl.replace(/\/+$/, "")}/auth/callback`;
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+      options: { redirectTo },
+    });
+    if (!linkError) {
+      actionLink = (linkData as unknown as { properties?: { action_link?: string } })
+        ?.properties?.action_link;
+    }
+  } else {
+    // Vérifie si le slug est libre avant toute création
+    const { data: slugOwner, error: slugOwnerError } = await supabaseAdmin
+      .from(TABLES.profiles)
+      .select("id")
+      .eq("slug", desiredSlug)
+      .maybeSingle();
 
-  const userId = linkData.user.id;
-  const actionLink = (linkData as unknown as { properties?: { action_link?: string } })?.properties
-    ?.action_link;
+    if (slugOwnerError) {
+      return NextResponse.json({ error: slugOwnerError.message }, { status: 500 });
+    }
+    if (slugOwner) {
+      return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
+    }
 
-  // Crée le profil (id = auth.uid) pour activer le sous-domaine + dashboard
-  // Le service role bypass RLS, mais on respecte la convention du projet: profile.id == auth.uid
-  const fullName = (entry.full_name ?? "").toString().trim() || email.split("@")[0];
-  const type = (entry.type ?? "developer") as "developer" | "startup" | "enterprise" | "other";
+    // Génère un magic link Supabase (crée ou récupère l'utilisateur auth)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ivoire.io";
+    const redirectTo = `${siteUrl.replace(/\/+$/, "")}/auth/callback`;
 
-  const { error: upsertError } = await supabaseAdmin
-    .from(TABLES.profiles)
-    .upsert(
-      {
-        id: userId,
-        slug: desiredSlug,
-        email,
-        full_name: fullName,
-        type,
-        is_suspended: false,
-      },
-      { onConflict: "id" }
-    );
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+      options: { redirectTo },
+    });
 
-  if (upsertError) {
-    return NextResponse.json({ error: upsertError.message }, { status: 500 });
+    if (linkError || !linkData?.user?.id) {
+      return NextResponse.json(
+        { error: linkError?.message || "Unable to generate access link" },
+        { status: 500 }
+      );
+    }
+
+    userId = linkData.user.id;
+    actionLink = (linkData as unknown as { properties?: { action_link?: string } })
+      ?.properties?.action_link;
+
+    // Crée le profil (id = auth.uid)
+    const fullName = (entry.full_name ?? "").toString().trim() || email.split("@")[0];
+    const type = (entry.type ?? "developer") as "developer" | "startup" | "enterprise" | "other";
+
+    const { error: upsertError } = await supabaseAdmin
+      .from(TABLES.profiles)
+      .upsert(
+        {
+          id: userId,
+          slug: desiredSlug,
+          email,
+          full_name: fullName,
+          type,
+          is_suspended: false,
+        },
+        { onConflict: "id" }
+      );
+
+    if (upsertError) {
+      return NextResponse.json({ error: upsertError.message }, { status: 500 });
+    }
   }
 
   // Marquer comme invité + converti

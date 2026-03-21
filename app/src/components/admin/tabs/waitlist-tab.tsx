@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/select";
-import { Download, Mail, Search, Trash2, UserCheck } from "lucide-react";
+import { CheckCircle2, Download, Mail, RefreshCw, Search, Trash2, UserCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,7 +33,10 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
 export function AdminWaitlistTab() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [showInvited, setShowInvited] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
 
   async function loadWaitlist() {
@@ -61,6 +64,7 @@ export function AdminWaitlistTab() {
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
     return entries.filter((w) => {
+      if (!showInvited && w.invited) return false;
       const matchSearch =
         !s ||
         (w.full_name ?? "").toLowerCase().includes(s) ||
@@ -69,7 +73,7 @@ export function AdminWaitlistTab() {
       const matchType = typeFilter === "all" || w.type === typeFilter;
       return matchSearch && matchType;
     });
-  }, [entries, search, typeFilter]);
+  }, [entries, search, typeFilter, showInvited]);
 
   const total = entries.length;
   const invited = entries.filter((e) => e.invited).length;
@@ -107,8 +111,8 @@ export function AdminWaitlistTab() {
       toast.success(`Conversions: ${data?.data?.converted ?? 0} / ${data?.data?.requested ?? 0}`);
       if (data?.data?.note) toast.info(data.data.note);
       loadWaitlist();
-    } catch {
-      toast.error("Erreur lors de l’invitation en masse");
+    } catch (e) {
+      toast.error(`Erreur : ${e instanceof Error ? e.message : "Erreur inconnue"}`);
     }
   }
 
@@ -119,6 +123,14 @@ export function AdminWaitlistTab() {
           Waitlist ({loading ? "…" : pending} en attente)
         </h2>
         <div className="flex gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2 text-xs"
+            onClick={() => setShowInvited((v) => !v)}
+          >
+            {showInvited ? "Masquer invités" : `Voir invités (${invited})`}
+          </Button>
           <Button size="sm" className="gap-2" style={{ background: "var(--color-green)", color: "white" }} onClick={handleInviteAll}>
             <UserCheck className="h-4 w-4" /> Inviter tous
           </Button>
@@ -167,8 +179,19 @@ export function AdminWaitlistTab() {
                     <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">Chargement…</td>
                   </tr>
                 ) : filtered.map((entry) => (
-                  <tr key={entry.id} className="border-b border-border/50 hover:bg-white/2 transition-colors">
-                    <td className="p-3 pl-4 font-medium">{entry.full_name ?? "—"}</td>
+                  <tr
+                    key={entry.id}
+                    className={`border-b border-border/50 transition-colors ${entry.invited ? "opacity-50" : "hover:bg-white/2"
+                      }`}
+                  >
+                    <td className="p-3 pl-4 font-medium">
+                      <div className="flex items-center gap-2">
+                        {entry.full_name ?? "—"}
+                        {entry.invited && (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-400 shrink-0" />
+                        )}
+                      </div>
+                    </td>
                     <td className="p-3 text-xs text-muted-foreground">{entry.email}</td>
                     <td className="p-3 text-xs font-mono">{entry.desired_slug ? `${entry.desired_slug}.ivoire.io` : "—"}</td>
                     <td className="p-3">
@@ -189,10 +212,38 @@ export function AdminWaitlistTab() {
                     <td className="p-3 text-xs text-muted-foreground">{entry.whatsapp ?? "—"}</td>
                     <td className="p-3">
                       <div className="flex gap-1">
-                        <Button size="sm" className="h-7 w-7 p-0" style={{ background: "var(--color-green)", color: "white" }} onClick={() => handleInvite(entry)}>
-                          <UserCheck className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-400 hover:text-red-300" onClick={() => handleDelete(entry)}>
+                        {entry.invited ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 w-7 p-0 text-muted-foreground"
+                            title="Renvoyer le lien d'accès"
+                            disabled={invitingId === entry.id}
+                            onClick={() => handleInvite(entry)}
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            style={{ background: "var(--color-green)", color: "white" }}
+                            title="Inviter"
+                            disabled={invitingId === entry.id}
+                            onClick={() => handleInvite(entry)}
+                          >
+                            {invitingId === entry.id
+                              ? <RefreshCw className="h-3 w-3 animate-spin" />
+                              : <UserCheck className="h-3 w-3" />}
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0 text-red-400 hover:text-red-300"
+                          disabled={deletingId === entry.id}
+                          onClick={() => handleDelete(entry)}
+                        >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>

@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
@@ -20,9 +20,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Statut invalide." }, { status: 400 });
   }
 
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(TABLES.startups)
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
@@ -34,7 +32,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   // Log admin action
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     type: "content",
     description: `Startup "${data.name}" → statut: ${status}`,
     actor_id: guard.userId,
@@ -51,9 +49,8 @@ export async function DELETE(_request: Request, context: RouteContext) {
   if (!guard.authorized) return guard.response;
 
   const { id } = await context.params;
-  const supabase = await createClient();
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from(TABLES.startups)
     .delete()
     .eq("id", id);
@@ -62,7 +59,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     type: "content",
     description: "Startup supprimée",
     actor_id: guard.userId,

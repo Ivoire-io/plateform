@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
@@ -15,11 +15,9 @@ export async function GET(request: Request) {
   const limit = 20;
   const offset = (page - 1) * limit;
 
-  const supabase = await createClient();
-
-  let query = supabase
+  let query = supabaseAdmin
     .from(TABLES.startups)
-    .select("*, profile:ivoireio_profiles!profile_id(full_name, slug, avatar_url)", { count: "exact" })
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -28,7 +26,7 @@ export async function GET(request: Request) {
 
   const { data, error, count } = await query;
   if (error) {
-    return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
   return NextResponse.json({ startups: data || [], total: count ?? 0 });
