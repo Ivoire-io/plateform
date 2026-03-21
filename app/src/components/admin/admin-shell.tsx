@@ -29,8 +29,11 @@ import {
   Briefcase,
   ChevronRight,
   Clock,
+  Code,
+  Cpu,
   CreditCard,
   Flag,
+  Gift,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -38,11 +41,17 @@ import {
   Settings,
   ShieldAlert,
   Users,
+  Wallet,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AdminAIUsageTab } from "./tabs/ai-usage-tab";
+import { AdminDevPipelineTab } from "./tabs/dev-pipeline-tab";
+import { AdminPaymentProvidersTab } from "./tabs/payment-providers-tab";
+import { AdminPaymentsTab } from "./tabs/payments-tab";
+import { AdminReferralsTab } from "./tabs/referrals-tab";
 
 export type AdminTab =
   | "overview"
@@ -58,7 +67,12 @@ export type AdminTab =
   | "logs"
   | "flags"
   | "broadcasting"
-  | "templates";
+  | "templates"
+  | "payments"
+  | "ai-usage"
+  | "referrals"
+  | "dev-pipeline"
+  | "payment-providers";
 
 interface AdminShellProps {
   adminEmail: string;
@@ -81,6 +95,11 @@ const tabTitles: Record<AdminTab, string> = {
   flags: "Feature Flags",
   broadcasting: "Broadcasting",
   templates: "Templates",
+  payments: "Paiements",
+  "ai-usage": "Couts IA",
+  referrals: "Parrainage",
+  "dev-pipeline": "Dev Outsourcing",
+  "payment-providers": "Providers Paiement",
 };
 
 interface NavItemProps {
@@ -130,6 +149,11 @@ function tabFromPath(pathname: string): AdminTab {
     "flags",
     "broadcasting",
     "templates",
+    "payments",
+    "ai-usage",
+    "referrals",
+    "dev-pipeline",
+    "payment-providers",
   ]);
   return allowed.has(segment as AdminTab) ? (segment as AdminTab) : "overview";
 }
@@ -256,6 +280,20 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
               <SidebarMenu>
                 <NavItem id="analytics" label="Analytics" Icon={BarChart3} href="/admin/analytics" activeTab={activeTab} />
                 <NavItem id="subscriptions" label="Abonnements" Icon={CreditCard} href="/admin/subscriptions" activeTab={activeTab} />
+                <NavItem id="payments" label="Paiements" Icon={CreditCard} href="/admin/payments" activeTab={activeTab} />
+                <NavItem id="payment-providers" label="Providers" Icon={Wallet} href="/admin/payment-providers" activeTab={activeTab} />
+                <NavItem id="ai-usage" label="Couts IA" Icon={Cpu} href="/admin/ai-usage" activeTab={activeTab} />
+                <NavItem id="referrals" label="Parrainage" Icon={Gift} href="/admin/referrals" activeTab={activeTab} />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          {/* Dev Outsourcing */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Dev Outsourcing</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <NavItem id="dev-pipeline" label="Pipeline Dev" Icon={Code} href="/admin/dev-pipeline" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -326,6 +364,11 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
 
         <div className="flex flex-1 flex-col gap-6 p-6">
           {children}
+          {activeTab === "payments" && <AdminPaymentsTab />}
+          {activeTab === "ai-usage" && <AdminAIUsageTab />}
+          {activeTab === "referrals" && <AdminReferralsTab />}
+          {activeTab === "dev-pipeline" && <AdminDevPipelineTab />}
+          {activeTab === "payment-providers" && <AdminPaymentProvidersTab />}
         </div>
       </SidebarInset>
     </SidebarProvider>

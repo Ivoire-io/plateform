@@ -339,94 +339,10 @@ Réponds en markdown structuré.`;
   return generateLongDocument(prompt, { maxTokens: 4096, temperature: 0.2 });
 }
 
-// ─── Analyse concurrentielle (avec recherche web) ───
-export async function generateCompetitorAnalysis(
-  projectName: string,
-  sector: string,
-  country: string,
-  problem: string
-): Promise<string> {
-  const prompt = `Fais une analyse concurrentielle complète pour la startup "${projectName}" (${sector}) en ${country}.
-Problème résolu : ${problem}
+// ─── Analyse concurrentielle — MIGRÉE vers openai-websearch.ts ───
+// Utilise OpenAI Responses API avec web_search_preview au lieu d'Anthropic web_search
+// pour réduire les coûts (Anthropic facture les recherches web séparément)
+export { generateCompetitorAnalysisOpenAI as generateCompetitorAnalysis } from "./openai-websearch";
 
-Recherche les concurrents réels dans ce secteur en ${country} et en Afrique de l'Ouest. Utilise la recherche web pour trouver des informations actuelles.
-
-Structure de l'analyse :
-1. **Concurrents directs** — Entreprises résolvant le même problème dans la même zone
-2. **Concurrents indirects** — Solutions alternatives utilisées actuellement
-3. **Acteurs internationaux** — Entreprises étrangères présentes ou pouvant entrer sur le marché
-4. **Matrice concurrentielle** — Tableau comparatif (fonctionnalités, prix, couverture, forces/faiblesses)
-5. **Avantages concurrentiels potentiels** — Ce qui peut différencier "${projectName}"
-6. **Recommandations stratégiques** — Positionnement recommandé
-
-Cite tes sources quand c'est possible. Tous les prix en FCFA.
-
-Réponds en markdown structuré.`;
-
-  const response = await anthropic.messages.create({
-    model: MODEL_DOCUMENTS,
-    system: SYSTEM_CONTEXT,
-    max_tokens: 4096,
-    temperature: 0.4,
-    tools: [
-      {
-        type: "web_search_20250305",
-        name: "web_search",
-        max_uses: 5,
-      },
-    ],
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const textBlock = response.content.find((block) => block.type === "text");
-  return textBlock?.text?.trim() ?? "";
-}
-
-// ─── Vérification de nom à l'OAPI / RCCM (avec recherche web) ───
-export async function verifyOAPIName(
-  projectName: string
-): Promise<{
-  available: boolean;
-  risques: string[];
-  sources: string[];
-}> {
-  const prompt = `Vérifie si le nom "${projectName}" est déjà utilisé ou enregistré :
-
-1. Recherche dans les bases de l'OAPI (Organisation Africaine de la Propriété Intellectuelle) si une marque similaire existe
-2. Recherche dans le RCCM (Registre du Commerce et du Crédit Mobilier) de Côte d'Ivoire
-3. Vérifie les noms de domaine (.ci, .com, .io)
-4. Recherche d'entreprises existantes avec ce nom en Côte d'Ivoire et en Afrique de l'Ouest
-
-Réponds uniquement en JSON :
-{
-  "available": true/false,
-  "risques": ["description de chaque risque identifié"],
-  "sources": ["URL ou source de chaque information trouvée"]
-}
-
-Si tu ne trouves aucun conflit, indique available: true avec risques vide.
-Si tu trouves des conflits potentiels, indique available: false avec les détails.`;
-
-  const response = await anthropic.messages.create({
-    model: MODEL_DOCUMENTS,
-    system: SYSTEM_CONTEXT,
-    max_tokens: 1000,
-    temperature: 0.2,
-    tools: [
-      {
-        type: "web_search_20250305",
-        name: "web_search",
-        max_uses: 5,
-      },
-    ],
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const textBlock = response.content.find((block) => block.type === "text");
-  const result = textBlock?.text?.trim() ?? "";
-  try {
-    return JSON.parse(result);
-  } catch {
-    return { available: true, risques: [], sources: [] };
-  }
-}
+// ─── Vérification de nom à l'OAPI / RCCM — MIGRÉE vers openai-websearch.ts ───
+export { verifyOAPINameOpenAI as verifyOAPIName } from "./openai-websearch";

@@ -173,7 +173,7 @@ export function TemplateTab({ profile }: TemplateTabProps) {
   );
   const [saving, setSaving] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState<string | null>(null);
-  const isPremium = profile.plan === "premium" || profile.plan === "enterprise";
+  const isPremium = profile.plan !== "free";
 
   async function applyTemplate(templateId: string, plan: "free" | "premium") {
     if (plan === "premium" && !isPremium) return;
@@ -337,7 +337,7 @@ export function TemplateTab({ profile }: TemplateTabProps) {
               Accède aux 7 templates premium et personnalise ton portfolio à 100%.
             </p>
             <Button style={{ background: "var(--color-orange)", color: "#fff" }}>
-              Passer en Premium — 3 000 FCFA/mois
+              Voir les plans disponibles
             </Button>
           </div>
         )}

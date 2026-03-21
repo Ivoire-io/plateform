@@ -31,6 +31,7 @@ function memberSinceText(dateStr: string): string {
 interface SettingsTabProps {
   profile: Profile;
   userEmail: string;
+  onNavigate?: (tab: string) => void;
 }
 
 interface NotifPrefs {
@@ -79,7 +80,7 @@ function Toggle({
   );
 }
 
-export function SettingsTab({ profile, userEmail }: SettingsTabProps) {
+export function SettingsTab({ profile, userEmail, onNavigate }: SettingsTabProps) {
   const router = useRouter();
   const [prefs, setPrefs] = useState<NotifPrefs>({
     notif_messages: true,
@@ -218,9 +219,13 @@ export function SettingsTab({ profile, userEmail }: SettingsTabProps) {
               <p className="text-sm font-medium capitalize">
                 {profile.plan === "free"
                   ? "Gratuit"
-                  : profile.plan === "premium"
-                    ? "Premium ⭐"
-                    : "Entreprise"}
+                  : profile.plan === "starter"
+                    ? "Starter"
+                    : profile.plan === "pro"
+                      ? "Pro ⭐"
+                      : profile.plan === "student"
+                        ? "Etudiant"
+                        : "Enterprise"}
               </p>
             </div>
           </div>
@@ -292,16 +297,17 @@ export function SettingsTab({ profile, userEmail }: SettingsTabProps) {
           >
             <div>
               <p className="text-sm font-medium">
-                Plan {profile.plan === "free" ? "Gratuit" : profile.plan === "premium" ? "Premium ⭐" : "Entreprise"}
+                Plan {profile.plan === "free" ? "Gratuit" : profile.plan === "starter" ? "Starter" : profile.plan === "pro" ? "Pro" : profile.plan === "student" ? "Etudiant" : "Enterprise"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {profile.plan === "free" ? "3 templates · Stats 30j · 5 projets max" : "Accès complet à toutes les fonctionnalités"}
+                {profile.plan === "free" ? "3 templates · Stats 30j · 5 projets max" : "Acces complet a toutes les fonctionnalites"}
               </p>
             </div>
             {profile.plan === "free" && (
               <Button
                 size="sm"
                 style={{ background: "var(--color-orange)", color: "#fff" }}
+                onClick={() => onNavigate?.("subscription")}
               >
                 Upgrader
               </Button>
@@ -321,8 +327,9 @@ export function SettingsTab({ profile, userEmail }: SettingsTabProps) {
               <Button
                 className="mt-3 w-full"
                 style={{ background: "var(--color-orange)", color: "#fff" }}
+                onClick={() => onNavigate?.("subscription")}
               >
-                ⭐ Passer en Premium — 3 000 FCFA/mois
+                ⭐ Voir les plans disponibles
               </Button>
             </div>
           )}

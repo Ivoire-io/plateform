@@ -26,7 +26,10 @@ import {
   Briefcase,
   BriefcaseBusiness,
   Clock,
+  Code,
+  CreditCard,
   ExternalLink,
+  Gift,
   Home,
   Layers,
   Lightbulb,
@@ -44,6 +47,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { DevOutsourcingTab } from "./dev-outsourcing-tab";
 import { ExperiencesTab } from "./experiences-tab";
 import { FundraisingTab } from "./fundraising-tab";
 import { JobsTab } from "./jobs-tab";
@@ -53,9 +57,11 @@ import { ProductsTab } from "./products-tab";
 import { ProfileTab } from "./profile-tab";
 import { ProjectBuilderTab } from "./project-builder-tab";
 import { ProjectsTab } from "./projects-tab";
+import { ReferralTab } from "./referral-tab";
 import { SettingsTab } from "./settings-tab";
 import { StartupTab } from "./startup-tab";
 import { StatsTab } from "./stats-tab";
+import { SubscriptionTab } from "./subscription-tab";
 import { TeamTab } from "./team-tab";
 import { TemplateTab } from "./template-tab";
 
@@ -73,7 +79,10 @@ type Tab =
   | "products"
   | "fundraising"
   | "settings"
-  | "project-builder";
+  | "project-builder"
+  | "subscription"
+  | "referral"
+  | "dev-outsourcing";
 
 interface DashboardShellProps {
   userId: string;
@@ -145,6 +154,9 @@ export function DashboardShell({
     fundraising: "Levée de fonds",
     settings: "Paramètres",
     "project-builder": "Project Builder",
+    subscription: "Abonnement",
+    referral: "Parrainage",
+    "dev-outsourcing": "Services Dev",
   };
 
   return (
@@ -263,6 +275,12 @@ export function DashboardShell({
                         <TrendingUp /><span>Levée de fonds</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "dev-outsourcing"} onClick={() => setActiveTab("dev-outsourcing")}>
+                        <Code className="h-4 w-4" />
+                        Services Dev
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -286,6 +304,18 @@ export function DashboardShell({
                 <SidebarGroupLabel>Compte</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "subscription"} onClick={() => setActiveTab("subscription")}>
+                        <CreditCard className="h-4 w-4" />
+                        Abonnement
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "referral"} onClick={() => setActiveTab("referral")}>
+                        <Gift className="h-4 w-4" />
+                        Parrainage
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
                         <Settings /><span>Paramètres</span>
@@ -386,6 +416,18 @@ export function DashboardShell({
                 <SidebarGroupLabel>Compte</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "subscription"} onClick={() => setActiveTab("subscription")}>
+                        <CreditCard className="h-4 w-4" />
+                        Abonnement
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "referral"} onClick={() => setActiveTab("referral")}>
+                        <Gift className="h-4 w-4" />
+                        Parrainage
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
                         <Settings /><span>Paramètres</span>
@@ -519,6 +561,9 @@ export function DashboardShell({
           {profile && activeTab === "settings" && (
             <SettingsTab profile={profile} userEmail={userEmail} />
           )}
+          {profile && activeTab === "subscription" && <SubscriptionTab />}
+          {profile && activeTab === "referral" && <ReferralTab />}
+          {profile && activeTab === "dev-outsourcing" && profile.type === "startup" && <DevOutsourcingTab startupId={profile.id} />}
         </div>
       </SidebarInset>
     </SidebarProvider>

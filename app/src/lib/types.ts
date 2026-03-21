@@ -1,3 +1,7 @@
+// ─── Plan Tiers ───
+
+export type PlanTier = "free" | "starter" | "pro" | "enterprise" | "student";
+
 // ─── Profiles ───
 
 export interface Profile {
@@ -18,7 +22,9 @@ export interface Profile {
   type: "developer" | "startup" | "enterprise" | "other";
   is_admin: boolean;
   is_suspended: boolean;
-  plan: "free" | "premium" | "enterprise";
+  plan: PlanTier;
+  referral_code: string | null;
+  referred_by: string | null;
   admin_notes: string | null;
   verified_badge: boolean;
   // Notifications & confidentialité
@@ -124,7 +130,7 @@ export interface AdminTemplate {
   name: string;
   icon: string;
   state: "off" | "beta" | "active";
-  plan: "free" | "premium" | "enterprise";
+  plan: PlanTier;
   allowed_types: string[];
   usage_count: number;
   created_at: string;
@@ -339,4 +345,214 @@ export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+// ─── Subscriptions ───
+
+export interface Subscription {
+  id: string;
+  profile_id: string;
+  plan: PlanTier;
+  payment_method: "manual" | "paypal" | "wave" | "orange_money" | "credit" | "admin" | null;
+  status: "active" | "pending" | "expired" | "cancelled" | "suspended";
+  amount: number;
+  currency: string;
+  started_at: string;
+  expires_at: string | null;
+  cancelled_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  profile?: Pick<Profile, "full_name" | "slug" | "avatar_url" | "email" | "type">;
+}
+
+// ─── Payments ───
+
+export interface Payment {
+  id: string;
+  profile_id: string;
+  subscription_id: string | null;
+  amount: number;
+  currency: string;
+  payment_method: "manual" | "paypal" | "wave" | "orange_money" | "credit";
+  status: "pending" | "completed" | "failed" | "refunded" | "cancelled";
+  proof_url: string | null;
+  proof_file_name: string | null;
+  bank_reference: string | null;
+  paypal_order_id: string | null;
+  paypal_capture_id: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
+  description: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  profile?: Pick<Profile, "full_name" | "slug" | "email">;
+}
+
+// ─── Referrals ───
+
+export interface Referral {
+  id: string;
+  referrer_id: string;
+  referred_id: string;
+  referral_code: string;
+  status: "pending" | "converted" | "rewarded";
+  reward_type: "credit" | "upgrade" | "regeneration" | null;
+  reward_amount: number | null;
+  created_at: string;
+  converted_at: string | null;
+  referrer?: Pick<Profile, "full_name" | "slug" | "avatar_url">;
+  referred?: Pick<Profile, "full_name" | "slug" | "avatar_url">;
+}
+
+// ─── Credits ───
+
+export interface Credit {
+  id: string;
+  profile_id: string;
+  amount: number;
+  source: "referral" | "purchase" | "promo" | "admin" | "refund";
+  description: string | null;
+  reference_id: string | null;
+  created_at: string;
+}
+
+// ─── AI Usage ───
+
+export interface AIUsageRecord {
+  id: string;
+  profile_id: string;
+  task: string;
+  provider: "openai" | "anthropic" | "crunai";
+  model: string;
+  tokens_input: number;
+  tokens_output: number;
+  cost_usd: number;
+  cost_fcfa: number;
+  cached: boolean;
+  cache_key: string | null;
+  duration_ms: number | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+// ─── Dev Outsourcing ───
+
+export interface DevRequest {
+  id: string;
+  startup_id: string;
+  profile_id: string;
+  title: string;
+  description: string | null;
+  cahier_charges_ref: string | null;
+  required_roles: string[];
+  budget_min: number | null;
+  budget_max: number | null;
+  timeline: string | null;
+  payment_type: "one_shot" | "installments" | "partnership";
+  installments_count: number;
+  partnership_percentage: number | null;
+  discount_percentage: number;
+  status: "draft" | "submitted" | "reviewing" | "quoted" | "accepted" | "in_progress" | "completed" | "cancelled";
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  startup?: Pick<Startup, "name" | "slug" | "logo_url">;
+  quotes?: DevQuote[];
+}
+
+export interface DevQuote {
+  id: string;
+  dev_request_id: string;
+  amount: number;
+  currency: string;
+  timeline: string | null;
+  scope: string | null;
+  tech_stack: string[];
+  team_composition: Array<{ role: string; count: number }>;
+  payment_schedule: Array<{ milestone: string; amount: number; due: string }>;
+  discount_applied: number;
+  status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+  valid_until: string | null;
+  admin_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DevProject {
+  id: string;
+  dev_request_id: string;
+  dev_quote_id: string;
+  startup_id: string;
+  title: string;
+  status: "setup" | "in_progress" | "review" | "completed" | "paused" | "cancelled";
+  progress: number;
+  total_amount: number;
+  paid_amount: number;
+  current_milestone: string | null;
+  milestones: Array<{
+    name: string;
+    amount: number;
+    status: "pending" | "in_progress" | "completed" | "paid";
+    due: string;
+  }>;
+  team_assigned: Array<{ name: string; role: string; profile_slug?: string }>;
+  started_at: string | null;
+  completed_at: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  startup?: Pick<Startup, "name" | "slug" | "logo_url">;
+}
+
+// ─── Payment Provider Config ───
+
+export interface PaymentProviderConfig {
+  manual: {
+    enabled: boolean;
+    bank_name: string;
+    account_number: string;
+    account_name: string;
+    instructions: string;
+  };
+  paypal: {
+    enabled: boolean;
+    mode: "sandbox" | "live";
+  };
+  wave: { enabled: boolean };
+  orange_money: { enabled: boolean };
+}
+
+// ─── Plan Feature Limits ───
+
+export interface PlanLimits {
+  max_projects: number | null;
+  max_team_members: number | null;
+  max_products: number | null;
+  max_job_listings: number | null;
+  max_ai_generations_per_day: number | null;
+  max_logo_variations: number;
+  max_regenerations: number | null;
+  allowed_templates: "free" | "free+1" | "all" | "all+corporate";
+  features: {
+    pitch_deck: boolean;
+    cahier_charges: boolean;
+    business_plan: boolean;
+    one_pager: boolean;
+    cgu: boolean;
+    roadmap: boolean;
+    competitors_analysis: boolean;
+    oapi_check: boolean;
+    timestamp: boolean;
+    export_pdf: boolean;
+    fundraising: boolean;
+    advanced_stats: boolean;
+    verified_badge: boolean;
+    priority_visibility: boolean;
+    homepage_featured: boolean;
+    dev_outsourcing: boolean;
+  };
 }

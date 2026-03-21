@@ -30,6 +30,15 @@ export const TABLES = {
   investors: "ivoireio_investors",
   fundraising_documents: "ivoireio_fundraising_documents",
   job_listings: "ivoireio_job_listings",
+  subscriptions: "ivoireio_subscriptions",
+  payments: "ivoireio_payments",
+  referrals: "ivoireio_referrals",
+  credits: "ivoireio_credits",
+  ai_usage: "ivoireio_ai_usage",
+  ai_cache: "ivoireio_ai_cache",
+  dev_requests: "ivoireio_dev_requests",
+  dev_quotes: "ivoireio_dev_quotes",
+  dev_projects: "ivoireio_dev_projects",
 } as const;
 
 // ─── Sous-domaines réservés ───

@@ -40,8 +40,9 @@ const TASK_PROVIDER_MAP: Record<AITask, AIProvider> = {
   one_pager: "anthropic",
   roadmap: "anthropic",
   cgu: "anthropic",
-  competitors: "anthropic",
-  oapi_check: "anthropic",
+  // OpenAI — Recherche web (migré depuis Anthropic pour réduire les coûts)
+  competitors: "openai",
+  oapi_check: "openai",
 
   // crun.ai — Génération d'images (logos)
   logo: "crunai",
