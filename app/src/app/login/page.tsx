@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { CheckCircle, Mail } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -14,6 +14,14 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
+
+  // Capture referral code from URL if present
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      localStorage.setItem("ivoire_ref", ref);
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -214,10 +214,11 @@ function formatCurrency(n: number): string {
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export function DevOutsourcingTab({ startupId }: { startupId: string }) {
+export function DevOutsourcingTab({ startupId, onNavigate }: { startupId: string; onNavigate?: (tab: string) => void }) {
   const [requests, setRequests] = useState<DevRequest[]>([]);
   const [projects, setProjects] = useState<DevProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasStartup, setHasStartup] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [analyzingRoles, setAnalyzingRoles] = useState(false);
@@ -244,8 +245,10 @@ export function DevOutsourcingTab({ startupId }: { startupId: string }) {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setRequests(data.requests || []);
+      // If requests came back empty and we get an empty array, check if startup exists
+      // The API returns { requests: [] } when no startup exists (no error)
     } catch {
-      toast.error("Impossible de charger les demandes.");
+      // non-blocking
     }
   }, []);
 
@@ -261,11 +264,18 @@ export function DevOutsourcingTab({ startupId }: { startupId: string }) {
   }, []);
 
   useEffect(() => {
-    void startupId; // acknowledged
-    Promise.all([fetchRequests(), fetchProjects()]).finally(() =>
-      setLoading(false)
-    );
-  }, [fetchRequests, fetchProjects, startupId]);
+    void startupId;
+    Promise.all([
+      fetch("/api/dashboard/dev-requests")
+        .then((res) => res.json())
+        .then((data) => {
+          setRequests(data.requests || []);
+          if (data.startup_exists === false) setHasStartup(false);
+        })
+        .catch(() => {}),
+      fetchProjects(),
+    ]).finally(() => setLoading(false));
+  }, [fetchProjects, startupId]);
 
   /* ---- AI Role Analysis ---- */
 
@@ -327,7 +337,13 @@ export function DevOutsourcingTab({ startupId }: { startupId: string }) {
         }),
       });
 
-      if (!createRes.ok) throw new Error();
+      if (!createRes.ok) {
+        const err = await createRes.json().catch(() => ({}));
+        if (err.error?.includes("startup")) {
+          setHasStartup(false);
+        }
+        throw new Error(err.error || "Erreur lors de la creation de la demande");
+      }
       const createData = await createRes.json();
 
       // 2. Submit (draft -> submitted)
@@ -346,8 +362,8 @@ export function DevOutsourcingTab({ startupId }: { startupId: string }) {
       resetForm();
       setShowForm(false);
       await fetchRequests();
-    } catch {
-      toast.error("Erreur lors de la soumission de la demande.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur lors de la soumission de la demande.");
     } finally {
       setSubmitting(false);
     }
@@ -389,6 +405,31 @@ export function DevOutsourcingTab({ startupId }: { startupId: string }) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // No startup — tell user to create one first
+  if (!hasStartup) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+        <div
+          className="w-14 h-14 rounded-xl flex items-center justify-center"
+          style={{ background: "var(--color-orange)", color: "#fff" }}
+        >
+          <Rocket className="w-7 h-7" />
+        </div>
+        <h2 className="text-lg font-bold">Creez votre startup d&apos;abord</h2>
+        <p className="text-sm text-muted-foreground max-w-md">
+          Pour demander un service de developpement, vous devez d&apos;abord renseigner les informations de votre startup.
+        </p>
+        <Button
+          onClick={() => onNavigate?.("startup")}
+          style={{ background: "var(--color-orange)", color: "#fff" }}
+        >
+          <Rocket className="w-4 h-4 mr-2" />
+          Creer ma startup
+        </Button>
       </div>
     );
   }

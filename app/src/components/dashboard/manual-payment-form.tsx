@@ -20,6 +20,8 @@ interface ManualPaymentFormProps {
   amount: number;
   bankInfo: PaymentProviderConfig["manual"];
   onSuccess: () => void;
+  mobileMoneyMode?: boolean;
+  providerName?: string;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -30,6 +32,8 @@ export function ManualPaymentForm({
   amount,
   bankInfo,
   onSuccess,
+  mobileMoneyMode,
+  providerName,
 }: ManualPaymentFormProps) {
   const [bankReference, setBankReference] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -119,101 +123,102 @@ export function ManualPaymentForm({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Bank details */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Building2 className="w-4 h-4" style={{ color: "var(--color-orange)" }} />
-            Informations bancaires
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">Banque</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{bankInfo.bank_name}</span>
-                <button
-                  onClick={() => copyToClipboard(bankInfo.bank_name)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
+      {/* Bank details — only shown when NOT in mobile money mode */}
+      {!mobileMoneyMode && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Building2 className="w-4 h-4" style={{ color: "var(--color-orange)" }} />
+              Informations bancaires
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Banque</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{bankInfo.bank_name}</span>
+                  <button
+                    onClick={() => copyToClipboard(bankInfo.bank_name)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Numero de compte</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium font-mono">
+                    {bankInfo.account_number}
+                  </span>
+                  <button
+                    onClick={() => copyToClipboard(bankInfo.account_number)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Titulaire du compte</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{bankInfo.account_name}</span>
+                  <button
+                    onClick={() => copyToClipboard(bankInfo.account_name)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Montant a transferer</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold" style={{ color: "var(--color-orange)" }}>
+                    {amount.toLocaleString("fr-FR")} FCFA
+                  </span>
+                  <button
+                    onClick={() => copyToClipboard(amount.toString())}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">Numero de compte</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium font-mono">
-                  {bankInfo.account_number}
-                </span>
-                <button
-                  onClick={() => copyToClipboard(bankInfo.account_number)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">Titulaire du compte</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{bankInfo.account_name}</span>
-                <button
-                  onClick={() => copyToClipboard(bankInfo.account_name)}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">Montant a transferer</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold" style={{ color: "var(--color-orange)" }}>
-                  {amount.toLocaleString("fr-FR")} FCFA
-                </span>
-                <button
-                  onClick={() => copyToClipboard(amount.toString())}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
 
-          {bankInfo.instructions && (
-            <div
-              className="rounded-lg p-3 text-sm"
-              style={{ background: "var(--color-surface)" }}
-            >
-              <p className="text-xs font-medium text-muted-foreground mb-1">
-                Instructions
-              </p>
-              <p className="text-sm">{bankInfo.instructions}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {bankInfo.instructions && (
+              <div
+                className="rounded-lg p-3 text-sm"
+                style={{ background: "var(--color-surface)" }}
+              >
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  Instructions
+                </p>
+                <p className="text-sm">{bankInfo.instructions}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Bank reference input */}
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="bank-reference" className="text-sm">
-          Reference bancaire (optionnel)
-        </Label>
-        <Input
-          id="bank-reference"
-          type="text"
-          placeholder="Ex: REF-20260321-001"
-          value={bankReference}
-          onChange={(e) => setBankReference(e.target.value)}
-          disabled={submitting}
-        />
-        <p className="text-xs text-muted-foreground">
-          Si votre banque genere une reference de transaction, indiquez-la ici.
-        </p>
-      </div>
+      {/* Reference input */}
+      {!mobileMoneyMode && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="bank-reference" className="text-sm">
+            Reference bancaire (optionnel)
+          </Label>
+          <Input
+            id="bank-reference"
+            type="text"
+            placeholder="Ex: REF-20260321-001"
+            value={bankReference}
+            onChange={(e) => setBankReference(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
+      )}
 
       {/* File upload */}
       <div className="flex flex-col gap-2">
@@ -286,8 +291,9 @@ export function ManualPaymentForm({
       </Button>
 
       <p className="text-xs text-muted-foreground text-center">
-        Votre abonnement sera active apres verification de la preuve de paiement
-        (delai moyen : 24h).
+        {mobileMoneyMode
+          ? `Votre abonnement sera active apres verification de la preuve ${providerName ?? "Mobile Money"} (delai moyen : 24h).`
+          : "Votre abonnement sera active apres verification de la preuve de paiement (delai moyen : 24h)."}
       </p>
     </div>
   );

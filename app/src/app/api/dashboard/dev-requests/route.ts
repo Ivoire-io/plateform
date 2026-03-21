@@ -19,7 +19,7 @@ export async function GET() {
     .maybeSingle();
 
   if (!startup) {
-    return NextResponse.json({ requests: [] });
+    return NextResponse.json({ requests: [], startup_exists: false });
   }
 
   const { data: requests, error } = await supabase

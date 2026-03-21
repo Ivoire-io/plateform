@@ -65,7 +65,7 @@ Mettre en place l'infrastructure de paiement et d'abonnement pour commencer a ge
 6. Decrementation `free_slots` dans `platform_config`
 
 ### Livrables
-- [ ] Migration SQL appliquee
+- [✅] Migration SQL appliquee
 - [ ] API routes fonctionnelles
 - [ ] Test : upload preuve → admin approuve → plan change
 
@@ -181,8 +181,8 @@ NEXT_PUBLIC_PAYPAL_CLIENT_ID=xxx
 - `GET/POST /api/admin/credits` — Voir + attribution manuelle
 
 ### Livrables
-- [ ] Code genere automatiquement
-- [ ] Partage WhatsApp fonctionnel
+- [✅] Code genere automatiquement
+- [✅] Partage WhatsApp fonctionnel
 - [ ] Credits credites sur conversion
 - [ ] Paiement par credits operationnel
 
@@ -229,7 +229,7 @@ Apres avoir genere un cahier des charges avec le Project Builder, une startup pe
 
 ### Livrables
 - [ ] Startup peut creer une demande dev
-- [ ] IA suggere les roles techniques
+- [✅] IA suggere les roles techniques
 - [ ] Admin peut creer un devis et gerer le pipeline
 - [ ] Suivi par milestones
 
@@ -441,9 +441,9 @@ app/
 ## Checklist de verification
 
 ### Pre-deploiement
-- [ ] Migration 011 appliquee sans erreur
-- [ ] Variables d'environnement PayPal configurees
-- [ ] `npm run build` passe sans erreur TypeScript
+- [✅] Migration 011 appliquee sans erreur
+- [✅] Variables d'environnement PayPal configurees
+- [✅] `npm run build` passe sans erreur TypeScript
 - [ ] RLS policies testees
 
 ### Tests fonctionnels

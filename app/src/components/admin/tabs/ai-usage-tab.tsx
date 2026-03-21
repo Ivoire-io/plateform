@@ -122,10 +122,10 @@ export function AdminAIUsageTab() {
       {/* Stats globales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { icon: DollarSign, label: "Total cout ce mois", value: `${data.total_cost.toLocaleString("fr-FR")} FCFA`, color: "#ef4444" },
-          { icon: Zap, label: "Total requetes", value: data.total_requests.toLocaleString("fr-FR"), color: "#3b82f6" },
-          { icon: BarChart3, label: "Cout moyen/requete", value: `${data.avg_cost_per_request.toLocaleString("fr-FR")} FCFA`, color: "#eab308" },
-          { icon: Zap, label: "Requetes en cache", value: `${data.cache_hit_rate.toFixed(1)}%`, color: "#10b981" },
+          { icon: DollarSign, label: "Total cout ce mois", value: `${(data.total_cost ?? 0).toLocaleString("fr-FR")} FCFA`, color: "#ef4444" },
+          { icon: Zap, label: "Total requetes", value: (data.total_requests ?? 0).toLocaleString("fr-FR"), color: "#3b82f6" },
+          { icon: BarChart3, label: "Cout moyen/requete", value: `${(data.avg_cost_per_request ?? 0).toLocaleString("fr-FR")} FCFA`, color: "#eab308" },
+          { icon: Zap, label: "Requetes en cache", value: `${(data.cache_hit_rate ?? 0).toFixed(1)}%`, color: "#10b981" },
         ].map((m) => (
           <Card key={m.label} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
             <CardContent className="p-4">

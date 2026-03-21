@@ -20,6 +20,7 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { Experience, Profile, Project } from "@/lib/types";
+import { toast } from "sonner";
 import {
   BarChart2,
   Blocks,
@@ -45,7 +46,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DevOutsourcingTab } from "./dev-outsourcing-tab";
 import { ExperiencesTab } from "./experiences-tab";
@@ -84,6 +85,26 @@ type Tab =
   | "referral"
   | "dev-outsourcing";
 
+const tabTitles: Record<Tab, string> = {
+  overview: "Vue d'ensemble",
+  profile: "Mon Profil",
+  template: "Template",
+  projects: "Projets",
+  experiences: "Experiences",
+  messages: "Messages",
+  stats: "Statistiques",
+  jobs: "Emploi",
+  startup: "Ma Startup",
+  team: "Equipe",
+  products: "Produits",
+  fundraising: "Levee de fonds",
+  settings: "Parametres",
+  "project-builder": "Project Builder",
+  subscription: "Abonnement",
+  referral: "Parrainage",
+  "dev-outsourcing": "Services Dev",
+};
+
 interface DashboardShellProps {
   userId: string;
   userEmail: string;
@@ -104,12 +125,26 @@ export function DashboardShell({
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { theme, setTheme, resolvedTheme } = useTheme();
+
+  // Sync activeTab with URL ?tab= parameter
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as Tab | null;
+    if (tabParam && tabParam in tabTitles) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  function navigateTab(tab: Tab) {
+    setActiveTab(tab);
+    const url = tab === "overview" ? "/dashboard" : `/dashboard?tab=${tab}`;
+    router.replace(url, { scroll: false });
+  }
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Callback pour les mises à jour partielles du profil (depuis ProfileTab, avatar, etc.)
-  // Met à jour l'état local sans re-fetch SSR
   function handleProfileUpdate(fields: Partial<typeof initialProfile & Record<string, unknown>>) {
     setProfile((prev) => prev ? { ...prev, ...fields } as typeof prev : prev);
   }
@@ -132,32 +167,35 @@ export function DashboardShell({
     fetchUnread();
   }, [fetchUnread]);
 
+  // Auto-apply referral code from localStorage (captured on landing/login page)
+  useEffect(() => {
+    if (!profile) return;
+    const refCode = localStorage.getItem("ivoire_ref");
+    if (!refCode) return;
+    if (profile.referral_code === refCode) {
+      localStorage.removeItem("ivoire_ref");
+      return;
+    }
+    fetch("/api/dashboard/referral", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ referral_code: refCode }),
+    })
+      .then((res) => {
+        if (res.ok) toast.success("Code de parrainage applique !");
+        localStorage.removeItem("ivoire_ref");
+      })
+      .catch(() => {
+        localStorage.removeItem("ivoire_ref");
+      });
+  }, [profile]);
+
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
   }
-
-  const tabTitles: Record<Tab, string> = {
-    overview: "Vue d'ensemble",
-    profile: "Mon Profil",
-    template: "Template",
-    projects: "Projets",
-    experiences: "Expériences",
-    messages: "Messages",
-    stats: "Statistiques",
-    jobs: "Emploi",
-    startup: "Ma Startup",
-    team: "Équipe",
-    products: "Produits",
-    fundraising: "Levée de fonds",
-    settings: "Paramètres",
-    "project-builder": "Project Builder",
-    subscription: "Abonnement",
-    referral: "Parrainage",
-    "dev-outsourcing": "Services Dev",
-  };
 
   return (
     <SidebarProvider>
@@ -207,23 +245,23 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
+                      <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => navigateTab("overview")}>
                         <Home /><span>Vue d&apos;ensemble</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "project-builder"} onClick={() => setActiveTab("project-builder")}>
+                      <SidebarMenuButton isActive={activeTab === "project-builder"} onClick={() => navigateTab("project-builder")}>
                         <Blocks /><span>Project Builder</span>
                         <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-500">NEW</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "startup"} onClick={() => setActiveTab("startup")}>
+                      <SidebarMenuButton isActive={activeTab === "startup"} onClick={() => navigateTab("startup")}>
                         <Rocket /><span>Ma Startup</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "template"} onClick={() => setActiveTab("template")}>
+                      <SidebarMenuButton isActive={activeTab === "template"} onClick={() => navigateTab("template")}>
                         <Layers /><span>Template</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -237,12 +275,12 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "team"} onClick={() => setActiveTab("team")}>
+                      <SidebarMenuButton isActive={activeTab === "team"} onClick={() => navigateTab("team")}>
                         <Users /><span>Équipe</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "products"} onClick={() => setActiveTab("products")}>
+                      <SidebarMenuButton isActive={activeTab === "products"} onClick={() => navigateTab("products")}>
                         <Lightbulb /><span>Produits</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -256,7 +294,7 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => setActiveTab("messages")}>
+                      <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => navigateTab("messages")}>
                         <Mail /><span>Messages</span>
                         {unreadMessages > 0 && (
                           <span className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "var(--color-orange)", color: "#fff" }}>
@@ -266,17 +304,17 @@ export function DashboardShell({
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => setActiveTab("stats")}>
+                      <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => navigateTab("stats")}>
                         <BarChart2 /><span>Statistiques</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "fundraising"} onClick={() => setActiveTab("fundraising")}>
+                      <SidebarMenuButton isActive={activeTab === "fundraising"} onClick={() => navigateTab("fundraising")}>
                         <TrendingUp /><span>Levée de fonds</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "dev-outsourcing"} onClick={() => setActiveTab("dev-outsourcing")}>
+                      <SidebarMenuButton isActive={activeTab === "dev-outsourcing"} onClick={() => navigateTab("dev-outsourcing")}>
                         <Code className="h-4 w-4" />
                         Services Dev
                       </SidebarMenuButton>
@@ -291,7 +329,7 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => setActiveTab("jobs")}>
+                      <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => navigateTab("jobs")}>
                         <BriefcaseBusiness /><span>Offres &amp; Pipeline</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -305,19 +343,19 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "subscription"} onClick={() => setActiveTab("subscription")}>
+                      <SidebarMenuButton isActive={activeTab === "subscription"} onClick={() => navigateTab("subscription")}>
                         <CreditCard className="h-4 w-4" />
                         Abonnement
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "referral"} onClick={() => setActiveTab("referral")}>
+                      <SidebarMenuButton isActive={activeTab === "referral"} onClick={() => navigateTab("referral")}>
                         <Gift className="h-4 w-4" />
                         Parrainage
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
+                      <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => navigateTab("settings")}>
                         <Settings /><span>Paramètres</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -336,17 +374,17 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
+                      <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => navigateTab("overview")}>
                         <Home /><span>Vue d&apos;ensemble</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "profile"} onClick={() => setActiveTab("profile")}>
+                      <SidebarMenuButton isActive={activeTab === "profile"} onClick={() => navigateTab("profile")}>
                         <User /><span>Mon Profil</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "template"} onClick={() => setActiveTab("template")}>
+                      <SidebarMenuButton isActive={activeTab === "template"} onClick={() => navigateTab("template")}>
                         <Layers /><span>Template</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -360,12 +398,12 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "projects"} onClick={() => setActiveTab("projects")}>
+                      <SidebarMenuButton isActive={activeTab === "projects"} onClick={() => navigateTab("projects")}>
                         <Briefcase /><span>Projets</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "experiences"} onClick={() => setActiveTab("experiences")}>
+                      <SidebarMenuButton isActive={activeTab === "experiences"} onClick={() => navigateTab("experiences")}>
                         <Clock /><span>Expériences</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -379,7 +417,7 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => setActiveTab("messages")}>
+                      <SidebarMenuButton isActive={activeTab === "messages"} onClick={() => navigateTab("messages")}>
                         <Mail /><span>Messages</span>
                         {unreadMessages > 0 && (
                           <span className="ml-auto text-xs font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "var(--color-orange)", color: "#fff" }}>
@@ -389,7 +427,7 @@ export function DashboardShell({
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => setActiveTab("stats")}>
+                      <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => navigateTab("stats")}>
                         <BarChart2 /><span>Statistiques</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -403,7 +441,7 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => setActiveTab("jobs")}>
+                      <SidebarMenuButton isActive={activeTab === "jobs"} onClick={() => navigateTab("jobs")}>
                         <BriefcaseBusiness /><span>Offres &amp; Candidatures</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -417,19 +455,19 @@ export function DashboardShell({
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "subscription"} onClick={() => setActiveTab("subscription")}>
+                      <SidebarMenuButton isActive={activeTab === "subscription"} onClick={() => navigateTab("subscription")}>
                         <CreditCard className="h-4 w-4" />
                         Abonnement
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "referral"} onClick={() => setActiveTab("referral")}>
+                      <SidebarMenuButton isActive={activeTab === "referral"} onClick={() => navigateTab("referral")}>
                         <Gift className="h-4 w-4" />
                         Parrainage
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
-                      <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
+                      <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => navigateTab("settings")}>
                         <Settings /><span>Paramètres</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -516,7 +554,7 @@ export function DashboardShell({
               projects={initialProjects}
               experiences={initialExperiences}
               unreadMessages={unreadMessages}
-              onNavigate={(tab) => setActiveTab(tab as Tab)}
+              onNavigate={(tab) => navigateTab(tab as Tab)}
             />
           )}
           {profile && activeTab === "profile" && (
@@ -559,11 +597,11 @@ export function DashboardShell({
             <FundraisingTab startupId={profile.id} />
           )}
           {profile && activeTab === "settings" && (
-            <SettingsTab profile={profile} userEmail={userEmail} />
+            <SettingsTab profile={profile} userEmail={userEmail} onNavigate={(tab) => navigateTab(tab as Tab)} />
           )}
           {profile && activeTab === "subscription" && <SubscriptionTab />}
           {profile && activeTab === "referral" && <ReferralTab />}
-          {profile && activeTab === "dev-outsourcing" && profile.type === "startup" && <DevOutsourcingTab startupId={profile.id} />}
+          {profile && activeTab === "dev-outsourcing" && profile.type === "startup" && <DevOutsourcingTab startupId={profile.id} onNavigate={(tab) => navigateTab(tab as Tab)} />}
         </div>
       </SidebarInset>
     </SidebarProvider>

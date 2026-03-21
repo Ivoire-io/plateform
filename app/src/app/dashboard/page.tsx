@@ -4,6 +4,7 @@ import type { Experience, Profile, Project } from "@/lib/types";
 import { TABLES } from "@/lib/utils";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 // Toujours rendu dynamiquement — données de profil fraîches à chaque visite
 export const dynamic = "force-dynamic";
@@ -38,12 +39,14 @@ export default async function DashboardPage() {
   }
 
   return (
-    <DashboardShell
-      userId={user.id}
-      userEmail={user.email ?? ""}
-      profile={profile as Profile | null}
-      initialProjects={projects}
-      initialExperiences={experiences}
-    />
+    <Suspense>
+      <DashboardShell
+        userId={user.id}
+        userEmail={user.email ?? ""}
+        profile={profile as Profile | null}
+        initialProjects={projects}
+        initialExperiences={experiences}
+      />
+    </Suspense>
   );
 }

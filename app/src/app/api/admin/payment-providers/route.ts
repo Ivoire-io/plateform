@@ -47,7 +47,7 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ config: data?.value ?? null });
+  return NextResponse.json(data?.value ?? {});
 }
 
 // PUT /api/admin/payment-providers — Update payment providers config

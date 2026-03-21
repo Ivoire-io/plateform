@@ -74,9 +74,9 @@ export function AdminReferralsTab() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { icon: Users, label: "Total parrainages", value: stats.total_referrals.toLocaleString("fr-FR"), color: "#3b82f6" },
-          { icon: Users, label: "Convertis", value: stats.converted.toLocaleString("fr-FR"), color: "#8b5cf6" },
-          { icon: DollarSign, label: "Total recompenses", value: `${stats.total_rewards.toLocaleString("fr-FR")} FCFA`, color: "#10b981" },
+          { icon: Users, label: "Total parrainages", value: (stats.total_referrals ?? 0).toLocaleString("fr-FR"), color: "#3b82f6" },
+          { icon: Users, label: "Convertis", value: (stats.converted ?? 0).toLocaleString("fr-FR"), color: "#8b5cf6" },
+          { icon: DollarSign, label: "Total recompenses", value: `${(stats.total_rewards ?? 0).toLocaleString("fr-FR")} FCFA`, color: "#10b981" },
         ].map((m) => (
           <Card key={m.label} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
             <CardContent className="p-4">

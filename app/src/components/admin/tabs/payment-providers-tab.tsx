@@ -11,6 +11,7 @@ import {
   Globe,
   Loader2,
   Save,
+  Smartphone,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -28,23 +29,32 @@ interface PayPalConfig {
   mode: "sandbox" | "live";
 }
 
-interface ProviderStub {
+interface MobileMoneyConfig {
   enabled: boolean;
+  phone_number: string;
 }
 
 interface ProvidersConfig {
   manual: ManualConfig;
   paypal: PayPalConfig;
-  wave: ProviderStub;
-  orange_money: ProviderStub;
+  wave: MobileMoneyConfig;
+  orange_money: MobileMoneyConfig;
+  moov: MobileMoneyConfig;
 }
 
 const DEFAULT_CONFIG: ProvidersConfig = {
   manual: { enabled: false, bank_name: "", account_number: "", account_name: "", instructions: "" },
   paypal: { enabled: false, mode: "sandbox" },
-  wave: { enabled: false },
-  orange_money: { enabled: false },
+  wave: { enabled: false, phone_number: "" },
+  orange_money: { enabled: false, phone_number: "" },
+  moov: { enabled: false, phone_number: "" },
 };
+
+const MOBILE_PROVIDERS: { key: keyof Pick<ProvidersConfig, "wave" | "orange_money" | "moov">; label: string; color: string; placeholder: string }[] = [
+  { key: "wave", label: "Wave", color: "#1DC3E2", placeholder: "Ex: 07 00 00 00 00" },
+  { key: "orange_money", label: "Orange Money", color: "#FF6600", placeholder: "Ex: 07 00 00 00 00" },
+  { key: "moov", label: "Moov Money", color: "#003DA5", placeholder: "Ex: 01 00 00 00 00" },
+];
 
 export function AdminPaymentProvidersTab() {
   const [loading, setLoading] = useState(true);
@@ -57,7 +67,13 @@ export function AdminPaymentProvidersTab() {
       const res = await fetch("/api/admin/payment-providers");
       if (!res.ok) throw new Error();
       const data: ProvidersConfig = await res.json();
-      setConfig({ ...DEFAULT_CONFIG, ...data });
+      setConfig({
+        ...DEFAULT_CONFIG,
+        ...data,
+        wave: { ...DEFAULT_CONFIG.wave, ...(data.wave ?? {}) },
+        orange_money: { ...DEFAULT_CONFIG.orange_money, ...(data.orange_money ?? {}) },
+        moov: { ...DEFAULT_CONFIG.moov, ...(data.moov ?? {}) },
+      });
     } catch {
       toast.error("Erreur lors du chargement de la configuration");
     } finally {
@@ -97,6 +113,13 @@ export function AdminPaymentProvidersTab() {
     setConfig((prev) => ({
       ...prev,
       paypal: { ...prev.paypal, [field]: value },
+    }));
+  }
+
+  function updateMobile(key: keyof Pick<ProvidersConfig, "wave" | "orange_money" | "moov">, field: keyof MobileMoneyConfig, value: string | boolean) {
+    setConfig((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value },
     }));
   }
 
@@ -192,6 +215,52 @@ export function AdminPaymentProvidersTab() {
         </CardContent>
       </Card>
 
+      {/* Mobile Money (Wave, Orange Money, Moov) */}
+      {MOBILE_PROVIDERS.map(({ key, label, color, placeholder }) => {
+        const provider = config[key];
+        return (
+          <Card key={key} style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Smartphone className="h-4 w-4" style={{ color }} />
+                  {label}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge className={`text-xs ${provider.enabled ? "bg-green-500/15 text-green-400 border-green-500/30" : "bg-red-500/15 text-red-400 border-red-500/30"}`}>
+                    {provider.enabled ? "Actif" : "Inactif"}
+                  </Badge>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={provider.enabled}
+                    onClick={() => updateMobile(key, "enabled", !provider.enabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${provider.enabled ? "" : "bg-gray-600"}`}
+                    style={provider.enabled ? { background: color } : {}}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${provider.enabled ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <Label className="text-xs text-muted-foreground">Numero de telephone</Label>
+                <Input
+                  className="mt-1"
+                  placeholder={placeholder}
+                  value={provider.phone_number}
+                  onChange={(e) => updateMobile(key, "phone_number", e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Ce numero sera affiche aux utilisateurs pour effectuer le paiement.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+
       {/* PayPal */}
       <Card style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
         <CardHeader className="pb-3">
@@ -238,68 +307,6 @@ export function AdminPaymentProvidersTab() {
             Configurez <code className="px-1 py-0.5 rounded" style={{ background: "var(--color-border)" }}>PAYPAL_CLIENT_ID</code> et{" "}
             <code className="px-1 py-0.5 rounded" style={{ background: "var(--color-border)" }}>PAYPAL_CLIENT_SECRET</code> dans les variables d&apos;environnement.
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Wave */}
-      <Card style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", opacity: 0.6 }}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <CreditCard className="h-4 w-4" style={{ color: "#22c55e" }} />
-              Wave
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Badge className="text-xs bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
-                Bientot disponible
-              </Badge>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={false}
-                disabled
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-600 opacity-50 cursor-not-allowed"
-              >
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-1" />
-              </button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">
-            L&apos;integration Wave sera disponible prochainement. Vous pourrez accepter les paiements via Wave Mobile Money.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Orange Money */}
-      <Card style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", opacity: 0.6 }}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <CreditCard className="h-4 w-4" style={{ color: "#f97316" }} />
-              Orange Money
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Badge className="text-xs bg-yellow-500/15 text-yellow-400 border-yellow-500/30">
-                Bientot disponible
-              </Badge>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={false}
-                disabled
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-600 opacity-50 cursor-not-allowed"
-              >
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-1" />
-              </button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">
-            L&apos;integration Orange Money sera disponible prochainement. Vous pourrez accepter les paiements via Orange Money.
-          </p>
         </CardContent>
       </Card>
     </div>

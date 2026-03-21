@@ -522,8 +522,9 @@ export interface PaymentProviderConfig {
     enabled: boolean;
     mode: "sandbox" | "live";
   };
-  wave: { enabled: boolean };
-  orange_money: { enabled: boolean };
+  wave: { enabled: boolean; phone_number?: string };
+  orange_money: { enabled: boolean; phone_number?: string };
+  moov: { enabled: boolean; phone_number?: string };
 }
 
 // ─── Plan Feature Limits ───

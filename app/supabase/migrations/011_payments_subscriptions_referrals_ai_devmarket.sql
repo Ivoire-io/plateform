@@ -212,6 +212,10 @@ ALTER TABLE ivoireio_profiles
   ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE,
   ADD COLUMN IF NOT EXISTS referred_by UUID REFERENCES ivoireio_profiles(id);
 
+-- Add referral_code to waitlist for tracking signups
+ALTER TABLE ivoireio_waitlist
+  ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20);
+
 -- Extend plan CHECK to include new tiers
 ALTER TABLE ivoireio_profiles DROP CONSTRAINT IF EXISTS ivoireio_profiles_plan_check;
 ALTER TABLE ivoireio_profiles
@@ -350,7 +354,7 @@ $$ LANGUAGE plpgsql;
 -- ─── SEED PLATFORM CONFIG ───
 INSERT INTO ivoireio_platform_config (key, value) VALUES
   ('pricing', '{"free": {"amount": 0, "type": "free", "label": "Gratuit"}, "starter": {"amount": 5000, "type": "one_time", "label": "Starter"}, "student": {"amount": 2000, "type": "one_time", "label": "Etudiant"}, "pro": {"amount": 35000, "type": "yearly", "label": "Pro"}, "enterprise": {"amount": 150000, "type": "yearly", "label": "Enterprise"}}'::jsonb),
-  ('payment_providers', '{"manual": {"enabled": true, "bank_name": "", "account_number": "", "account_name": "", "instructions": "Effectuez un virement bancaire puis uploadez votre preuve de paiement."}, "paypal": {"enabled": false, "mode": "sandbox"}, "wave": {"enabled": false}, "orange_money": {"enabled": false}}'::jsonb),
+  ('payment_providers', '{"manual": {"enabled": true, "bank_name": "", "account_number": "", "account_name": "", "instructions": "Effectuez un virement bancaire puis uploadez votre preuve de paiement."}, "paypal": {"enabled": false, "mode": "sandbox"}, "wave": {"enabled": true, "phone_number": ""}, "orange_money": {"enabled": true, "phone_number": ""}, "moov": {"enabled": true, "phone_number": ""}}'::jsonb),
   ('plan_limits', '{
     "free": {"max_projects": 3, "max_team_members": 3, "max_products": 1, "max_job_listings": 1, "max_ai_generations_per_day": 5, "max_logo_variations": 1, "max_regenerations": 1, "allowed_templates": "free", "features": {"pitch_deck": false, "cahier_charges": false, "business_plan": false, "one_pager": false, "cgu": false, "roadmap": false, "competitors_analysis": false, "oapi_check": false, "timestamp": false, "export_pdf": false, "fundraising": false, "advanced_stats": false, "verified_badge": false, "priority_visibility": false, "homepage_featured": false, "dev_outsourcing": false}},
     "starter": {"max_projects": 10, "max_team_members": 5, "max_products": 3, "max_job_listings": 1, "max_ai_generations_per_day": 15, "max_logo_variations": 3, "max_regenerations": 3, "allowed_templates": "free+1", "features": {"pitch_deck": true, "cahier_charges": false, "business_plan": false, "one_pager": true, "cgu": false, "roadmap": false, "competitors_analysis": true, "oapi_check": true, "timestamp": true, "export_pdf": true, "fundraising": false, "advanced_stats": false, "verified_badge": false, "priority_visibility": false, "homepage_featured": false, "dev_outsourcing": false}},

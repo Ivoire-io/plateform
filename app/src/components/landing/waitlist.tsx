@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { TABLES } from "@/lib/utils";
 import { Check, CheckCircle2, Loader2, Mail, Phone, Rocket, User, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type FormType = "developer" | "startup" | "enterprise" | "other";
@@ -44,6 +45,15 @@ export function WaitlistSection() {
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchParams = useSearchParams();
+
+  // Capture referral code from URL ?ref=xxx and persist in localStorage
+  useEffect(() => {
+    const refParam = searchParams.get("ref");
+    if (refParam) {
+      localStorage.setItem("ivoire_ref", refParam);
+    }
+  }, [searchParams]);
 
   // Validation dérivée
   const emailOk = email.length === 0 ? null : EMAIL_REGEX.test(email);
@@ -109,12 +119,14 @@ export function WaitlistSection() {
 
     try {
       const supabase = createClient();
+      const referralCode = localStorage.getItem("ivoire_ref") || null;
       const { error } = await supabase.from(TABLES.waitlist).insert({
         email,
         full_name: fullName.trim(),
         desired_slug: slug,
         whatsapp: whatsappDigits.length > 0 ? `+225${whatsappDigits}` : null,
         type,
+        referral_code: referralCode,
       });
 
       if (error) {
