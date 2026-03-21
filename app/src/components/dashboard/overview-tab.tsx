@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Experience, Profile, Project } from "@/lib/types";
 import {
   BarChart2,
+  Blocks,
   Briefcase,
   Check,
   Clock,
@@ -15,9 +16,11 @@ import {
   Loader2,
   MessageSquare,
   PenLine,
+  Rocket,
   Share2,
   Star,
   TrendingUp,
+  Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -78,6 +81,9 @@ export function OverviewTab({
 
   const [statsData, setStatsData] = useState<StatsData | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [projectScore, setProjectScore] = useState<{ global: number; statusLabel: string; statusColor: string; identity: { score: number }; vision: { score: number }; technique: { score: number }; financier: { score: number } } | null>(null);
+
+  const isStartup = profile.type === "startup";
 
   useEffect(() => {
     fetch("/api/dashboard/stats?period=30j")
@@ -89,7 +95,17 @@ export function OverviewTab({
         // silencieux — les cards afficheront 0
       })
       .finally(() => setStatsLoading(false));
-  }, []);
+
+    // Fetch project score for startups
+    if (isStartup) {
+      fetch("/api/project-builder/score")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success) setProjectScore(data.data);
+        })
+        .catch(() => { });
+    }
+  }, [isStartup]);
 
   async function copyLink() {
     const url = `https://${profile.slug}.ivoire.io`;
@@ -225,6 +241,78 @@ export function OverviewTab({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Project Score (startup only) */}
+        {isStartup && (
+          <Card className="md:col-span-2 overflow-hidden border-orange-500/20">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                <div className="flex items-center gap-5 flex-1">
+                  <div className="relative">
+                    <div
+                      className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold border-4"
+                      style={{
+                        borderColor: projectScore?.statusColor || "var(--color-orange)",
+                        color: projectScore?.statusColor || "var(--color-orange)",
+                      }}
+                    >
+                      {projectScore?.global ?? "—"}
+                      {projectScore && <span className="text-sm">%</span>}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Blocks className="w-4 h-4" style={{ color: "var(--color-orange)" }} />
+                      <h3 className="font-semibold">Score Projet</h3>
+                      {projectScore && (
+                        <span
+                          className="text-xs font-medium px-2 py-0.5 rounded-full"
+                          style={{ background: projectScore.statusColor + "15", color: projectScore.statusColor }}
+                        >
+                          {projectScore.statusLabel}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Dossier projet complété à {projectScore?.global ?? 0}%
+                    </p>
+                    <div className="h-2 rounded-full overflow-hidden mt-2" style={{ background: "var(--color-surface)" }}>
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${projectScore?.global ?? 0}%`, background: projectScore?.statusColor || "var(--color-orange)" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {/* Category mini scores */}
+                <div className="flex gap-3">
+                  {[
+                    { label: "Identité", score: projectScore?.identity.score ?? 0, icon: "🎨" },
+                    { label: "Vision", score: projectScore?.vision.score ?? 0, icon: "🎯" },
+                    { label: "Technique", score: projectScore?.technique.score ?? 0, icon: "🔧" },
+                    { label: "Financier", score: projectScore?.financier.score ?? 0, icon: "💰" },
+                  ].map((cat) => (
+                    <div key={cat.label} className="text-center">
+                      <span className="text-sm">{cat.icon}</span>
+                      <p className="text-xs font-bold mt-0.5" style={{ color: cat.score >= 80 ? "#22c55e" : cat.score >= 50 ? "#eab308" : "#ef4444" }}>
+                        {cat.score}%
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{cat.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => onNavigate("project-builder")}
+                  style={{ background: "var(--color-orange)", color: "#fff" }}
+                >
+                  <Blocks className="w-3.5 h-3.5 mr-1.5" />
+                  {(projectScore?.global ?? 0) < 50 ? "Lancer le Project Builder" : "Continuer"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Profile completion */}
         <Card>
           <CardHeader className="pb-2">
@@ -367,40 +455,79 @@ export function OverviewTab({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <button
-              onClick={() => onNavigate("profile")}
-              className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-            >
-              <PenLine className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
-              <span>Modifier profil</span>
-            </button>
-            <button
-              onClick={() => onNavigate("projects")}
-              className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-            >
-              <Briefcase className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
-              <span>Ajouter projet</span>
-            </button>
-            <a
-              href={`https://${profile.slug}.ivoire.io`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-            >
-              <Share2 className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
-              <span>Voir portfolio</span>
-            </a>
-            <button
-              onClick={copyLink}
-              className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-            >
-              <Copy className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
-              <span>Copier lien</span>
-            </button>
+            {isStartup ? (
+              <>
+                <button
+                  onClick={() => onNavigate("project-builder")}
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <Blocks className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Project Builder</span>
+                </button>
+                <button
+                  onClick={() => onNavigate("team")}
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <Users className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Mon équipe</span>
+                </button>
+                <button
+                  onClick={() => onNavigate("products")}
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <Rocket className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Mes produits</span>
+                </button>
+                <button
+                  onClick={() => onNavigate("fundraising")}
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <TrendingUp className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Levée de fonds</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => onNavigate("profile")}
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <PenLine className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Modifier profil</span>
+                </button>
+                <button
+                  onClick={() => onNavigate("projects")}
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <Briefcase className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Ajouter projet</span>
+                </button>
+                <a
+                  href={`https://${profile.slug}.ivoire.io`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <Share2 className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Voir portfolio</span>
+                </a>
+                <button
+                  onClick={copyLink}
+                  className="flex flex-col items-center gap-2 rounded-lg p-3 border border-border hover:border-orange-400 transition-colors text-sm"
+                  style={{ borderColor: "var(--color-border)" }}
+                >
+                  <Copy className="w-5 h-5" style={{ color: "var(--color-orange)" }} />
+                  <span>Copier lien</span>
+                </button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>

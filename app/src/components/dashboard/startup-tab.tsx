@@ -14,8 +14,10 @@ import {
   Loader2,
   Rocket,
   Smartphone,
+  Sparkles,
   Trash2,
   Twitter,
+  Wand2,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -187,6 +189,7 @@ export function StartupTab() {
   const [deleting, setDeleting] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [techInput, setTechInput] = useState("");
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const emptyForm = {
@@ -372,7 +375,7 @@ export function StartupTab() {
   const statusCfg = startup ? STATUS_CONFIG[startup.status] : null;
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 w-full max-w-4xl">
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
@@ -491,12 +494,40 @@ export function StartupTab() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="tagline">
-                  Tagline <span className="text-orange-400">*</span>{" "}
-                  <span className="text-xs text-muted-foreground">
-                    (max 80 car.)
-                  </span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="tagline">
+                    Tagline <span className="text-orange-400">*</span>{" "}
+                    <span className="text-xs text-muted-foreground">
+                      (max 80 car.)
+                    </span>
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs gap-1"
+                    disabled={aiLoading === "tagline" || !form.name}
+                    onClick={async () => {
+                      setAiLoading("tagline");
+                      try {
+                        const res = await fetch("/api/project-builder/generate", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ type: "tagline", projectName: form.name, sector: form.sector, description: form.description || form.tagline }),
+                        });
+                        const data = await res.json();
+                        if (data.success && Array.isArray(data.data) && data.data[0]) {
+                          setField("tagline", data.data[0]);
+                          toast.success("Tagline g\u00e9n\u00e9r\u00e9e par IA !");
+                        }
+                      } catch { toast.error("Erreur IA"); }
+                      finally { setAiLoading(null); }
+                    }}
+                  >
+                    {aiLoading === "tagline" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" style={{ color: "var(--color-orange)" }} />}
+                    <span style={{ color: "var(--color-orange)" }}>IA</span>
+                  </Button>
+                </div>
                 <Input
                   id="tagline"
                   value={form.tagline}
@@ -596,12 +627,40 @@ export function StartupTab() {
         {/* DESCRIPTION */}
         <SectionCard title="Description">
           <div className="space-y-1.5">
-            <Label htmlFor="description">
-              Description longue{" "}
-              <span className="text-xs text-muted-foreground">
-                ({form.description.length} / 1000 caract\u00e8res)
-              </span>
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="description">
+                Description longue{" "}
+                <span className="text-xs text-muted-foreground">
+                  ({form.description.length} / 1000 caract\u00e8res)
+                </span>
+              </Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs gap-1"
+                disabled={aiLoading === "description" || !form.name}
+                onClick={async () => {
+                  setAiLoading("description");
+                  try {
+                    const res = await fetch("/api/project-builder/improve", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ text: form.description || form.tagline, context: `Startup ${form.name} dans le secteur ${form.sector}` }),
+                    });
+                    const data = await res.json();
+                    if (data.success && data.data?.improved) {
+                      setField("description", data.data.improved);
+                      toast.success("Description am\u00e9lior\u00e9e par IA !");
+                    }
+                  } catch { toast.error("Erreur IA"); }
+                  finally { setAiLoading(null); }
+                }}
+              >
+                {aiLoading === "description" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" style={{ color: "var(--color-orange)" }} />}
+                <span style={{ color: "var(--color-orange)" }}>Am\u00e9liorer</span>
+              </Button>
+            </div>
             <Textarea
               id="description"
               value={form.description}
@@ -612,12 +671,40 @@ export function StartupTab() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="problem_statement">
-              Probl\u00e8me r\u00e9solu{" "}
-              <span className="text-xs text-muted-foreground">
-                (en 1 phrase)
-              </span>
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="problem_statement">
+                Probl\u00e8me r\u00e9solu{" "}
+                <span className="text-xs text-muted-foreground">
+                  (en 1 phrase)
+                </span>
+              </Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs gap-1"
+                disabled={aiLoading === "problem" || !form.name}
+                onClick={async () => {
+                  setAiLoading("problem");
+                  try {
+                    const res = await fetch("/api/project-builder/generate", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ type: "problem", projectName: form.name, sector: form.sector, description: form.description || form.tagline }),
+                    });
+                    const data = await res.json();
+                    if (data.success && data.data) {
+                      setField("problem_statement", data.data);
+                      toast.success("Probl\u00e8me sugg\u00e9r\u00e9 par IA !");
+                    }
+                  } catch { toast.error("Erreur IA"); }
+                  finally { setAiLoading(null); }
+                }}
+              >
+                {aiLoading === "problem" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" style={{ color: "var(--color-orange)" }} />}
+                <span style={{ color: "var(--color-orange)" }}>IA</span>
+              </Button>
+            </div>
             <Input
               id="problem_statement"
               value={form.problem_statement}
@@ -732,11 +819,10 @@ export function StartupTab() {
                 onClick={() => toggleLookingFor(opt.value)}
               >
                 <div
-                  className={`w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-colors ${
-                    form.looking_for.includes(opt.value)
+                  className={`w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-colors ${form.looking_for.includes(opt.value)
                       ? "border-orange-400 bg-orange-500"
                       : "border-border bg-background"
-                  }`}
+                    }`}
                 >
                   {form.looking_for.includes(opt.value) && (
                     <CheckCircle2 className="h-3 w-3 text-white" />

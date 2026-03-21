@@ -22,6 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Experience, Profile, Project } from "@/lib/types";
 import {
   BarChart2,
+  Blocks,
   Briefcase,
   BriefcaseBusiness,
   Clock,
@@ -50,6 +51,7 @@ import { MessagesTab } from "./messages-tab";
 import { OverviewTab } from "./overview-tab";
 import { ProductsTab } from "./products-tab";
 import { ProfileTab } from "./profile-tab";
+import { ProjectBuilderTab } from "./project-builder-tab";
 import { ProjectsTab } from "./projects-tab";
 import { SettingsTab } from "./settings-tab";
 import { StartupTab } from "./startup-tab";
@@ -70,7 +72,8 @@ type Tab =
   | "team"
   | "products"
   | "fundraising"
-  | "settings";
+  | "settings"
+  | "project-builder";
 
 interface DashboardShellProps {
   userId: string;
@@ -141,6 +144,7 @@ export function DashboardShell({
     products: "Produits",
     fundraising: "Levée de fonds",
     settings: "Paramètres",
+    "project-builder": "Project Builder",
   };
 
   return (
@@ -193,6 +197,12 @@ export function DashboardShell({
                     <SidebarMenuItem>
                       <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
                         <Home /><span>Vue d&apos;ensemble</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "project-builder"} onClick={() => setActiveTab("project-builder")}>
+                        <Blocks /><span>Project Builder</span>
+                        <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-500">NEW</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
@@ -494,14 +504,17 @@ export function DashboardShell({
           {profile && activeTab === "startup" && profile.type === "startup" && (
             <StartupTab />
           )}
+          {profile && activeTab === "project-builder" && profile.type === "startup" && (
+            <ProjectBuilderTab profile={profile} onNavigate={(tab) => setActiveTab(tab as Tab)} />
+          )}
           {profile && activeTab === "team" && profile.type === "startup" && (
-            <TeamTab />
+            <TeamTab startupId={profile.id} />
           )}
           {profile && activeTab === "products" && profile.type === "startup" && (
-            <ProductsTab />
+            <ProductsTab startupId={profile.id} />
           )}
           {profile && activeTab === "fundraising" && profile.type === "startup" && (
-            <FundraisingTab />
+            <FundraisingTab startupId={profile.id} />
           )}
           {profile && activeTab === "settings" && (
             <SettingsTab profile={profile} userEmail={userEmail} />

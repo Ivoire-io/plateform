@@ -238,6 +238,101 @@ export interface StartupUpvote {
   created_at: string;
 }
 
+// ─── Team Members ───
+
+export interface TeamMember {
+  id: string;
+  startup_id: string;
+  name: string;
+  role: string;
+  email: string | null;
+  linkedin: string | null;
+  ivoireio_slug: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Products ───
+
+export interface Product {
+  id: string;
+  startup_id: string;
+  name: string;
+  short_desc: string | null;
+  long_desc: string | null;
+  category: string;
+  tech_stack: string[];
+  website_url: string | null;
+  app_store_url: string | null;
+  play_store_url: string | null;
+  docs_url: string | null;
+  github_url: string | null;
+  launch_date: string | null;
+  publish_on_portal: boolean;
+  votes_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Fundraising ───
+
+export interface Fundraising {
+  id: string;
+  startup_id: string;
+  is_raising: "yes" | "no" | "hidden";
+  raise_type: string;
+  target_amount: number;
+  raised_amount: number;
+  show_progress_on_profile: boolean;
+  created_at: string;
+  updated_at: string;
+  investors?: Investor[];
+  documents?: FundraisingDocument[];
+}
+
+export interface Investor {
+  id: string;
+  fundraising_id: string;
+  name: string;
+  amount: number;
+  status: "confirmed" | "negotiating" | "refused";
+  created_at: string;
+}
+
+export interface FundraisingDocument {
+  id: string;
+  fundraising_id: string;
+  doc_type: "pitch_deck" | "business_plan" | "one_pager";
+  file_url: string;
+  file_name: string;
+  created_at: string;
+}
+
+// ─── Job Listings ───
+
+export interface JobListing {
+  id: string;
+  startup_id: string | null;
+  profile_id: string;
+  title: string;
+  company: string;
+  location: string | null;
+  type: "cdi" | "cdd" | "freelance" | "stage";
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string;
+  description: string | null;
+  requirements: string[];
+  tech_tags: string[];
+  remote_ok: boolean;
+  expires_at: string | null;
+  status: "active" | "closed" | "draft";
+  created_at: string;
+  updated_at: string;
+  startup?: Pick<Startup, "name" | "slug" | "logo_url">;
+}
+
 // ─── API responses ───
 
 export interface ApiResponse<T = unknown> {

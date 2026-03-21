@@ -4,97 +4,41 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Profile } from "@/lib/types";
-import { Briefcase, CheckCircle, Clock, MapPin, X } from "lucide-react";
+import { Briefcase, CheckCircle, Clock, Loader2, MapPin, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
-// Static mock data — real data would come from /api/jobs/recommended
-const MOCK_JOBS = [
-  {
-    id: "1",
-    company: "Acme Corp",
-    title: "Développeur Full-Stack React / Node.js",
-    location: "Abidjan",
-    type: "CDI",
-    salary: "500K–800K FCFA/mois",
-    tags: ["React", "Node.js", "TypeScript", "PostgreSQL"],
-    match: 95,
-    applications: 12,
-    expiresAt: "15/04",
-  },
-  {
-    id: "2",
-    company: "TechCI",
-    title: "Lead Frontend React",
-    location: "Remote",
-    type: "CDI",
-    salary: "700K–1M FCFA/mois",
-    tags: ["React", "TypeScript", "Next.js"],
-    match: 87,
-    applications: 7,
-    expiresAt: "20/04",
-  },
-  {
-    id: "3",
-    company: "WebAgency",
-    title: "Dev React Senior",
-    location: "Abidjan",
-    type: "CDI",
-    salary: "600K–900K FCFA/mois",
-    tags: ["React", "Vue.js", "CSS"],
-    match: 91,
-    applications: 19,
-    expiresAt: "18/04",
-  },
-];
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-const MOCK_APPLICATIONS = [
-  {
-    id: "app1",
-    company: "Acme Corp",
-    title: "Dév Full-Stack React",
-    appliedAt: "12/03",
-    type: "CDI",
-    location: "Abidjan",
-    match: 95,
-    status: "interview" as const,
-    statusLabel: "Entretien planifié",
-    interview: "Jeu 20 mars · 14:00 – 14:45",
-  },
-  {
-    id: "app2",
-    company: "TechCI",
-    title: "Lead Frontend React",
-    appliedAt: "10/03",
-    type: "CDI",
-    location: "Remote",
-    match: 87,
-    status: "review" as const,
-    statusLabel: "En revue",
-  },
-  {
-    id: "app3",
-    company: "DataCo",
-    title: "Data Engineer Python",
-    appliedAt: "05/03",
-    type: "Freelance",
-    location: "Abidjan",
-    match: 72,
-    status: "rejected" as const,
-    statusLabel: "Refusée",
-    reason: "Le profil ne correspond pas au poste.",
-  },
-  {
-    id: "app4",
-    company: "WebAgency",
-    title: "Dev React Senior",
-    appliedAt: "01/03",
-    type: "CDI",
-    location: "Abidjan",
-    match: 91,
-    status: "offer" as const,
-    statusLabel: "Proposition reçue !",
-    offer: "700 000 FCFA/mois · CDI · Télétravail",
-  },
-];
+interface Job {
+  id: string;
+  company: string;
+  title: string;
+  location: string;
+  type: string;
+  salary: string;
+  tags: string[];
+  match: number;
+  applications: number;
+  expiresAt: string;
+}
+
+interface Application {
+  id: string;
+  company: string;
+  title: string;
+  appliedAt: string;
+  type: string;
+  location: string;
+  match: number;
+  status: AppStatus;
+  statusLabel: string;
+  interview?: string;
+  reason?: string;
+  offer?: string;
+}
 
 type AppStatus = "interview" | "review" | "rejected" | "offer" | "sent";
 
@@ -124,6 +68,53 @@ interface JobsTabProps {
 
 export function JobsTab({ profile }: JobsTabProps) {
   const skills = profile.skills.slice(0, 4);
+  const isStartup = profile.type === "startup";
+
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    try {
+      if (isStartup) {
+        // Startup: fetch own posted jobs
+        const res = await fetch("/api/dashboard/jobs");
+        if (!res.ok) throw new Error("Erreur chargement");
+        const data = await res.json();
+        setJobs(data.jobs ?? []);
+      } else {
+        // Developer: fetch public job listings + own applications
+        const [jobsRes, appsRes] = await Promise.all([
+          fetch("/api/jobs?page=1&limit=20"),
+          fetch("/api/dashboard/jobs"),
+        ]);
+        if (jobsRes.ok) {
+          const jobsData = await jobsRes.json();
+          setJobs(jobsData.jobs ?? []);
+        }
+        if (appsRes.ok) {
+          const appsData = await appsRes.json();
+          setApplications(appsData.applications ?? []);
+        }
+      }
+    } catch {
+      toast.error("Impossible de charger les offres.");
+    } finally {
+      setLoading(false);
+    }
+  }, [isStartup]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -155,12 +146,12 @@ export function JobsTab({ profile }: JobsTabProps) {
             className="text-xs"
             style={{ background: "var(--color-orange)", color: "#fff" }}
           >
-            {MOCK_JOBS.length} nouvelles
+            {jobs.length} nouvelles
           </Badge>
         </div>
 
         <div className="flex flex-col gap-4">
-          {MOCK_JOBS.map((job) => (
+          {jobs.map((job) => (
             <Card key={job.id}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -201,13 +192,14 @@ export function JobsTab({ profile }: JobsTabProps) {
                   <Button
                     size="sm"
                     style={{ background: "var(--color-orange)", color: "#fff" }}
+                    onClick={() => toast.info("Fonctionnalite bientot disponible.")}
                   >
                     📩 Postuler
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => toast.info("Fonctionnalite bientot disponible.")}>
                     🔗 Voir détails
                   </Button>
-                  <Button size="sm" variant="ghost">
+                  <Button size="sm" variant="ghost" onClick={() => toast.info("Fonctionnalite bientot disponible.")}>
                     🔖 Sauvegarder
                   </Button>
                 </div>
@@ -243,11 +235,11 @@ export function JobsTab({ profile }: JobsTabProps) {
       {/* ── Mes candidatures ── */}
       <div>
         <h2 className="text-xl font-bold mb-3">
-          📩 Mes candidatures ({MOCK_APPLICATIONS.length})
+          📩 Mes candidatures ({applications.length})
         </h2>
 
         <div className="flex flex-col gap-3">
-          {MOCK_APPLICATIONS.map((app) => {
+          {applications.map((app) => {
             const cfg = STATUS_CONFIG[app.status];
             return (
               <Card key={app.id}>
