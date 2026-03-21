@@ -1,3 +1,4 @@
+import { checkResourceLimit } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
@@ -50,6 +51,14 @@ export async function POST(request: Request) {
   if (!startup) {
     return NextResponse.json({ success: false, error: "Startup introuvable." }, { status: 404 });
   }
+
+  // Check team member limit
+  const { count: teamCount } = await supabase
+    .from(TABLES.team_members)
+    .select("id", { count: "exact", head: true })
+    .eq("startup_id", startup.id);
+  const limitCheck = await checkResourceLimit(user.id, "team_members", teamCount ?? 0);
+  if (!limitCheck.allowed) return limitCheck.response!;
 
   let body: Record<string, unknown>;
   try {

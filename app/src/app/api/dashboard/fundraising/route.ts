@@ -1,3 +1,4 @@
+import { planGuard } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
@@ -70,6 +71,10 @@ export async function PUT(request: Request) {
   if (!user) {
     return NextResponse.json({ success: false, error: "Non authentifié." }, { status: 401 });
   }
+
+  // Feature check for fundraising
+  const guard = await planGuard(undefined, "fundraising");
+  if (!guard.authorized) return guard.response;
 
   const { data: startup } = await supabase
     .from(TABLES.startups)

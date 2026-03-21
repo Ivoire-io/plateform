@@ -15,6 +15,7 @@ import {
   suggestProblemStatement,
   suggestProjectNames,
 } from "@/lib/ai/openai";
+import { checkAIRateLimit, planGuard } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -27,9 +28,29 @@ export async function POST(request: Request) {
   if (!user)
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
+  // AI rate limiting
+  const rateCheck = await checkAIRateLimit(user.id);
+  if (!rateCheck.allowed) return rateCheck.response!;
+
   try {
     const body = await request.json();
     const { type, projectName, sector, description, problem, solution, country } = body;
+
+    // Feature check for premium document types
+    const featureMap: Record<string, string> = {
+      "pitch_deck": "pitch_deck",
+      "business_plan": "business_plan",
+      "cahier_charges": "cahier_charges",
+      "one_pager": "one_pager",
+      "cgu": "cgu",
+      "roadmap": "roadmap",
+      "competitors": "competitors_analysis",
+    };
+
+    if (featureMap[type]) {
+      const guard = await planGuard(undefined, featureMap[type] as any);
+      if (!guard.authorized) return guard.response;
+    }
 
     let result: unknown;
 

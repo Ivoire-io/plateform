@@ -1,3 +1,4 @@
+import { planGuard } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
@@ -43,6 +44,10 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Feature check for dev outsourcing
+  const guard = await planGuard(undefined, "dev_outsourcing");
+  if (!guard.authorized) return guard.response;
 
   try {
     const body = await request.json();

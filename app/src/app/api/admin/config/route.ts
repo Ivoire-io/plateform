@@ -15,30 +15,34 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Transforme en objet clé-valeur
-  const config: Record<string, unknown> = {};
-  for (const row of data ?? []) {
-    config[row.key] = row.value;
-  }
-
-  return NextResponse.json(config);
+  return NextResponse.json({ config: data ?? [] });
 }
 
 export async function PUT(req: NextRequest) {
   const guard = await adminGuard();
   if (!guard.authorized) return guard.response;
 
-  const updates = await req.json() as Record<string, unknown>;
-
+  const body = await req.json();
   const supabase = await createClient();
 
-  // Upsert chaque clé-valeur
-  const upsertData = Object.entries(updates).map(([key, value]) => ({
-    key,
-    value,
-    updated_by: guard.userId,
-    updated_at: new Date().toISOString(),
-  }));
+  // Support both formats: { entries: [...] } and flat { key: value }
+  let upsertData: Array<{ key: string; value: unknown; updated_by: string; updated_at: string }>;
+
+  if (body.entries && Array.isArray(body.entries)) {
+    upsertData = body.entries.map((e: { key: string; value: unknown }) => ({
+      key: e.key,
+      value: e.value,
+      updated_by: guard.userId,
+      updated_at: new Date().toISOString(),
+    }));
+  } else {
+    upsertData = Object.entries(body).map(([key, value]) => ({
+      key,
+      value,
+      updated_by: guard.userId,
+      updated_at: new Date().toISOString(),
+    }));
+  }
 
   const { error } = await supabase
     .from(TABLES.platform_config)
@@ -47,10 +51,10 @@ export async function PUT(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await supabase.from(TABLES.admin_logs).insert({
-    admin_id: guard.userId,
-    action: "config_updated",
-    target_type: "config",
-    metadata: updates,
+    type: "system",
+    description: `Configuration mise a jour (${upsertData.length} cle(s))`,
+    actor_id: guard.userId,
+    metadata: { keys: upsertData.map((d) => d.key) },
   });
 
   return NextResponse.json({ success: true });

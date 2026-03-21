@@ -1,4 +1,5 @@
 import { calculateProjectScore } from "@/lib/ai/score";
+import { checkAIRateLimit } from "@/lib/plan-guard";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
@@ -12,6 +13,10 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+
+  // AI rate limiting
+  const rateCheck = await checkAIRateLimit(user.id);
+  if (!rateCheck.allowed) return rateCheck.response!;
 
   try {
     const { data: startup, error } = await supabaseAdmin

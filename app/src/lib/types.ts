@@ -527,6 +527,36 @@ export interface PaymentProviderConfig {
   moov: { enabled: boolean; phone_number?: string };
 }
 
+// ─── Dynamic Plan (from DB) ───
+
+export interface DynamicPlan {
+  id: string;
+  tier: string;
+  name: string;
+  tagline: string | null;
+  description: string | null;
+  price: number;
+  currency: string;
+  billing_type: "free" | "monthly" | "yearly" | "one_time";
+  icon: string;
+  color: string;
+  is_active: boolean;
+  is_highlighted: boolean;
+  sort_order: number;
+  max_projects: number | null;
+  max_team_members: number | null;
+  max_products: number | null;
+  max_job_listings: number | null;
+  max_ai_generations_per_day: number | null;
+  max_logo_variations: number;
+  max_regenerations: number | null;
+  allowed_templates: string;
+  features: Record<string, boolean>;
+  display_features: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 // ─── Plan Feature Limits ───
 
 export interface PlanLimits {

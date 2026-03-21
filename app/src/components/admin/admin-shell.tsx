@@ -37,6 +37,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Package,
   Palette,
   Settings,
   ShieldAlert,
@@ -63,6 +64,7 @@ export type AdminTab =
   | "moderation"
   | "analytics"
   | "subscriptions"
+  | "plans"
   | "config"
   | "logs"
   | "flags"
@@ -90,6 +92,7 @@ const tabTitles: Record<AdminTab, string> = {
   moderation: "Modération",
   analytics: "Analytics",
   subscriptions: "Abonnements & Revenus",
+  plans: "Gestion des Plans",
   config: "Configuration",
   logs: "Logs d'activité",
   flags: "Feature Flags",
@@ -144,6 +147,7 @@ function tabFromPath(pathname: string): AdminTab {
     "moderation",
     "analytics",
     "subscriptions",
+    "plans",
     "config",
     "logs",
     "flags",
@@ -279,6 +283,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
             <SidebarGroupContent>
               <SidebarMenu>
                 <NavItem id="analytics" label="Analytics" Icon={BarChart3} href="/admin/analytics" activeTab={activeTab} />
+                <NavItem id="plans" label="Plans & Offres" Icon={Package} href="/admin/plans" activeTab={activeTab} />
                 <NavItem id="subscriptions" label="Abonnements" Icon={CreditCard} href="/admin/subscriptions" activeTab={activeTab} />
                 <NavItem id="payments" label="Paiements" Icon={CreditCard} href="/admin/payments" activeTab={activeTab} />
                 <NavItem id="payment-providers" label="Providers" Icon={Wallet} href="/admin/payment-providers" activeTab={activeTab} />

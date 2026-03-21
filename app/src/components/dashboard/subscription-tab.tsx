@@ -4,10 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type {
+  DynamicPlan,
   Payment,
   PaymentProviderConfig,
-  PlanLimits,
-  PlanTier,
   Subscription,
 } from "@/lib/types";
 import {
@@ -30,19 +29,45 @@ import { toast } from "sonner";
 import { ManualPaymentForm } from "./manual-payment-form";
 import { PayPalCheckout } from "./paypal-checkout";
 
-interface PricingPlan {
-  tier: PlanTier;
-  name: string;
-  price: number;
-  period: string;
-  periodLabel: string;
-  tagline: string;
-  description: string;
-  icon: React.ReactNode;
-  features: string[];
-  highlight?: boolean;
-  color?: string;
-}
+/* ------------------------------------------------------------------ */
+/*  Icon map (matches the names stored in DB)                          */
+/* ------------------------------------------------------------------ */
+
+const ICON_MAP: Record<string, React.ReactNode> = {
+  Zap: <Zap className="w-5 h-5" />,
+  GraduationCap: <GraduationCap className="w-5 h-5" />,
+  Rocket: <Rocket className="w-5 h-5" />,
+  Crown: <Crown className="w-5 h-5" />,
+  Shield: <Shield className="w-5 h-5" />,
+};
+
+const BILLING_LABELS: Record<string, string> = {
+  free: "",
+  monthly: "/mois",
+  yearly: "/an",
+  one_time: " unique",
+};
+
+const BILLING_PERIOD_LABELS: Record<string, string> = {
+  free: "",
+  monthly: "par mois",
+  yearly: "par an",
+  one_time: "paiement unique",
+};
+
+/* ------------------------------------------------------------------ */
+/*  Mobile Money providers                                             */
+/* ------------------------------------------------------------------ */
+
+const MOBILE_MONEY_PROVIDERS = [
+  { id: "orange_money", name: "Orange Money", color: "#FF6600", number: "" },
+  { id: "wave", name: "Wave", color: "#1DC3E2", number: "" },
+  { id: "moov", name: "Moov Money", color: "#003DA5", number: "" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Data types                                                          */
+/* ------------------------------------------------------------------ */
 
 interface SubscriptionData {
   subscription: Subscription | null;
@@ -50,139 +75,35 @@ interface SubscriptionData {
   pricing: Record<string, { amount: number; currency: string; period: string }>;
   payment_providers: PaymentProviderConfig;
   payments: Payment[];
-  plan_limits: Record<string, PlanLimits>;
 }
 
-const PLANS: PricingPlan[] = [
-  {
-    tier: "free",
-    name: "Gratuit",
-    price: 0,
-    period: "",
-    periodLabel: "",
-    tagline: "Pour explorer la plateforme",
-    description: "Decouvrez ivoire.io sans engagement. Creez vos premiers projets et testez nos outils IA.",
-    icon: <Zap className="w-5 h-5" />,
-    color: "#6b7280",
-    features: [
-      "5 projets maximum",
-      "3 templates gratuits",
-      "1 variation de logo",
-      "5 generations IA / jour",
-      "Stats basiques",
-    ],
-  },
-  {
-    tier: "student",
-    name: "Student",
-    price: 2000,
-    period: "/mois",
-    periodLabel: "par mois",
-    tagline: "Pour les etudiants entrepreneurs",
-    description: "Construisez votre premier projet serieusement. Acces aux outils essentiels a prix reduit.",
-    icon: <GraduationCap className="w-5 h-5" />,
-    color: "#8b5cf6",
-    features: [
-      "10 projets maximum",
-      "Templates gratuits + 1 premium",
-      "2 variations de logo",
-      "10 generations IA / jour",
-      "Acces a la communaute",
-      "Support par email",
-    ],
-  },
-  {
-    tier: "starter",
-    name: "Starter",
-    price: 5000,
-    period: "",
-    periodLabel: "paiement unique",
-    tagline: "Pour lancer serieusement votre startup",
-    description: "Tout ce qu'il faut pour valider votre idee et demarcher vos premiers clients. Paiement une seule fois.",
-    icon: <Rocket className="w-5 h-5" />,
-    color: "#0ea5e9",
-    features: [
-      "15 projets maximum",
-      "Templates gratuits + 1 premium",
-      "Pitch Deck genere par IA",
-      "One Pager professionnel",
-      "Analyse de la concurrence",
-      "Verification OAPI (marque)",
-      "3 variations de logo",
-      "20 generations IA / jour",
-    ],
-  },
-  {
-    tier: "pro",
-    name: "Pro",
-    price: 35000,
-    period: "/an",
-    periodLabel: "par an",
-    tagline: "Pour scaler votre startup",
-    description: "La puissance complete de la plateforme : IA, investisseurs, dev outsourcing. Tout pour passer a l'echelle.",
-    icon: <Crown className="w-5 h-5" />,
-    highlight: true,
-    color: "#f97316",
-    features: [
-      "Projets illimites",
-      "Tous les templates",
-      "Pitch Deck, Business Plan, Cahier des charges",
-      "CGU, Roadmap produit generes par IA",
-      "Stats avancees + Export PDF",
-      "Badge startup verifie",
-      "Dev outsourcing (mise en relation)",
-      "Acces levee de fonds",
-      "5 variations de logo",
-      "50 generations IA / jour",
-      "Support prioritaire",
-    ],
-  },
-  {
-    tier: "enterprise",
-    name: "Enterprise",
-    price: 150000,
-    period: "/an",
-    periodLabel: "par an",
-    tagline: "Pour les grandes ambitions",
-    description: "Accompagnement personnalise, templates corporate exclusifs et ressources illimitees pour les structures etablies.",
-    icon: <Shield className="w-5 h-5" />,
-    color: "#eab308",
-    features: [
-      "Projets illimites",
-      "Tous les templates + corporate exclusifs",
-      "Toutes les fonctionnalites Pro",
-      "Generations IA illimitees",
-      "10 variations de logo",
-      "Account manager dedie",
-      "Accompagnement personnalise",
-      "Rapports sur mesure",
-      "SLA garanti",
-      "Facturation entreprise",
-    ],
-  },
-];
-
-// Mobile money providers with their phone numbers
-const MOBILE_MONEY_PROVIDERS = [
-  { id: "orange_money", name: "Orange Money", color: "#FF6600", number: "" },
-  { id: "wave", name: "Wave", color: "#1DC3E2", number: "" },
-  { id: "moov", name: "Moov Money", color: "#003DA5", number: "" },
-];
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 export function SubscriptionTab() {
   const [data, setData] = useState<SubscriptionData | null>(null);
+  const [plans, setPlans] = useState<DynamicPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [creditLoading, setCreditLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
   async function fetchData() {
     try {
-      const res = await fetch("/api/dashboard/subscription");
-      if (!res.ok) throw new Error("Erreur chargement");
-      const json = await res.json();
-      setData(json);
+      const [subRes, plansRes] = await Promise.all([
+        fetch("/api/dashboard/subscription"),
+        fetch("/api/plans"),
+      ]);
+      if (!subRes.ok) throw new Error("Erreur chargement abonnement");
+      if (!plansRes.ok) throw new Error("Erreur chargement plans");
+
+      const subJson = await subRes.json();
+      const plansJson = await plansRes.json();
+
+      setData(subJson);
+      setPlans(plansJson.plans ?? []);
     } catch {
       toast.error("Impossible de charger les informations d'abonnement");
     } finally {
@@ -194,8 +115,9 @@ export function SubscriptionTab() {
     fetchData();
   }, []);
 
-  function handlePlanSelect(tier: PlanTier) {
-    if (tier === "free") return;
+  function handlePlanSelect(tier: string) {
+    const plan = plans.find((p) => p.tier === tier);
+    if (!plan || plan.billing_type === "free") return;
     if (data?.subscription?.plan === tier && data.subscription.status === "active") return;
     setSelectedPlan(tier);
     setPaymentMethod(null);
@@ -211,7 +133,7 @@ export function SubscriptionTab() {
 
   async function handleCreditPayment() {
     if (!selectedPlan || !data) return;
-    const plan = PLANS.find((p) => p.tier === selectedPlan);
+    const plan = plans.find((p) => p.tier === selectedPlan);
     if (!plan) return;
 
     if (data.credit_balance < plan.price) {
@@ -260,7 +182,7 @@ export function SubscriptionTab() {
 
   const currentPlan = data.subscription?.plan ?? "free";
   const isActive = data.subscription?.status === "active";
-  const selectedPlanInfo = selectedPlan ? PLANS.find((p) => p.tier === selectedPlan) : null;
+  const selectedPlanInfo = selectedPlan ? plans.find((p) => p.tier === selectedPlan) : null;
 
   // Get mobile money numbers from payment_providers config
   const mobileProviders = MOBILE_MONEY_PROVIDERS.map((p) => {
@@ -272,6 +194,14 @@ export function SubscriptionTab() {
     };
   }).filter((p) => p.enabled);
 
+  // Grid columns based on number of active plans
+  const gridCols =
+    plans.length <= 3
+      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      : plans.length === 4
+        ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5";
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header + current plan inline */}
@@ -281,7 +211,7 @@ export function SubscriptionTab() {
           <p className="text-muted-foreground text-sm mt-0.5">
             Plan actuel :{" "}
             <span className="font-semibold" style={{ color: "var(--color-orange)" }}>
-              {PLANS.find((p) => p.tier === currentPlan)?.name ?? currentPlan}
+              {plans.find((p) => p.tier === currentPlan)?.name ?? currentPlan}
             </span>
             {data.subscription && (
               <>
@@ -311,13 +241,15 @@ export function SubscriptionTab() {
         )}
       </div>
 
-      {/* Pricing cards — responsive grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pt-5">
-        {PLANS.map((plan) => {
+      {/* Pricing cards — dynamic grid */}
+      <div className={`grid ${gridCols} gap-4 pt-5`}>
+        {plans.map((plan) => {
           const isCurrent = currentPlan === plan.tier && isActive;
           const isSelected = selectedPlan === plan.tier;
-          const isFree = plan.tier === "free";
+          const isFree = plan.billing_type === "free";
           const accentColor = plan.color ?? "var(--color-orange)";
+          const icon = ICON_MAP[plan.icon] ?? <Zap className="w-5 h-5" />;
+          const period = BILLING_LABELS[plan.billing_type] ?? "";
 
           return (
             <button
@@ -331,16 +263,16 @@ export function SubscriptionTab() {
                   ? accentColor
                   : isCurrent
                     ? "#22c55e"
-                    : plan.highlight
+                    : plan.is_highlighted
                       ? `${accentColor}55`
                       : "var(--color-border, #e5e7eb)",
-                background: plan.highlight && !isSelected && !isCurrent
+                background: plan.is_highlighted && !isSelected && !isCurrent
                   ? `${accentColor}08`
                   : "var(--color-card, #fff)",
               }}
             >
               {/* Badge POPULAIRE / ACTUEL */}
-              {plan.highlight && !isCurrent && (
+              {plan.is_highlighted && !isCurrent && (
                 <span
                   className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white px-3 py-0.5 rounded-full whitespace-nowrap shadow-sm"
                   style={{ background: accentColor }}
@@ -363,7 +295,7 @@ export function SubscriptionTab() {
                     color: isSelected || isCurrent ? "#fff" : accentColor,
                   }}
                 >
-                  {plan.icon}
+                  {icon}
                 </div>
                 <div>
                   <p className="font-bold text-sm">{plan.name}</p>
@@ -377,7 +309,7 @@ export function SubscriptionTab() {
                   {plan.price === 0 ? "0" : plan.price.toLocaleString("fr-FR")}
                 </span>
                 <span className="text-sm font-medium text-muted-foreground">
-                  {plan.price === 0 ? "FCFA" : `FCFA${plan.period || " unique"}`}
+                  {plan.price === 0 ? "FCFA" : `FCFA${period}`}
                 </span>
               </div>
 
@@ -389,9 +321,9 @@ export function SubscriptionTab() {
               {/* Separator */}
               <div className="w-full h-px" style={{ background: "var(--color-border, #e5e7eb)" }} />
 
-              {/* Features */}
+              {/* Features from display_features */}
               <ul className="flex flex-col gap-1.5">
-                {plan.features.map((f) => (
+                {(plan.display_features ?? []).map((f) => (
                   <li key={f} className="flex items-start gap-2 text-xs">
                     <Check
                       className="w-3.5 h-3.5 mt-0.5 flex-shrink-0"
@@ -435,7 +367,7 @@ export function SubscriptionTab() {
                   className="w-9 h-9 rounded-lg flex items-center justify-center"
                   style={{ background: "var(--color-orange)", color: "#fff" }}
                 >
-                  {selectedPlanInfo.icon}
+                  {ICON_MAP[selectedPlanInfo.icon] ?? <Zap className="w-5 h-5" />}
                 </div>
                 <div>
                   <p className="font-semibold">{selectedPlanInfo.name}</p>
@@ -446,13 +378,15 @@ export function SubscriptionTab() {
                 <p className="text-lg font-bold">
                   {selectedPlanInfo.price.toLocaleString("fr-FR")} FCFA
                 </p>
-                <p className="text-xs text-muted-foreground">{selectedPlanInfo.periodLabel}</p>
+                <p className="text-xs text-muted-foreground">
+                  {BILLING_PERIOD_LABELS[selectedPlanInfo.billing_type] ?? ""}
+                </p>
               </div>
             </div>
 
             {/* Features */}
             <ul className="flex flex-wrap gap-x-4 gap-y-1">
-              {selectedPlanInfo.features.map((f) => (
+              {(selectedPlanInfo.display_features ?? []).map((f) => (
                 <li key={f} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Check className="w-3 h-3 shrink-0" style={{ color: "#22c55e" }} />
                   {f}

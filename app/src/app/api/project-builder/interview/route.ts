@@ -1,4 +1,5 @@
 import { analyzeInterviewClaude } from "@/lib/ai/anthropic";
+import { checkAIRateLimit } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -10,6 +11,10 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+
+  // AI rate limiting
+  const rateCheck = await checkAIRateLimit(user.id);
+  if (!rateCheck.allowed) return rateCheck.response!;
 
   try {
     const body = await request.json();

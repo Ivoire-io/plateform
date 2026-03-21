@@ -4,6 +4,7 @@ import {
   OnePagerPDF,
   PitchDeckPDF,
 } from "@/lib/pdf/templates";
+import { planGuard } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
@@ -40,6 +41,10 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+
+  // Feature check for export
+  const guard = await planGuard(undefined, "export_pdf");
+  if (!guard.authorized) return guard.response;
 
   try {
     const body = await request.json();

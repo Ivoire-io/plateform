@@ -1,3 +1,4 @@
+import { planGuard } from "@/lib/plan-guard";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
@@ -12,6 +13,10 @@ export async function POST() {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+
+  // Feature check for timestamp
+  const guard = await planGuard(undefined, "timestamp");
+  if (!guard.authorized) return guard.response;
 
   try {
     // Fetch the user's startup with all relevant fields

@@ -1,3 +1,4 @@
+import { checkAIRateLimit } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -12,6 +13,10 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // AI rate limiting
+  const rateCheck = await checkAIRateLimit(user.id);
+  if (!rateCheck.allowed) return rateCheck.response!;
 
   try {
     const body = await request.json();

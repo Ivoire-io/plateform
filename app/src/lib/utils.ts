@@ -39,6 +39,7 @@ export const TABLES = {
   dev_requests: "ivoireio_dev_requests",
   dev_quotes: "ivoireio_dev_quotes",
   dev_projects: "ivoireio_dev_projects",
+  plans: "ivoireio_plans",
 } as const;
 
 // ─── Sous-domaines réservés ───

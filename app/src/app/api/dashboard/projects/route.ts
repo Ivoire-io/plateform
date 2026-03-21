@@ -1,3 +1,4 @@
+import { checkResourceLimit } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
@@ -30,6 +31,14 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ success: false, error: "Non authentifié." }, { status: 401 });
   }
+
+  // Check project limit
+  const { count: projectCount } = await supabase
+    .from(TABLES.projects)
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", user.id);
+  const limitCheck = await checkResourceLimit(user.id, "projects", projectCount ?? 0);
+  if (!limitCheck.allowed) return limitCheck.response!;
 
   let body: Record<string, unknown>;
   try {

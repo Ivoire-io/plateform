@@ -1,3 +1,4 @@
+import { planGuard } from "@/lib/plan-guard";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
@@ -10,6 +11,10 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ success: false, error: "Non authentifié." }, { status: 401 });
   }
+
+  // Feature check for PDF export
+  const guard = await planGuard(undefined, "export_pdf");
+  if (!guard.authorized) return guard.response;
 
   const [profileRes, projectsRes, experiencesRes, messagesRes] = await Promise.all([
     supabase.from(TABLES.profiles).select("*").eq("id", user.id).single(),
