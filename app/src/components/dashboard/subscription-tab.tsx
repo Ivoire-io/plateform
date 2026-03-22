@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type {
   DynamicPlan,
+  Pack,
   Payment,
   PaymentProviderConfig,
   Subscription,
@@ -17,10 +18,12 @@ import {
   Crown,
   GraduationCap,
   Loader2,
+  Package,
   Rocket,
   Shield,
   Smartphone,
   Sparkles,
+  TrendingUp,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -39,6 +42,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   Rocket: <Rocket className="w-5 h-5" />,
   Crown: <Crown className="w-5 h-5" />,
   Shield: <Shield className="w-5 h-5" />,
+  Package: <Package className="w-5 h-5" />,
+  TrendingUp: <TrendingUp className="w-5 h-5" />,
 };
 
 const BILLING_LABELS: Record<string, string> = {
@@ -46,6 +51,7 @@ const BILLING_LABELS: Record<string, string> = {
   monthly: "/mois",
   yearly: "/an",
   one_time: " unique",
+  custom: "",
 };
 
 const BILLING_PERIOD_LABELS: Record<string, string> = {
@@ -53,6 +59,7 @@ const BILLING_PERIOD_LABELS: Record<string, string> = {
   monthly: "par mois",
   yearly: "par an",
   one_time: "paiement unique",
+  custom: "sur mesure",
 };
 
 /* ------------------------------------------------------------------ */
@@ -84,26 +91,31 @@ interface SubscriptionData {
 export function SubscriptionTab() {
   const [data, setData] = useState<SubscriptionData | null>(null);
   const [plans, setPlans] = useState<DynamicPlan[]>([]);
+  const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [creditLoading, setCreditLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [buyingPack, setBuyingPack] = useState<string | null>(null);
 
   async function fetchData() {
     try {
-      const [subRes, plansRes] = await Promise.all([
+      const [subRes, plansRes, packsRes] = await Promise.all([
         fetch("/api/dashboard/subscription"),
         fetch("/api/plans"),
+        fetch("/api/packs"),
       ]);
       if (!subRes.ok) throw new Error("Erreur chargement abonnement");
       if (!plansRes.ok) throw new Error("Erreur chargement plans");
 
       const subJson = await subRes.json();
       const plansJson = await plansRes.json();
+      const packsJson = packsRes.ok ? await packsRes.json() : { packs: [] };
 
       setData(subJson);
       setPlans(plansJson.plans ?? []);
+      setPacks(packsJson.packs ?? []);
     } catch {
       toast.error("Impossible de charger les informations d'abonnement");
     } finally {
@@ -247,6 +259,7 @@ export function SubscriptionTab() {
           const isCurrent = currentPlan === plan.tier && isActive;
           const isSelected = selectedPlan === plan.tier;
           const isFree = plan.billing_type === "free";
+          const isCustom = plan.billing_type === "custom";
           const accentColor = plan.color ?? "var(--color-orange)";
           const icon = ICON_MAP[plan.icon] ?? <Zap className="w-5 h-5" />;
           const period = BILLING_LABELS[plan.billing_type] ?? "";
@@ -254,8 +267,8 @@ export function SubscriptionTab() {
           return (
             <button
               key={plan.tier}
-              disabled={isFree || isCurrent}
-              onClick={() => handlePlanSelect(plan.tier)}
+              disabled={isFree || isCurrent || isCustom}
+              onClick={() => !isCustom && handlePlanSelect(plan.tier)}
               className={`relative flex flex-col gap-3 rounded-2xl p-5 border-2 text-left transition-all duration-200 ${isFree || isCurrent ? "cursor-default" : "cursor-pointer hover:shadow-md"
                 }`}
               style={{
@@ -305,12 +318,18 @@ export function SubscriptionTab() {
 
               {/* Price */}
               <div className="flex items-baseline gap-1 flex-wrap">
-                <span className="text-2xl font-extrabold leading-none">
-                  {plan.price === 0 ? "0" : plan.price.toLocaleString("fr-FR")}
-                </span>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {plan.price === 0 ? "FCFA" : `FCFA${period}`}
-                </span>
+                {isCustom ? (
+                  <span className="text-lg font-extrabold leading-none">Sur mesure</span>
+                ) : (
+                  <>
+                    <span className="text-2xl font-extrabold leading-none">
+                      {plan.price === 0 ? "0" : plan.price.toLocaleString("fr-FR")}
+                    </span>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {plan.price === 0 ? "FCFA" : `FCFA${period}`}
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Description */}
@@ -335,7 +354,15 @@ export function SubscriptionTab() {
               </ul>
 
               {/* CTA label */}
-              {!isFree && !isCurrent && (
+              {isCustom && !isCurrent && (
+                <div
+                  className="mt-auto pt-2 text-center text-xs font-semibold py-1.5 rounded-lg"
+                  style={{ background: `${accentColor}15`, color: accentColor }}
+                >
+                  Nous contacter
+                </div>
+              )}
+              {!isFree && !isCurrent && !isCustom && (
                 <div
                   className="mt-auto pt-2 text-center text-xs font-semibold py-1.5 rounded-lg"
                   style={{
@@ -550,6 +577,101 @@ export function SubscriptionTab() {
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {/* Packs — one-time purchases */}
+      {packs.length > 0 && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-bold">Packs ponctuels</h2>
+            <p className="text-sm text-muted-foreground">Achats uniques sans abonnement</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {packs.map((pack) => {
+              const icon = ICON_MAP[pack.icon] ?? <Package className="w-5 h-5" />;
+              const isBuying = buyingPack === pack.slug;
+
+              return (
+                <Card
+                  key={pack.id}
+                  style={{ border: `1px solid ${pack.color}30` }}
+                >
+                  <CardContent className="p-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center"
+                          style={{ background: `${pack.color}20`, color: pack.color }}
+                        >
+                          {icon}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm">{pack.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{pack.description}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-extrabold" style={{ color: pack.color }}>
+                          {pack.price.toLocaleString("fr-FR")}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">FCFA</p>
+                      </div>
+                    </div>
+
+                    <ul className="flex flex-col gap-1">
+                      {(pack.includes ?? []).map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-xs">
+                          <Check className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: pack.color }} />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      disabled={isBuying}
+                      style={{ background: pack.color, color: "#fff" }}
+                      onClick={async () => {
+                        setBuyingPack(pack.slug);
+                        try {
+                          const res = await fetch("/api/dashboard/packs", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              pack_slug: pack.slug,
+                              payment_method: "credit",
+                            }),
+                          });
+                          if (!res.ok) {
+                            const err = await res.json().catch(() => ({}));
+                            throw new Error(err.error ?? "Erreur");
+                          }
+                          toast.success(`Pack "${pack.name}" achete !`);
+                          fetchData();
+                        } catch (e) {
+                          toast.error(e instanceof Error ? e.message : "Erreur lors de l'achat");
+                        } finally {
+                          setBuyingPack(null);
+                        }
+                      }}
+                    >
+                      {isBuying ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Achat en cours...
+                        </>
+                      ) : (
+                        `Acheter — ${pack.price.toLocaleString("fr-FR")} FCFA`
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* Payment history — collapsible */}

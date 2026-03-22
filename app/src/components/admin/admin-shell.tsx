@@ -41,6 +41,7 @@ import {
   Palette,
   Settings,
   ShieldAlert,
+  ShoppingBag,
   Users,
   Wallet,
 } from "lucide-react";
@@ -65,6 +66,7 @@ export type AdminTab =
   | "analytics"
   | "subscriptions"
   | "plans"
+  | "packs"
   | "config"
   | "logs"
   | "flags"
@@ -93,6 +95,7 @@ const tabTitles: Record<AdminTab, string> = {
   analytics: "Analytics",
   subscriptions: "Abonnements & Revenus",
   plans: "Gestion des Plans",
+  packs: "Gestion des Packs",
   config: "Configuration",
   logs: "Logs d'activité",
   flags: "Feature Flags",
@@ -148,6 +151,7 @@ function tabFromPath(pathname: string): AdminTab {
     "analytics",
     "subscriptions",
     "plans",
+    "packs",
     "config",
     "logs",
     "flags",
@@ -284,6 +288,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
               <SidebarMenu>
                 <NavItem id="analytics" label="Analytics" Icon={BarChart3} href="/admin/analytics" activeTab={activeTab} />
                 <NavItem id="plans" label="Plans & Offres" Icon={Package} href="/admin/plans" activeTab={activeTab} />
+                <NavItem id="packs" label="Packs" Icon={ShoppingBag} href="/admin/packs" activeTab={activeTab} />
                 <NavItem id="subscriptions" label="Abonnements" Icon={CreditCard} href="/admin/subscriptions" activeTab={activeTab} />
                 <NavItem id="payments" label="Paiements" Icon={CreditCard} href="/admin/payments" activeTab={activeTab} />
                 <NavItem id="payment-providers" label="Providers" Icon={Wallet} href="/admin/payment-providers" activeTab={activeTab} />

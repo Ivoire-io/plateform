@@ -58,15 +58,15 @@ interface Subscription {
 
 const PAGE_SIZE = 20;
 
-const PLAN_OPTIONS = ["free", "starter", "student", "pro", "enterprise"] as const;
+const PLAN_OPTIONS = ["free", "builder", "startup", "pro", "growth"] as const;
 const STATUS_OPTIONS = ["active", "pending", "expired", "cancelled"] as const;
 
 const PLAN_BADGE_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  free: { bg: "rgba(160,160,160,0.15)", text: "#a0a0a0", border: "rgba(160,160,160,0.30)" },
-  starter: { bg: "rgba(59,130,246,0.15)", text: "#3b82f6", border: "rgba(59,130,246,0.30)" },
-  student: { bg: "rgba(139,92,246,0.15)", text: "#8b5cf6", border: "rgba(139,92,246,0.30)" },
-  pro: { bg: "rgba(249,115,22,0.15)", text: "#f97316", border: "rgba(249,115,22,0.30)" },
-  enterprise: { bg: "rgba(234,179,8,0.15)", text: "#eab308", border: "rgba(234,179,8,0.30)" },
+  free: { bg: "rgba(34,197,94,0.15)", text: "#22c55e", border: "rgba(34,197,94,0.30)" },
+  builder: { bg: "rgba(234,179,8,0.15)", text: "#eab308", border: "rgba(234,179,8,0.30)" },
+  startup: { bg: "rgba(249,115,22,0.15)", text: "#f97316", border: "rgba(249,115,22,0.30)" },
+  pro: { bg: "rgba(59,130,246,0.15)", text: "#3b82f6", border: "rgba(59,130,246,0.30)" },
+  growth: { bg: "rgba(239,68,68,0.15)", text: "#ef4444", border: "rgba(239,68,68,0.30)" },
 };
 
 const STATUS_BADGE_STYLES: Record<string, { bg: string; text: string; border: string }> = {
@@ -78,10 +78,10 @@ const STATUS_BADGE_STYLES: Record<string, { bg: string; text: string; border: st
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Gratuit",
-  starter: "Starter",
-  student: "Etudiant",
+  builder: "Builder",
+  startup: "Startup",
   pro: "Pro",
-  enterprise: "Enterprise",
+  growth: "Growth",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -93,8 +93,10 @@ const STATUS_LABELS: Record<string, string> = {
 
 /** Monthly recurring contribution per plan (FCFA) */
 const MRR_PER_PLAN: Record<string, number> = {
-  pro: Math.round(35000 / 12),       // 2917
-  enterprise: Math.round(150000 / 12), // 12500
+  builder: 3000,                     // 3000/month
+  startup: 10000,                    // 10000/month
+  pro: Math.round(60000 / 12),      // 5000/month (60k/year)
+  growth: 25000,                     // estimate for custom
 };
 
 /* ------------------------------------------------------------------ */

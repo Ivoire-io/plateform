@@ -1,6 +1,6 @@
 // ─── Plan Tiers ───
 
-export type PlanTier = "free" | "starter" | "pro" | "enterprise" | "student";
+export type PlanTier = "free" | "builder" | "startup" | "pro" | "growth" | string;
 
 // ─── Profiles ───
 
@@ -50,6 +50,41 @@ export interface AdminStats {
   reports_pending: number;
   mrr: number;
   new_this_month: number;
+}
+
+// ─── Packs (one-time purchases) ───
+
+export interface Pack {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  icon: string;
+  color: string;
+  is_active: boolean;
+  sort_order: number;
+  includes: string[];
+  unlocked_features: string[];
+  duration_days: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PackPurchase {
+  id: string;
+  profile_id: string;
+  pack_id: string;
+  pack_slug: string;
+  amount: number;
+  currency: string;
+  payment_method: string | null;
+  status: "pending" | "completed" | "failed" | "refunded";
+  proof_url: string | null;
+  expires_at: string | null;
+  purchased_at: string | null;
+  created_at: string;
 }
 
 // ─── Admin — Feature Flags ───
@@ -537,7 +572,7 @@ export interface DynamicPlan {
   description: string | null;
   price: number;
   currency: string;
-  billing_type: "free" | "monthly" | "yearly" | "one_time";
+  billing_type: "free" | "monthly" | "yearly" | "one_time" | "custom";
   icon: string;
   color: string;
   is_active: boolean;

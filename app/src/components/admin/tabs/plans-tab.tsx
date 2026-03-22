@@ -50,6 +50,7 @@ const BILLING_LABELS: Record<string, string> = {
   monthly: "Mensuel",
   yearly: "Annuel",
   one_time: "Paiement unique",
+  custom: "Sur mesure",
 };
 
 const TEMPLATE_OPTIONS = ["free", "free+1", "all", "all+corporate"];
@@ -524,6 +525,7 @@ export function AdminPlansTab() {
                     <NativeSelectOption value="monthly">Mensuel</NativeSelectOption>
                     <NativeSelectOption value="yearly">Annuel</NativeSelectOption>
                     <NativeSelectOption value="one_time">Paiement unique</NativeSelectOption>
+                    <NativeSelectOption value="custom">Sur mesure</NativeSelectOption>
                   </NativeSelect>
                 </div>
                 <div>
