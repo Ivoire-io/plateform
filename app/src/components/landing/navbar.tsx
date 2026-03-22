@@ -72,7 +72,9 @@ export function Navbar() {
             Connexion
           </Link>
           <a href={joinHref}>
-            <Button size="sm">Rejoindre</Button>
+            <Button size="sm" className="bg-orange hover:bg-orange/90 text-white font-medium border-0">
+              Rejoindre
+            </Button>
           </a>
         </div>
 

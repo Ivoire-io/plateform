@@ -1,6 +1,6 @@
-import { Briefcase, Calendar, Code2, Rocket, Star, Users } from "lucide-react";
+import { Briefcase, Code2, Lightbulb, Rocket, Users } from "lucide-react";
 
-const features = [
+const devFeatures = [
   {
     icon: Code2,
     title: "Un portfolio simple",
@@ -14,35 +14,38 @@ const features = [
       "Une liste ouverte pour trouver exactement le développeur qu'il faut, dans n'importe quelle ville du pays.",
   },
   {
-    icon: Rocket,
-    title: "La vitrine des startups",
-    description:
-      "Lance ton idée ici. La communauté vote, te donne de la force et t'aide à te faire de premiers clients.",
-  },
-  {
     icon: Briefcase,
     title: "De la visibilité pour l'emploi",
     description:
       "Des offres de travail claires, sans CV à rallonge. Le pont direct entre recruteurs et profils tech.",
   },
+];
+
+const startupFeatures = [
   {
-    icon: Star,
-    title: "La bonne équipe",
+    icon: Lightbulb,
+    title: "De l'idée à la startup",
     description:
-      "On t'aide à croiser la route des personnes qui veulent construire les mêmes choses que toi.",
+      "Décris ton idée. L'outil génère ton dossier complet : logo, pitch deck et étude de marché instantanément.",
   },
   {
-    icon: Calendar,
-    title: "Contact sans barrière",
+    icon: Rocket,
+    title: "Une vitrine publique",
     description:
-      "Ceux qui ont besoin de tes talents peuvent t'identifier et te laisser un message directement.",
+      "Ta startup a sa propre page. La communauté découvre, vote, et t'aide à trouver tes premiers utilisateurs.",
+  },
+  {
+    icon: Users,
+    title: "Recrute ton équipe",
+    description:
+      "Trouve les bons développeurs directement dans l'annuaire pour t'aider à construire ton produit. Contact facile et direct.",
   },
 ];
 
 export function FeaturesSection() {
   return (
     <section id="features" className="py-24 px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
           C&apos;est quoi <span className="text-orange">ivoire.io</span> au juste ?
         </h2>
@@ -50,21 +53,68 @@ export function FeaturesSection() {
           Un endroit qui regroupe les créateurs tech du pays pour les rendre facilement identifiables.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="bg-surface/50 border border-border rounded-2xl p-8 hover:border-orange/30 transition-all hover:-translate-y-1 block h-full group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-orange/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-orange/20 transition-all">
-                <feature.icon size={24} className="text-orange" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {/* Côté Développeurs */}
+          <div>
+            <div className="flex items-center gap-3 mb-8 border-b border-border pb-4">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <Code2 size={20} className="text-blue-500" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-muted leading-relaxed">
-                {feature.description}
-              </p>
+              <h3 className="text-2xl font-semibold">Pour les Développeurs</h3>
             </div>
-          ))}
+
+            <div className="flex flex-col gap-6">
+              {devFeatures.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="bg-surface/50 border border-border rounded-2xl p-6 hover:border-blue-500/30 transition-all hover:-translate-y-1 block group"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-500/20 transition-all">
+                      <feature.icon size={24} className="text-blue-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold mb-2">{feature.title}</h4>
+                      <p className="text-sm text-muted leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Côté Startups */}
+          <div>
+            <div className="flex items-center gap-3 mb-8 border-b border-border pb-4">
+              <div className="w-10 h-10 rounded-xl bg-orange/10 flex items-center justify-center">
+                <Rocket size={20} className="text-orange" />
+              </div>
+              <h3 className="text-2xl font-semibold">Pour les Projets & Startups</h3>
+            </div>
+
+            <div className="flex flex-col gap-6">
+              {startupFeatures.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="bg-surface/50 border border-border rounded-2xl p-6 hover:border-orange/30 transition-all hover:-translate-y-1 block group"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 shrink-0 rounded-xl bg-orange/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-orange/20 transition-all">
+                      <feature.icon size={24} className="text-orange" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold mb-2">{feature.title}</h4>
+                      <p className="text-sm text-muted leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
