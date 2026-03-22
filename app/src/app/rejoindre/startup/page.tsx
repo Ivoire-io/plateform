@@ -14,8 +14,8 @@ export default function RejoindreStartupPage() {
       eyebrow="Startup"
       title="Inscris ta startup sans détour"
       description="Renseigne les informations essentielles sans perdre le contexte ni l'accès à la page précédente."
-      backHref="/startups/landing"
-      backLabel="Retour à la page startups"
+      backHref="/rejoindre"
+      backLabel="Retour aux parcours"
     >
       <StartupRegistrationForm compact showHeader={false} />
     </RegistrationPageShell>

@@ -14,8 +14,8 @@ export default function RejoindreDevPage() {
       eyebrow="Développeur"
       title="Crée ton portfolio ivoire.io"
       description="Réserve ton sous-domaine, rends ton profil visible et garde un accès clair à la page précédente."
-      backHref="/developpeurs/landing"
-      backLabel="Retour à la page développeurs"
+      backHref="/rejoindre"
+      backLabel="Retour aux parcours"
     >
       <DevRegistrationForm compact showHeader={false} />
     </RegistrationPageShell>
