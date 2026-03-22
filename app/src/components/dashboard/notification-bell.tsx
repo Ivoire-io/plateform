@@ -153,7 +153,7 @@ export function NotificationBell() {
                   key={notif.id}
                   type="button"
                   onClick={() => handleNotifClick(notif)}
-                  className={`w-full text-left px-4 py-3 border-b border-border/50 hover:bg-white/[0.03] transition-colors
+                  className={`w-full text-left px-4 py-3 border-b border-border/50 hover:bg-accent transition-colors
                     ${!notif.read ? "bg-orange/[0.03]" : ""}`}
                 >
                   <div className="flex items-start gap-2">
@@ -161,7 +161,7 @@ export function NotificationBell() {
                       <span className="shrink-0 mt-1.5 w-2 h-2 rounded-full bg-orange" />
                     )}
                     <div className={!notif.read ? "" : "pl-4"}>
-                      <p className="text-sm font-medium text-white leading-snug">
+                      <p className="text-sm font-medium text-foreground leading-snug">
                         {notif.title}
                       </p>
                       {notif.body && (

@@ -84,10 +84,10 @@ function OtpInputRow({ form }: { form: FormReturn }) {
             value={digit}
             onChange={(e) => handleOtpChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            className={`w-9 h-10 text-center text-sm font-bold bg-white/[0.02] border rounded-lg text-white focus:outline-none transition-all
+            className={`w-9 h-10 text-center text-sm font-bold bg-muted border rounded-lg text-foreground focus:outline-none transition-all
               ${form.otpError
                 ? "border-red-400/60 focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
-                : "border-white/10 focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
+                : "border-border focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20"
               }`}
           />
         ))}
@@ -117,7 +117,7 @@ function OtpInputRow({ form }: { form: FormReturn }) {
           <button
             type="button"
             onClick={form.resetOtp}
-            className="text-muted hover:text-white hover:underline"
+            className="text-muted hover:text-foreground hover:underline"
           >
             Changer
           </button>
@@ -142,17 +142,17 @@ export function BaseFields({ form }: { form: FormReturn }) {
       {/* Phone input + verify button */}
       <div className="flex items-center gap-2">
         <div
-          className={`flex-1 flex items-center bg-white/[0.02] border rounded-xl overflow-hidden transition-all hover:bg-white/[0.04]
+          className={`flex-1 flex items-center bg-muted border rounded-xl overflow-hidden transition-all hover:bg-accent
             ${form.isPhoneVerified
               ? "border-green-400/60 ring-4 ring-green-400/10"
               : form.whatsappTouched && form.whatsappOk === false
                 ? "border-red-400/60 ring-4 ring-red-400/10"
                 : form.whatsappTouched && form.whatsappOk === true
                   ? "border-[#25D366]/60 ring-4 ring-[#25D366]/10"
-                  : "border-white/10 focus-within:border-orange focus-within:ring-4 focus-within:ring-orange/10"
+                  : "border-border focus-within:border-orange focus-within:ring-4 focus-within:ring-orange/10"
             }`}
         >
-          <span className="shrink-0 pl-3 pr-2 text-sm border-r border-white/10 py-3 flex items-center gap-1.5">
+          <span className="shrink-0 pl-3 pr-2 text-sm border-r border-border py-3 flex items-center gap-1.5">
             <Phone size={13} className="text-muted/50" />
             <span className="text-muted/60 text-xs font-mono">+225</span>
           </span>
@@ -169,7 +169,7 @@ export function BaseFields({ form }: { form: FormReturn }) {
               }
             }}
             onBlur={() => form.setWhatsappTouched(true)}
-            className={`flex-1 min-w-0 bg-transparent px-3 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none ${form.isPhoneVerified || form.otpStep !== "idle" ? "cursor-not-allowed opacity-70" : ""}`}
+            className={`flex-1 min-w-0 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted/50 focus:outline-none ${form.isPhoneVerified || form.otpStep !== "idle" ? "cursor-not-allowed opacity-70" : ""}`}
             maxLength={14}
           />
           {form.isPhoneVerified && (

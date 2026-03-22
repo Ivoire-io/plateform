@@ -470,7 +470,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 bg-[#0A0A0A] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
       <div className="min-h-screen flex flex-col items-center px-4 py-8">
         {/* Header */}
         <div className="w-full max-w-2xl mb-8">
@@ -479,12 +479,12 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
               <Sparkles size={20} className="text-orange-500" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">
+              <h1 className="text-xl font-bold text-foreground">
                 {profile.type === "startup" ? "Configurez votre startup" :
                   profile.type === "enterprise" ? "Configurez votre entreprise" :
                     "Configurez votre profil"}
               </h1>
-              <p className="text-sm text-white/50">
+              <p className="text-sm text-muted-foreground">
                 Étape {currentStep + 1} sur {steps.length} — vous pouvez passer les étapes
               </p>
             </div>
@@ -496,16 +496,16 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
               const meta = STEP_META[stepKey];
               return (
                 <div key={stepKey} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full h-1.5 rounded-full overflow-hidden bg-white/5">
+                  <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-surface)" }}>
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: index < currentStep ? "100%" : index === currentStep ? "50%" : "0%",
-                        background: index <= currentStep ? "#FF6B00" : "transparent",
+                        background: index <= currentStep ? "var(--color-orange)" : "transparent",
                       }}
                     />
                   </div>
-                  <span className={`text-[10px] uppercase tracking-wider font-medium transition-colors ${index <= currentStep ? "text-orange-500" : "text-white/20"
+                  <span className={`text-[10px] uppercase tracking-wider font-medium transition-colors ${index <= currentStep ? "text-orange-500" : "text-muted-foreground/40"
                     }`}>
                     {meta.label}
                   </span>
@@ -517,73 +517,73 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
 
         {/* Step Content */}
         <div className="w-full max-w-2xl flex-1">
-          <div className="bg-[#111111] border border-white/[0.06] rounded-2xl p-6 md:p-8">
+          <div className="bg-card border border-border rounded-2xl p-6 md:p-8">
             {/* Step header */}
-            <div className="flex items-center gap-3 mb-6 pb-5 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3 mb-6 pb-5 border-b border-border">
               <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-orange-500/10">
                 <StepIcon size={18} className="text-orange-500" />
               </div>
-              <h2 className="text-lg font-semibold text-white">{currentMeta.label}</h2>
+              <h2 className="text-lg font-semibold text-foreground">{currentMeta.label}</h2>
             </div>
 
             {/* ── Step: domaine ── */}
             {currentStepKey === "domaine" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">
+                <p className="text-sm text-muted-foreground">
                   Choisissez votre sous-domaine personnalisé. Ce sera l&apos;adresse de votre page publique.
                 </p>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Sous-domaine</label>
-                  <div className="flex items-center gap-0 bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition-all">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sous-domaine</label>
+                  <div className="flex items-center gap-0 bg-muted border border-border rounded-xl overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition-all">
                     <input
                       value={slug}
                       onChange={(e) => handleSlugChange(e.target.value)}
                       placeholder="mon-nom"
                       maxLength={30}
-                      className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none"
+                      className="flex-1 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                     />
-                    <span className="shrink-0 pr-4 text-sm text-white/30 font-mono">.ivoire.io</span>
+                    <span className="shrink-0 pr-4 text-sm text-muted-foreground/60 font-mono">.ivoire.io</span>
                   </div>
                   {slugStatus === "checking" && (
-                    <p className="text-xs text-white/40 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Vérification...</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Vérification...</p>
                   )}
                   {slugStatus === "available" && (
-                    <p className="text-xs text-green-400 flex items-center gap-1"><Check size={11} /> {slug}.ivoire.io est disponible !</p>
+                    <p className="text-xs text-green-500 flex items-center gap-1"><Check size={11} /> {slug}.ivoire.io est disponible !</p>
                   )}
                   {slugStatus === "taken" && (
-                    <p className="text-xs text-red-400 flex items-center gap-1"><X size={11} /> Ce sous-domaine est déjà pris.</p>
+                    <p className="text-xs text-red-500 flex items-center gap-1"><X size={11} /> Ce sous-domaine est déjà pris.</p>
                   )}
                   {slugStatus === "invalid" && slug.length > 0 && (
-                    <p className="text-xs text-red-400 flex items-center gap-1"><X size={11} /> Minimum 3 caractères (lettres, chiffres, tirets).</p>
+                    <p className="text-xs text-red-500 flex items-center gap-1"><X size={11} /> Minimum 3 caractères (lettres, chiffres, tirets).</p>
                   )}
                 </div>
-                <p className="text-xs text-white/20">Vous pouvez passer cette étape et choisir plus tard.</p>
+                <p className="text-xs text-muted-foreground/50">Vous pouvez passer cette étape et choisir plus tard.</p>
               </div>
             )}
 
             {/* ── Step: email ── */}
             {currentStepKey === "email" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">
+                <p className="text-sm text-muted-foreground">
                   Ajoutez votre adresse email pour recevoir des notifications et pouvoir récupérer votre compte.
                 </p>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Adresse email</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Adresse email</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
                     placeholder="vous@exemple.com"
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
                   />
                   {emailOk === false && email.length > 0 && (
-                    <p className="text-xs text-red-400 flex items-center gap-1"><X size={11} /> Adresse email invalide.</p>
+                    <p className="text-xs text-red-500 flex items-center gap-1"><X size={11} /> Adresse email invalide.</p>
                   )}
                   {emailOk === true && (
-                    <p className="text-xs text-green-400 flex items-center gap-1"><Check size={11} /> Format valide.</p>
+                    <p className="text-xs text-green-500 flex items-center gap-1"><Check size={11} /> Format valide.</p>
                   )}
                 </div>
-                <p className="text-xs text-white/20">Vous pouvez passer cette étape et ajouter votre email plus tard.</p>
+                <p className="text-xs text-muted-foreground/50">Vous pouvez passer cette étape et ajouter votre email plus tard.</p>
               </div>
             )}
 
@@ -593,7 +593,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                 {/* Avatar */}
                 <div className="flex items-center gap-5">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-muted border border-border flex items-center justify-center">
                       {avatarPreview ? (
                         <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
@@ -609,8 +609,8 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                     <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarChange} className="hidden" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-white font-medium">Photo de profil</p>
-                    <p className="text-xs text-white/40 mt-0.5">JPG, PNG ou WebP. Max 2 Mo.</p>
+                    <p className="text-sm text-foreground font-medium">Photo de profil</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG ou WebP. Max 2 Mo.</p>
                     {avatarUploading && (
                       <p className="text-xs text-orange-500 mt-1 flex items-center gap-1">
                         <Loader2 size={10} className="animate-spin" /> Upload en cours...
@@ -620,38 +620,38 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom complet</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom complet</label>
                   <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Koffi" maxLength={100}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Titre / Poste</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Titre / Poste</label>
                   <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Lead Developer, UI Designer..." maxLength={100}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Ville</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ville</label>
                   {CITIES.length > 0 ? (
                     <select value={city} onChange={(e) => setCity(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
                       <option value="">Sélectionnez une ville</option>
                       {CITIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   ) : (
                     <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Abidjan" maxLength={50}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                   )}
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Bio</label>
-                    <span className="text-[10px] text-white/20">{bio.length}/300</span>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bio</label>
+                    <span className="text-[10px] text-muted-foreground/50">{bio.length}/300</span>
                   </div>
                   <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Décrivez-vous en quelques phrases..." rows={3} maxLength={300}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none" />
                 </div>
               </div>
             )}
@@ -659,7 +659,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
             {/* ── Step: competences ── */}
             {currentStepKey === "competences" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">Sélectionnez vos compétences. Vous pourrez en ajouter d&apos;autres plus tard.</p>
+                <p className="text-sm text-muted-foreground">Sélectionnez vos compétences. Vous pourrez en ajouter d&apos;autres plus tard.</p>
                 {skills.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {skills.map((skill) => (
@@ -671,42 +671,42 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-white/30 uppercase tracking-wider font-medium mb-3">Suggestions</p>
+                  <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-medium mb-3">Suggestions</p>
                   <div className="flex flex-wrap gap-2">
                     {SUGGESTED_SKILLS.filter((s) => !skills.includes(s)).map((skill) => (
                       <button key={skill} onClick={() => setSkills((p) => [...p, skill])}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs font-medium transition-all hover:bg-white/10 hover:text-white hover:border-white/20">
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border text-muted-foreground text-xs font-medium transition-all hover:bg-accent hover:text-foreground hover:border-border">
                         <Plus size={11} />{skill}
                       </button>
                     ))}
                   </div>
                 </div>
-                {skills.length === 0 && <p className="text-xs text-white/20 text-center py-4">Cliquez sur une compétence pour l&apos;ajouter</p>}
+                {skills.length === 0 && <p className="text-xs text-muted-foreground/50 text-center py-4">Cliquez sur une compétence pour l&apos;ajouter</p>}
               </div>
             )}
 
             {/* ── Step: projet ── */}
             {currentStepKey === "projet" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">Ajoutez votre premier projet. Vous pouvez passer cette étape.</p>
+                <p className="text-sm text-muted-foreground">Ajoutez votre premier projet. Vous pouvez passer cette étape.</p>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom du projet</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom du projet</label>
                   <input value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="Mon super projet" maxLength={100}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Description courte</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Description courte</label>
                   <textarea value={projectDesc} onChange={(e) => setProjectDesc(e.target.value)} placeholder="Décrivez brièvement votre projet..." rows={3} maxLength={500}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Technologies utilisées</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Technologies utilisées</label>
                   <input value={projectTech} onChange={(e) => setProjectTech(e.target.value)} placeholder="React, Node.js, PostgreSQL (séparées par des virgules)"
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                   {projectTech && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {projectTech.split(",").map((t) => t.trim()).filter(Boolean).map((tech, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/60 text-[10px] font-mono">{tech}</span>
+                        <span key={i} className="px-2 py-0.5 rounded-md bg-muted border border-border text-muted-foreground text-[10px] font-mono">{tech}</span>
                       ))}
                     </div>
                   )}
@@ -717,30 +717,30 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
             {/* ── Step: startup_info ── */}
             {currentStepKey === "startup_info" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">Donnez vie à votre startup. Ces informations seront visibles sur votre vitrine.</p>
+                <p className="text-sm text-muted-foreground">Donnez vie à votre startup. Ces informations seront visibles sur votre vitrine.</p>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom de la startup</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom de la startup</label>
                   <input value={startupName} onChange={(e) => setStartupName(e.target.value)} placeholder="MonApp CI" maxLength={120}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Tagline</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tagline</label>
                   <input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="La solution qui révolutionne..." maxLength={120}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Secteur</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Secteur</label>
                     <select value={startupSector} onChange={(e) => setStartupSector(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
                       <option value="">Choisir un secteur</option>
                       {SECTORS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Stade</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Stade</label>
                     <select value={startupStage} onChange={(e) => setStartupStage(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
                       <option value="">Choisir un stade</option>
                       {STAGES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
@@ -752,16 +752,16 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
             {/* ── Step: besoins (startup) ── */}
             {currentStepKey === "besoins" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">Qu&apos;est-ce que vous recherchez pour votre startup ? (Plusieurs choix possibles)</p>
+                <p className="text-sm text-muted-foreground">Qu&apos;est-ce que vous recherchez pour votre startup ? (Plusieurs choix possibles)</p>
                 <div className="flex flex-col gap-3">
                   {LOOKING_FOR.map((item) => {
                     const selected = lookingFor.includes(item.value);
                     return (
                       <button key={item.value}
                         onClick={() => setLookingFor((prev) => selected ? prev.filter((v) => v !== item.value) : [...prev, item.value])}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all ${selected ? "bg-orange-500/10 border-orange-500/40 text-orange-400" : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all ${selected ? "bg-orange-500/10 border-orange-500/40 text-orange-500" : "bg-muted border-border text-muted-foreground hover:bg-accent hover:text-foreground"
                           }`}>
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "bg-orange-500 border-orange-500" : "border-white/20"
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "bg-orange-500 border-orange-500" : "border-border"
                           }`}>
                           {selected && <Check size={12} className="text-white" />}
                         </div>
@@ -776,25 +776,25 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
             {/* ── Step: company_info ── */}
             {currentStepKey === "company_info" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">Présentez votre entreprise. Ces informations aident les développeurs à mieux vous connaître.</p>
+                <p className="text-sm text-muted-foreground">Présentez votre entreprise. Ces informations aident les développeurs à mieux vous connaître.</p>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom de l&apos;entreprise</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nom de l&apos;entreprise</label>
                   <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Ma Société SARL" maxLength={120}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Secteur</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Secteur</label>
                     <select value={companySector} onChange={(e) => setCompanySector(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
                       <option value="">Choisir un secteur</option>
                       {SECTORS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Taille</label>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Taille</label>
                     <select value={companySize} onChange={(e) => setCompanySize(e.target.value)}
-                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all">
                       <option value="">Choisir une taille</option>
                       {COMP_SIZES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                       {COMP_SIZES.length === 0 && (
@@ -814,17 +814,17 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
             {/* ── Step: besoins_rh ── */}
             {currentStepKey === "besoins_rh" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">Décrivez vos besoins en recrutement. Vous pourrez préciser votre recherche plus tard.</p>
+                <p className="text-sm text-muted-foreground">Décrivez vos besoins en recrutement. Vous pourrez préciser votre recherche plus tard.</p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Besoins en développeurs</label>
-                    <span className="text-[10px] text-white/20">{hiringNeeds.length}/300</span>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Besoins en développeurs</label>
+                    <span className="text-[10px] text-muted-foreground/50">{hiringNeeds.length}/300</span>
                   </div>
                   <textarea value={hiringNeeds} onChange={(e) => setHiringNeeds(e.target.value)}
                     placeholder="Ex: Nous cherchons un développeur React senior pour rejoindre notre équipe produit..." rows={5} maxLength={300}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none" />
+                    className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none" />
                 </div>
-                <p className="text-xs text-white/30 bg-white/5 rounded-xl px-4 py-3 border border-white/5">
+                <p className="text-xs text-muted-foreground bg-muted rounded-xl px-4 py-3 border border-border">
                   Vous pourrez créer des offres d&apos;emploi détaillées depuis votre dashboard après l&apos;onboarding.
                 </p>
               </div>
@@ -833,7 +833,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
             {/* ── Step: template ── */}
             {currentStepKey === "template" && (
               <div className="space-y-5">
-                <p className="text-sm text-white/50">
+                <p className="text-sm text-muted-foreground">
                   {profile.type === "startup"
                     ? "Choisissez l'apparence de votre vitrine startup."
                     : profile.type === "enterprise"
@@ -845,7 +845,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                     const isSelected = selectedTemplate === template.id;
                     return (
                       <button key={template.id} onClick={() => setSelectedTemplate(template.id)}
-                        className={`relative flex flex-col rounded-xl border-2 overflow-hidden transition-all ${isSelected ? "border-orange-500 ring-1 ring-orange-500/30" : "border-white/10 hover:border-white/20"
+                        className={`relative flex flex-col rounded-xl border-2 overflow-hidden transition-all ${isSelected ? "border-orange-500 ring-1 ring-orange-500/30" : "border-border hover:border-muted-foreground/30"
                           }`}>
                         <div className="aspect-[4/3] p-3 flex flex-col gap-2" style={{ background: template.preview.bg }}>
                           <div className="flex items-center gap-2">
@@ -865,9 +865,9 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                             ))}
                           </div>
                         </div>
-                        <div className="p-3 bg-[#111111]">
-                          <p className="text-xs font-medium text-white text-left">{template.name}</p>
-                          <p className="text-[10px] text-white/40 text-left mt-0.5">{template.description}</p>
+                        <div className="p-3 bg-card">
+                          <p className="text-xs font-medium text-foreground text-left">{template.name}</p>
+                          <p className="text-[10px] text-muted-foreground text-left mt-0.5">{template.description}</p>
                         </div>
                         {isSelected && (
                           <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
@@ -886,7 +886,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
         {/* Navigation buttons */}
         <div className="w-full max-w-2xl mt-6 flex items-center justify-between">
           <button onClick={handlePrev} disabled={currentStep === 0 || isLoading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 text-white/60 text-sm font-medium transition-all hover:bg-white/5 hover:text-white disabled:opacity-0 disabled:pointer-events-none">
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium transition-all hover:bg-accent hover:text-foreground disabled:opacity-0 disabled:pointer-events-none">
             <ChevronLeft size={16} /> Précédent
           </button>
 
@@ -904,7 +904,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
 
         {/* Skip hints */}
         {(currentStepKey === "domaine" || currentStepKey === "email" || currentStepKey === "projet") && (
-          <p className="text-xs text-white/20 mt-3">Vous pouvez passer cette étape en cliquant sur Suivant</p>
+          <p className="text-xs text-muted-foreground/50 mt-3">Vous pouvez passer cette étape en cliquant sur Suivant</p>
         )}
       </div>
     </div>

@@ -194,9 +194,25 @@ export function SettingsTab({ profile, userEmail, onNavigate }: SettingsTabProps
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-col gap-0.5">
-            <p className="text-xs text-muted-foreground">Adresse email</p>
-            <p className="text-sm font-medium">{userEmail}</p>
-            <p className="text-xs text-muted-foreground">Non modifiable — fournie par ton authentification</p>
+            <p className="text-xs text-muted-foreground">
+              {profile.verified_phone ? "Numéro WhatsApp" : "Adresse email"}
+            </p>
+            <p className="text-sm font-medium">
+              {profile.verified_phone
+                ? (() => {
+                    const digits = profile.verified_phone.replace(/\D/g, "");
+                    const local = digits.startsWith("225") ? digits.slice(3) : digits;
+                    return local.length >= 4
+                      ? `${local.slice(0, 2)} .. .. .. ${local.slice(-2)}`
+                      : profile.verified_phone;
+                  })()
+                : userEmail}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {profile.verified_phone
+                ? "Numéro vérifié — utilisé pour la connexion"
+                : "Non modifiable — fournie par ton authentification"}
+            </p>
           </div>
           <div
             className="h-px"

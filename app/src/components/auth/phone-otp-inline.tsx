@@ -171,15 +171,15 @@ export function PhoneOtpInline({ purpose, onVerified, defaultPhone }: PhoneOtpIn
             Numero WhatsApp
           </label>
           <div
-            className={`flex items-center bg-white/[0.02] border rounded-xl overflow-hidden transition-all hover:bg-white/[0.04]
+            className={`flex items-center bg-muted border rounded-xl overflow-hidden transition-all hover:bg-accent
               ${phoneTouched && phoneOk === false
                 ? "border-red-400/60 ring-4 ring-red-400/10"
                 : phoneTouched && phoneOk === true
                   ? "border-green-400/60 ring-4 ring-green-400/10"
-                  : "border-white/10 focus-within:border-orange focus-within:ring-4 focus-within:ring-orange/10"
+                  : "border-border focus-within:border-orange focus-within:ring-4 focus-within:ring-orange/10"
               }`}
           >
-            <span className="shrink-0 pl-3 pr-2 text-sm border-r border-white/10 py-3 flex items-center gap-1.5">
+            <span className="shrink-0 pl-3 pr-2 text-sm border-r border-border py-3 flex items-center gap-1.5">
               <Phone size={13} className="text-muted/50" />
               <span className="text-muted/60 text-xs font-mono">+225</span>
             </span>
@@ -192,7 +192,7 @@ export function PhoneOtpInline({ purpose, onVerified, defaultPhone }: PhoneOtpIn
                 setPhoneTouched(true);
               }}
               onBlur={() => setPhoneTouched(true)}
-              className="flex-1 bg-transparent px-3 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none"
+              className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted/50 focus:outline-none"
               maxLength={14}
             />
           </div>
@@ -230,7 +230,7 @@ export function PhoneOtpInline({ purpose, onVerified, defaultPhone }: PhoneOtpIn
       <div className="flex flex-col gap-4">
         <div className="text-center">
           <p className="text-sm text-muted">
-            Code envoye au <span className="text-white font-medium">+225 {phone}</span>
+            Code envoye au <span className="text-foreground font-medium">+225 {phone}</span>
           </p>
         </div>
 
@@ -245,10 +245,10 @@ export function PhoneOtpInline({ purpose, onVerified, defaultPhone }: PhoneOtpIn
               value={digit}
               onChange={(e) => handleOtpChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className={`w-11 h-12 text-center text-lg font-bold bg-white/[0.02] border rounded-lg text-white focus:outline-none transition-all
+              className={`w-11 h-12 text-center text-lg font-bold bg-muted border rounded-lg text-foreground focus:outline-none transition-all
                 ${error
                   ? "border-red-400/60 focus:border-red-400 focus:ring-2 focus:ring-red-400/20"
-                  : "border-white/10 focus:border-orange focus:ring-2 focus:ring-orange/20"
+                  : "border-border focus:border-orange focus:ring-2 focus:ring-orange/20"
                 }`}
             />
           ))}

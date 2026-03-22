@@ -39,7 +39,7 @@ const registrationOptions = [
       "Tu ne rentres dans aucune catégorie ? Utilise le formulaire rapide pour rejoindre la liste.",
     href: "/#rejoindre",
     icon: Sparkles,
-    accent: "text-white border-white/10 bg-white/5",
+    accent: "text-muted-foreground border-border bg-muted",
     disabled: true,
   },
 ] as const;

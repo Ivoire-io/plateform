@@ -26,7 +26,6 @@ interface FormState {
   github_url: string;
   linkedin_url: string;
   twitter_url: string;
-  website_url: string;
   skills: string[];
   is_available: boolean;
 }
@@ -40,7 +39,6 @@ function initForm(profile: Profile): FormState {
     github_url: profile.github_url ?? "",
     linkedin_url: profile.linkedin_url ?? "",
     twitter_url: profile.twitter_url ?? "",
-    website_url: profile.website_url ?? "",
     skills: [...profile.skills],
     is_available: profile.is_available,
   };
@@ -70,7 +68,6 @@ export function ProfileTab({ profile, onProfileUpdate }: ProfileTabProps) {
     if ((form.github_url || null) !== profile.github_url) dirty.github_url = form.github_url || null;
     if ((form.linkedin_url || null) !== profile.linkedin_url) dirty.linkedin_url = form.linkedin_url || null;
     if ((form.twitter_url || null) !== profile.twitter_url) dirty.twitter_url = form.twitter_url || null;
-    if ((form.website_url || null) !== profile.website_url) dirty.website_url = form.website_url || null;
     if (!arraysEqual(form.skills, profile.skills)) dirty.skills = form.skills;
     if (form.is_available !== profile.is_available) dirty.is_available = form.is_available;
     return dirty;
@@ -341,7 +338,6 @@ export function ProfileTab({ profile, onProfileUpdate }: ProfileTabProps) {
                 { key: "github_url", label: "GitHub", placeholder: "https://github.com/username" },
                 { key: "linkedin_url", label: "LinkedIn", placeholder: "https://linkedin.com/in/username" },
                 { key: "twitter_url", label: "Twitter / X", placeholder: "https://x.com/username" },
-                { key: "website_url", label: "Site web", placeholder: "https://monsite.dev" },
               ] as const).map(({ key, label, placeholder }) => (
                 <div key={key} className="flex flex-col gap-2">
                   <Label>{label}</Label>
@@ -353,6 +349,13 @@ export function ProfileTab({ profile, onProfileUpdate }: ProfileTabProps) {
                   />
                 </div>
               ))}
+              <div className="flex flex-col gap-2">
+                <Label>Site web</Label>
+                <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted px-3 py-1 text-sm text-muted-foreground cursor-not-allowed">
+                  <span className="font-mono">{profile.slug}.ivoire.io</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Votre domaine réservé — non modifiable</p>
+              </div>
             </div>
 
             {/* Compétences */}

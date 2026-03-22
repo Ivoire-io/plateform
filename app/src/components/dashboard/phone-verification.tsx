@@ -231,7 +231,7 @@ export function PhoneVerification({
             <p className="text-sm font-medium text-green-400">
               Numero verifie
             </p>
-            <p className="text-xs text-white/50 font-mono mt-0.5">
+            <p className="text-xs text-muted-foreground font-mono mt-0.5">
               +225 {displayPhone}
             </p>
           </div>
@@ -249,22 +249,22 @@ export function PhoneVerification({
             <Phone size={18} className="text-orange-500" />
           </div>
           <div>
-            <p className="text-sm font-medium text-white">
+            <p className="text-sm font-medium text-foreground">
               Verification WhatsApp
             </p>
-            <p className="text-xs text-white/50">
+            <p className="text-xs text-muted-foreground">
               Recevez un code sur votre WhatsApp
             </p>
           </div>
         </div>
 
         <div className="space-y-3">
-          <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Numero de telephone
           </label>
-          <div className="flex items-center bg-[#0A0A0A] border border-border rounded-xl overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition-all">
+          <div className="flex items-center bg-muted border border-border rounded-xl overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition-all">
             <span className="shrink-0 pl-3.5 pr-2.5 text-sm border-r border-border/60 py-3 flex items-center gap-1.5">
-              <span className="text-white/40 text-xs font-mono">+225</span>
+              <span className="text-muted-foreground text-xs font-mono">+225</span>
             </span>
             <input
               type="tel"
@@ -274,7 +274,7 @@ export function PhoneVerification({
                 setPhone(e.target.value.replace(/[^0-9 ]/g, ""));
                 setErrorMsg("");
               }}
-              className="flex-1 bg-transparent px-3 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none font-mono"
+              className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none font-mono"
               maxLength={14}
             />
           </div>
@@ -312,10 +312,10 @@ export function PhoneVerification({
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 space-y-5">
       <div className="text-center">
-        <p className="text-sm font-medium text-white mb-1">
+        <p className="text-sm font-medium text-foreground mb-1">
           Code de verification
         </p>
-        <p className="text-xs text-white/50">
+        <p className="text-xs text-muted-foreground">
           Entrez le code envoye au{" "}
           <span className="font-mono text-orange-500">
             +225 {phone}
@@ -338,14 +338,14 @@ export function PhoneVerification({
             onChange={(e) => handleOtpChange(index, e.target.value)}
             onKeyDown={(e) => handleOtpKeyDown(index, e)}
             onPaste={index === 0 ? handleOtpPaste : undefined}
-            className="w-11 h-13 text-center text-lg font-mono font-bold bg-[#0A0A0A] border border-border rounded-xl text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+            className="w-11 h-13 text-center text-lg font-mono font-bold bg-muted border border-border rounded-xl text-foreground focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
           />
         ))}
       </div>
 
       {/* Countdown */}
       {countdown > 0 && (
-        <p className="text-center text-xs text-white/40">
+        <p className="text-center text-xs text-muted-foreground">
           Expire dans{" "}
           <span className="font-mono text-orange-500">
             {formatCountdown(countdown)}
@@ -387,13 +387,13 @@ export function PhoneVerification({
             setErrorMsg("");
             setOtpDigits(["", "", "", "", "", ""]);
           }}
-          className="text-white/40 hover:text-white transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           Changer de numero
         </button>
 
         {countdown > 0 ? (
-          <span className="text-white/30">
+          <span className="text-muted-foreground/60">
             Renvoyer dans {formatCountdown(countdown)}
           </span>
         ) : (

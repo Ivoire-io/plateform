@@ -208,7 +208,7 @@ export function DashboardShell({
   }
 
   if (profile && !profile.onboarding_completed) {
-    return <OnboardingWizard profile={profile} onComplete={() => setProfile({ ...profile, onboarding_completed: true })} />;
+    return <OnboardingWizard profile={profile} onComplete={() => router.refresh()} />;
   }
 
   return (
@@ -241,7 +241,19 @@ export function DashboardShell({
                 <span className="text-sm font-medium truncate">
                   {profile?.full_name ?? "Mon profil"}
                 </span>
-                <span className="text-xs text-muted-foreground truncate">{userEmail}</span>
+                <span className="text-xs text-muted-foreground truncate">
+                  {profile?.verified_phone
+                    ? (() => {
+                        const digits = profile.verified_phone.replace(/\D/g, "");
+                        const local = digits.startsWith("225") ? digits.slice(3) : digits;
+                        return local.length >= 4
+                          ? `${local.slice(0, 2)} .. .. .. ${local.slice(-2)}`
+                          : profile.verified_phone;
+                      })()
+                    : userEmail.endsWith("@phone.ivoire.io")
+                      ? "Numéro vérifié"
+                      : userEmail}
+                </span>
               </div>
             </div>
           </div>
