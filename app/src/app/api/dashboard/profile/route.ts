@@ -1,5 +1,6 @@
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { TABLES } from "@/lib/utils";
+import { isValidSlug, RESERVED_SUBDOMAINS, TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 function sanitizeUrl(raw: unknown): string | null {
@@ -19,6 +20,18 @@ const FIELD_VALIDATORS: Record<string, (v: unknown) => ValidatorResult> = {
   full_name: (v) => {
     const s = typeof v === "string" ? v.trim() : "";
     if (s.length < 2 || s.length > 100) return { error: "Nom invalide (2-100 caractères)." };
+    return { value: s };
+  },
+  slug: (v) => {
+    const s = typeof v === "string" ? v.toLowerCase().replace(/[^a-z0-9-]/g, "") : "";
+    if (!isValidSlug(s)) return { error: "Sous-domaine invalide (3-30 caractères, lettres, chiffres, tirets)." };
+    if (RESERVED_SUBDOMAINS.has(s)) return { error: "Ce sous-domaine est réservé." };
+    return { value: s };
+  },
+  email: (v) => {
+    const s = typeof v === "string" ? v.trim().toLowerCase() : "";
+    if (!s) return { value: null };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) return { error: "Email invalide." };
     return { value: s };
   },
   title: (v) => ({ value: typeof v === "string" ? v.trim().slice(0, 100) || null : null }),
@@ -76,6 +89,32 @@ export async function PATCH(request: Request) {
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ success: false, error: "Aucun champ à mettre à jour." }, { status: 400 });
+  }
+
+  // Check slug uniqueness if slug is being updated
+  if (typeof updates.slug === "string") {
+    const { data: existingSlug } = await supabaseAdmin
+      .from(TABLES.profiles)
+      .select("id")
+      .eq("slug", updates.slug)
+      .neq("id", user.id)
+      .maybeSingle();
+    if (existingSlug) {
+      return NextResponse.json({ success: false, error: "Ce sous-domaine est déjà pris." }, { status: 409 });
+    }
+  }
+
+  // Check email uniqueness if email is being updated
+  if (typeof updates.email === "string") {
+    const { data: existingEmail } = await supabaseAdmin
+      .from(TABLES.profiles)
+      .select("id")
+      .eq("email", updates.email)
+      .neq("id", user.id)
+      .maybeSingle();
+    if (existingEmail) {
+      return NextResponse.json({ success: false, error: "Cet email est déjà utilisé." }, { status: 409 });
+    }
   }
 
   const { data, error } = await supabase

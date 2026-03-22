@@ -33,6 +33,14 @@ vi.mock("resend", () => {
   return { Resend: MockResend };
 });
 
+vi.mock("@/lib/notifications", () => ({
+  createNotification: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/phone-auth", () => ({
+  derivePhonePassword: vi.fn().mockReturnValue("derived-password"),
+}));
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function makeRequest(body: Record<string, unknown>) {
@@ -132,16 +140,22 @@ describe("POST /api/register — validation", () => {
     expect(json.success).toBe(false);
   });
 
-  it("rejette si full_name manquant", async () => {
+  it("utilise 'Utilisateur' si full_name manquant", async () => {
+    setupWaitlistMode();
     const { POST } = await import("@/app/api/register/route");
     const res = await POST(makeRequest({ email: "a@b.com", desired_slug: "test" }));
-    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.success).toBe(true);
   });
 
-  it("rejette si desired_slug manquant", async () => {
+  it("génère un slug temporaire si desired_slug manquant", async () => {
+    setupWaitlistMode();
     const { POST } = await import("@/app/api/register/route");
     const res = await POST(makeRequest({ email: "a@b.com", full_name: "Test" }));
-    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.success).toBe(true);
   });
 
   it("rejette un email invalide", async () => {

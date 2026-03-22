@@ -16,6 +16,15 @@ function generateReferralCode(): string {
   return code;
 }
 
+function generateTempSlug(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `user-${code}`;
+}
+
 async function validateSlug(
   slug: string
 ): Promise<{ valid: boolean; error?: string }> {
@@ -139,8 +148,10 @@ export async function POST(request: Request) {
     const email =
       typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     const fullName =
-      typeof body.full_name === "string" ? body.full_name.trim() : "";
-    const desiredSlug =
+      typeof body.full_name === "string" && body.full_name.trim().length >= 2
+        ? body.full_name.trim()
+        : "Utilisateur";
+    let desiredSlug =
       typeof body.desired_slug === "string"
         ? body.desired_slug.toLowerCase().replace(/[^a-z0-9-]/g, "")
         : "";
@@ -167,7 +178,7 @@ export async function POST(request: Request) {
     if (sessionToken) {
       const { data: verification } = await supabaseAdmin
         .from(TABLES.phone_verifications)
-        .select("phone_number, verified_at, status")
+        .select("phone_number, status")
         .eq("session_token", sessionToken)
         .eq("status", "verified")
         .order("created_at", { ascending: false })
@@ -181,17 +192,6 @@ export async function POST(request: Request) {
         );
       }
 
-      // Check verification is recent (15 minutes)
-      const verifiedAt = verification.verified_at
-        ? new Date(verification.verified_at)
-        : new Date();
-      if (new Date().getTime() - verifiedAt.getTime() > 15 * 60 * 1000) {
-        return NextResponse.json(
-          { success: false, error: "Session expiree. Veuillez recommencer la verification." },
-          { status: 410 }
-        );
-      }
-
       verifiedPhone = verification.phone_number;
 
       // Generate synthetic email if none provided
@@ -201,10 +201,15 @@ export async function POST(request: Request) {
       }
     }
 
-    // Basic validation
-    if (!effectiveEmail || !fullName || !desiredSlug) {
+    // Generate temporary slug if not provided
+    if (!desiredSlug || desiredSlug.length < 3) {
+      desiredSlug = generateTempSlug();
+    }
+
+    // For non-phone-verified, email is still required
+    if (!verifiedPhone && !effectiveEmail) {
       return NextResponse.json(
-        { success: false, error: "Champs requis manquants." },
+        { success: false, error: "Email requis." },
         { status: 400 }
       );
     }
@@ -236,8 +241,11 @@ export async function POST(request: Request) {
     const registrationMode =
       configRow?.value === "open" ? "open" : "waitlist";
 
-    // ─── OPEN MODE ───
-    if (registrationMode === "open") {
+    // Phone-verified users always get an instant account regardless of registration mode
+    const createInstantly = registrationMode === "open" || !!verifiedPhone;
+
+    // ─── INSTANT ACCOUNT (open mode OR phone-verified) ───
+    if (createInstantly) {
       // Check if email already exists via profiles table
       const { data: existingEmail } = await supabaseAdmin
         .from(TABLES.profiles)

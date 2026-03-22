@@ -11,15 +11,17 @@ import {
   ChevronRight,
   Code2,
   FolderOpen,
+  Globe,
   Layout,
   Loader2,
+  Mail,
   Plus,
   Rocket,
   Sparkles,
   User,
   X,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface OnboardingWizardProps {
@@ -29,6 +31,8 @@ interface OnboardingWizardProps {
 
 // ─── Step definitions ───────────────────────────────────────────────────────
 type StepKey =
+  | "domaine"
+  | "email"
   | "profil"
   | "competences"
   | "projet"
@@ -39,22 +43,42 @@ type StepKey =
   | "template";
 
 const STEP_META: Record<StepKey, { label: string; icon: React.ElementType }> = {
-  profil:       { label: "Profil",         icon: User },
-  competences:  { label: "Compétences",    icon: Code2 },
-  projet:       { label: "Premier projet", icon: FolderOpen },
-  startup_info: { label: "Ma Startup",     icon: Rocket },
-  besoins:      { label: "Besoins",        icon: Sparkles },
+  domaine: { label: "Domaine", icon: Globe },
+  email: { label: "Email", icon: Mail },
+  profil: { label: "Profil", icon: User },
+  competences: { label: "Compétences", icon: Code2 },
+  projet: { label: "Premier projet", icon: FolderOpen },
+  startup_info: { label: "Ma Startup", icon: Rocket },
+  besoins: { label: "Besoins", icon: Sparkles },
   company_info: { label: "Mon Entreprise", icon: Building2 },
-  besoins_rh:   { label: "Recrutement",   icon: Briefcase },
-  template:     { label: "Template",       icon: Layout },
+  besoins_rh: { label: "Recrutement", icon: Briefcase },
+  template: { label: "Template", icon: Layout },
 };
 
-const STEPS_BY_TYPE: Record<Profile["type"], StepKey[]> = {
-  developer:  ["profil", "competences", "projet", "template"],
-  startup:    ["startup_info", "besoins", "template"],
+const TYPE_STEPS: Record<Profile["type"], StepKey[]> = {
+  developer: ["profil", "competences", "projet", "template"],
+  startup: ["startup_info", "besoins", "template"],
   enterprise: ["company_info", "besoins_rh", "template"],
-  other:      ["profil", "template"],
+  other: ["profil", "template"],
 };
+
+function buildSteps(profile: Profile): StepKey[] {
+  const steps: StepKey[] = [];
+
+  // Show domaine step if user has a temp slug (auto-generated user-XXXX)
+  if (profile.slug.startsWith("user-") && profile.slug.length <= 13) {
+    steps.push("domaine");
+  }
+
+  // Show email step if user has a synthetic email
+  if (profile.email.endsWith("@phone.ivoire.io")) {
+    steps.push("email");
+  }
+
+  // Type-specific steps
+  steps.push(...(TYPE_STEPS[profile.type] ?? TYPE_STEPS.developer));
+  return steps;
+}
 
 // ─── Fallbacks ───────────────────────────────────────────────────────────────
 const SUGGESTED_SKILLS_FALLBACK = [
@@ -64,12 +88,12 @@ const SUGGESTED_SKILLS_FALLBACK = [
 ];
 
 const LOOKING_FOR_FALLBACK = [
-  { value: "cofounders",  label: "Cherche des co-fondateurs" },
-  { value: "developers",  label: "Cherche des développeurs" },
-  { value: "investors",   label: "Cherche des investisseurs" },
-  { value: "customers",   label: "Cherche des clients / early adopters" },
-  { value: "mentors",     label: "Cherche des mentors / advisors" },
-  { value: "partners",    label: "Cherche des partenaires business" },
+  { value: "cofounders", label: "Cherche des co-fondateurs" },
+  { value: "developers", label: "Cherche des développeurs" },
+  { value: "investors", label: "Cherche des investisseurs" },
+  { value: "customers", label: "Cherche des clients / early adopters" },
+  { value: "mentors", label: "Cherche des mentors / advisors" },
+  { value: "partners", label: "Cherche des partenaires business" },
 ];
 
 const TEMPLATES = [
@@ -104,34 +128,88 @@ function getExtra(profile: Profile): Record<string, string> {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps) {
-  const steps = STEPS_BY_TYPE[profile.type] ?? STEPS_BY_TYPE.developer;
+  const steps = buildSteps(profile);
   const extra = getExtra(profile);
 
   // Dynamic fields
-  const { options: skillOpts }       = useDynamicFields("skill");
-  const { options: cityOpts }        = useDynamicFields("city");
-  const { options: sectorOpts }      = useDynamicFields("sector");
-  const { options: stageOpts }       = useDynamicFields("stage");
+  const { options: skillOpts } = useDynamicFields("skill");
+  const { options: cityOpts } = useDynamicFields("city");
+  const { options: sectorOpts } = useDynamicFields("sector");
+  const { options: stageOpts } = useDynamicFields("stage");
   const { options: companySizeOpts } = useDynamicFields("company_size");
-  const { options: lookingForOpts }  = useDynamicFields("looking_for");
+  const { options: lookingForOpts } = useDynamicFields("looking_for");
 
   const SUGGESTED_SKILLS = skillOpts.length > 0 ? skillOpts.map((s) => s.label) : SUGGESTED_SKILLS_FALLBACK;
-  const CITIES      = cityOpts.length > 0      ? cityOpts.map((c) => ({ value: c.label, label: c.label })) : [];
-  const SECTORS     = sectorOpts.length > 0    ? sectorOpts.map((s) => ({ value: s.value, label: s.label })) : [];
-  const STAGES      = stageOpts.length > 0     ? stageOpts.map((s) => ({ value: s.value, label: s.label })) : [];
-  const COMP_SIZES  = companySizeOpts.length > 0 ? companySizeOpts.map((s) => ({ value: s.value, label: s.label })) : [];
-  const LOOKING_FOR = lookingForOpts.length > 0  ? lookingForOpts.map((s) => ({ value: s.value, label: s.label })) : LOOKING_FOR_FALLBACK;
+  const CITIES = cityOpts.length > 0 ? cityOpts.map((c) => ({ value: c.label, label: c.label })) : [];
+  const SECTORS = sectorOpts.length > 0 ? sectorOpts.map((s) => ({ value: s.value, label: s.label })) : [];
+  const STAGES = stageOpts.length > 0 ? stageOpts.map((s) => ({ value: s.value, label: s.label })) : [];
+  const COMP_SIZES = companySizeOpts.length > 0 ? companySizeOpts.map((s) => ({ value: s.value, label: s.label })) : [];
+  const LOOKING_FOR = lookingForOpts.length > 0 ? lookingForOpts.map((s) => ({ value: s.value, label: s.label })) : LOOKING_FOR_FALLBACK;
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
+  // ── Step: domaine ──
+  const [slug, setSlug] = useState("");
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
+  const slugDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const checkSlug = useCallback(async (value: string) => {
+    const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    if (cleaned.length < 3) {
+      setSlugStatus("invalid");
+      return;
+    }
+    setSlugStatus("checking");
+    try {
+      const res = await fetch(`/api/check-slug?slug=${encodeURIComponent(cleaned)}`);
+      const json = await res.json();
+      setSlugStatus(json.available ? "available" : "taken");
+    } catch {
+      // On error, show as available (will be validated server-side on save)
+      setSlugStatus("available");
+    }
+  }, []);
+
+  function handleSlugChange(value: string) {
+    const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    setSlug(cleaned);
+    setSlugStatus("idle");
+    if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
+    if (cleaned.length >= 3) {
+      slugDebounceRef.current = setTimeout(() => checkSlug(cleaned), 500);
+    } else if (cleaned.length > 0) {
+      setSlugStatus("invalid");
+    }
+  }
+
+  // Cleanup timeout
+  useEffect(() => {
+    return () => {
+      if (slugDebounceRef.current) clearTimeout(slugDebounceRef.current);
+    };
+  }, []);
+
+  // ── Step: email ──
+  const [email, setEmail] = useState("");
+  const [emailOk, setEmailOk] = useState<boolean | null>(null);
+
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    if (!value) {
+      setEmailOk(null);
+    } else {
+      setEmailOk(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value));
+    }
+  }
+
   // ── Step: profil ──
-  const [fullName, setFullName]         = useState(profile.full_name || "");
-  const [title, setTitle]               = useState(profile.title || "");
-  const [city, setCity]                 = useState(profile.city || "");
-  const [bio, setBio]                   = useState(profile.bio || "");
+  const [fullName, setFullName] = useState(profile.full_name === "Utilisateur" ? "" : (profile.full_name || ""));
+  const [title, setTitle] = useState(profile.title || "");
+  const [city, setCity] = useState(profile.city || "");
+  const [bio, setBio] = useState(profile.bio || "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url || null);
-  const [avatarFile, setAvatarFile]     = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -144,10 +222,10 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
   const [projectTech, setProjectTech] = useState("");
 
   // ── Step: startup_info ──
-  const [startupName, setStartupName]   = useState(extra.startup_name || "");
-  const [tagline, setTagline]           = useState(extra.tagline || "");
+  const [startupName, setStartupName] = useState(extra.startup_name || "");
+  const [tagline, setTagline] = useState(extra.tagline || "");
   const [startupSector, setStartupSector] = useState(extra.sector || "");
-  const [startupStage, setStartupStage]   = useState(extra.stage || "");
+  const [startupStage, setStartupStage] = useState(extra.stage || "");
 
   // ── Step: besoins (startup) ──
   const preselectedLookingFor = (() => {
@@ -157,9 +235,9 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
   const [lookingFor, setLookingFor] = useState<string[]>(preselectedLookingFor);
 
   // ── Step: company_info ──
-  const [companyName, setCompanyName]   = useState(extra.company_name || "");
+  const [companyName, setCompanyName] = useState(extra.company_name || "");
   const [companySector, setCompanySector] = useState(extra.sector || "");
-  const [companySize, setCompanySize]   = useState(extra.company_size || "");
+  const [companySize, setCompanySize] = useState(extra.company_size || "");
 
   // ── Step: besoins_rh ──
   const [hiringNeeds, setHiringNeeds] = useState(extra.hiring_needs || "");
@@ -274,13 +352,25 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
   // ─── Step save logic ─────────────────────────────────────────────────────────
   async function handleStepSave(stepKey: StepKey): Promise<boolean> {
     switch (stepKey) {
+      case "domaine":
+        if (!slug || slug.length < 3) return true; // skip (keep temp slug)
+        return saveProfile({ slug });
+
+      case "email":
+        if (!email) return true; // skip (keep synthetic email)
+        if (!emailOk) {
+          toast.error("Adresse email invalide.");
+          return false;
+        }
+        return saveProfile({ email });
+
       case "profil":
         if (avatarFile) {
           const avatarOk = await uploadAvatar();
           if (!avatarOk) return false;
         }
         return saveProfile({
-          full_name: fullName.trim(),
+          full_name: fullName.trim() || undefined,
           title: title.trim() || null,
           city: city.trim() || null,
           bio: bio.trim() || null,
@@ -370,9 +460,13 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
 
   const isNextDisabled =
     isLoading ||
-    (currentStepKey === "profil" && fullName.trim().length < 2) ||
-    (currentStepKey === "startup_info" && startupName.trim().length < 2) ||
-    (currentStepKey === "company_info" && companyName.trim().length < 2);
+    (currentStepKey === "domaine" && slug.length > 0 && slug.length < 3) ||
+    (currentStepKey === "domaine" && slugStatus === "taken") ||
+    (currentStepKey === "domaine" && slugStatus === "checking") ||
+    (currentStepKey === "email" && email.length > 0 && !emailOk) ||
+    (currentStepKey === "profil" && fullName.trim().length > 0 && fullName.trim().length < 2) ||
+    (currentStepKey === "startup_info" && startupName.trim().length > 0 && startupName.trim().length < 2) ||
+    (currentStepKey === "company_info" && companyName.trim().length > 0 && companyName.trim().length < 2);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -387,11 +481,11 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
             <div>
               <h1 className="text-xl font-bold text-white">
                 {profile.type === "startup" ? "Configurez votre startup" :
-                 profile.type === "enterprise" ? "Configurez votre entreprise" :
-                 "Configurez votre profil"}
+                  profile.type === "enterprise" ? "Configurez votre entreprise" :
+                    "Configurez votre profil"}
               </h1>
               <p className="text-sm text-white/50">
-                Étape {currentStep + 1} sur {steps.length}
+                Étape {currentStep + 1} sur {steps.length} — vous pouvez passer les étapes
               </p>
             </div>
           </div>
@@ -411,9 +505,8 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                       }}
                     />
                   </div>
-                  <span className={`text-[10px] uppercase tracking-wider font-medium transition-colors ${
-                    index <= currentStep ? "text-orange-500" : "text-white/20"
-                  }`}>
+                  <span className={`text-[10px] uppercase tracking-wider font-medium transition-colors ${index <= currentStep ? "text-orange-500" : "text-white/20"
+                    }`}>
                     {meta.label}
                   </span>
                 </div>
@@ -432,6 +525,67 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
               </div>
               <h2 className="text-lg font-semibold text-white">{currentMeta.label}</h2>
             </div>
+
+            {/* ── Step: domaine ── */}
+            {currentStepKey === "domaine" && (
+              <div className="space-y-5">
+                <p className="text-sm text-white/50">
+                  Choisissez votre sous-domaine personnalisé. Ce sera l&apos;adresse de votre page publique.
+                </p>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Sous-domaine</label>
+                  <div className="flex items-center gap-0 bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition-all">
+                    <input
+                      value={slug}
+                      onChange={(e) => handleSlugChange(e.target.value)}
+                      placeholder="mon-nom"
+                      maxLength={30}
+                      className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none"
+                    />
+                    <span className="shrink-0 pr-4 text-sm text-white/30 font-mono">.ivoire.io</span>
+                  </div>
+                  {slugStatus === "checking" && (
+                    <p className="text-xs text-white/40 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Vérification...</p>
+                  )}
+                  {slugStatus === "available" && (
+                    <p className="text-xs text-green-400 flex items-center gap-1"><Check size={11} /> {slug}.ivoire.io est disponible !</p>
+                  )}
+                  {slugStatus === "taken" && (
+                    <p className="text-xs text-red-400 flex items-center gap-1"><X size={11} /> Ce sous-domaine est déjà pris.</p>
+                  )}
+                  {slugStatus === "invalid" && slug.length > 0 && (
+                    <p className="text-xs text-red-400 flex items-center gap-1"><X size={11} /> Minimum 3 caractères (lettres, chiffres, tirets).</p>
+                  )}
+                </div>
+                <p className="text-xs text-white/20">Vous pouvez passer cette étape et choisir plus tard.</p>
+              </div>
+            )}
+
+            {/* ── Step: email ── */}
+            {currentStepKey === "email" && (
+              <div className="space-y-5">
+                <p className="text-sm text-white/50">
+                  Ajoutez votre adresse email pour recevoir des notifications et pouvoir récupérer votre compte.
+                </p>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Adresse email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    placeholder="vous@exemple.com"
+                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                  />
+                  {emailOk === false && email.length > 0 && (
+                    <p className="text-xs text-red-400 flex items-center gap-1"><X size={11} /> Adresse email invalide.</p>
+                  )}
+                  {emailOk === true && (
+                    <p className="text-xs text-green-400 flex items-center gap-1"><Check size={11} /> Format valide.</p>
+                  )}
+                </div>
+                <p className="text-xs text-white/20">Vous pouvez passer cette étape et ajouter votre email plus tard.</p>
+              </div>
+            )}
 
             {/* ── Step: profil ── */}
             {currentStepKey === "profil" && (
@@ -466,7 +620,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom complet <span className="text-orange-500">*</span></label>
+                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom complet</label>
                   <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Koffi" maxLength={100}
                     className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
@@ -565,7 +719,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
               <div className="space-y-5">
                 <p className="text-sm text-white/50">Donnez vie à votre startup. Ces informations seront visibles sur votre vitrine.</p>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom de la startup <span className="text-orange-500">*</span></label>
+                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom de la startup</label>
                   <input value={startupName} onChange={(e) => setStartupName(e.target.value)} placeholder="MonApp CI" maxLength={120}
                     className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
@@ -605,12 +759,10 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                     return (
                       <button key={item.value}
                         onClick={() => setLookingFor((prev) => selected ? prev.filter((v) => v !== item.value) : [...prev, item.value])}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all ${
-                          selected ? "bg-orange-500/10 border-orange-500/40 text-orange-400" : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
-                        }`}>
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                          selected ? "bg-orange-500 border-orange-500" : "border-white/20"
-                        }`}>
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all ${selected ? "bg-orange-500/10 border-orange-500/40 text-orange-400" : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                          }`}>
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "bg-orange-500 border-orange-500" : "border-white/20"
+                          }`}>
                           {selected && <Check size={12} className="text-white" />}
                         </div>
                         {item.label}
@@ -626,7 +778,7 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
               <div className="space-y-5">
                 <p className="text-sm text-white/50">Présentez votre entreprise. Ces informations aident les développeurs à mieux vous connaître.</p>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom de l&apos;entreprise <span className="text-orange-500">*</span></label>
+                  <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Nom de l&apos;entreprise</label>
                   <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Ma Société SARL" maxLength={120}
                     className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
                 </div>
@@ -693,9 +845,8 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
                     const isSelected = selectedTemplate === template.id;
                     return (
                       <button key={template.id} onClick={() => setSelectedTemplate(template.id)}
-                        className={`relative flex flex-col rounded-xl border-2 overflow-hidden transition-all ${
-                          isSelected ? "border-orange-500 ring-1 ring-orange-500/30" : "border-white/10 hover:border-white/20"
-                        }`}>
+                        className={`relative flex flex-col rounded-xl border-2 overflow-hidden transition-all ${isSelected ? "border-orange-500 ring-1 ring-orange-500/30" : "border-white/10 hover:border-white/20"
+                          }`}>
                         <div className="aspect-[4/3] p-3 flex flex-col gap-2" style={{ background: template.preview.bg }}>
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full" style={{ background: template.preview.accent, opacity: 0.8 }} />
@@ -751,8 +902,8 @@ export function OnboardingWizard({ profile, onComplete }: OnboardingWizardProps)
           </button>
         </div>
 
-        {/* Skip hint for projet step */}
-        {currentStepKey === "projet" && !projectName.trim() && (
+        {/* Skip hints */}
+        {(currentStepKey === "domaine" || currentStepKey === "email" || currentStepKey === "projet") && (
           <p className="text-xs text-white/20 mt-3">Vous pouvez passer cette étape en cliquant sur Suivant</p>
         )}
       </div>

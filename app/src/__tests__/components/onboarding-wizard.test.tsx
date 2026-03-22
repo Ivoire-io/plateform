@@ -62,6 +62,8 @@ function makeProfile(
     notif_messages: true,
     notif_weekly_report: false,
     notif_news: true,
+    notif_whatsapp: true,
+    notif_inapp: true,
     privacy_visible_in_directory: true,
     privacy_show_email: false,
     template_id: "minimal-dark",

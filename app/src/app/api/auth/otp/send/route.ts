@@ -54,7 +54,8 @@ export async function POST(request: Request) {
 
   // Verify the number is on WhatsApp
   const isOnWhatsApp = await checkWhatsAppNumber(phoneNumber);
-  if (!isOnWhatsApp) {
+  // null = cannot determine (API key missing / API error) → proceed anyway
+  if (isOnWhatsApp === false) {
     return NextResponse.json(
       {
         success: false,
@@ -62,6 +63,9 @@ export async function POST(request: Request) {
       },
       { status: 400 }
     );
+  }
+  if (isOnWhatsApp === null) {
+    console.warn(`[OTP/send] checkWhatsApp returned null for ${phoneNumber} — verification ignoree, on continue.`);
   }
 
   // Generate OTP and session token

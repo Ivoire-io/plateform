@@ -1,6 +1,9 @@
+"use client";
+
 import { ArrowLeft, ArrowRight, Briefcase, Code2, Rocket, Sparkles } from "lucide-react";
-import type { Metadata } from "next";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 const registrationOptions = [
   {
@@ -41,13 +44,18 @@ const registrationOptions = [
   },
 ] as const;
 
-export const metadata: Metadata = {
-  title: "Rejoindre ivoire.io",
-  description:
-    "Choisis ton parcours d'inscription sur ivoire.io : développeur, startup, entreprise ou autre profil.",
-};
+function RejoindrePageInner() {
+  const searchParams = useSearchParams();
+  const phone = searchParams.get("phone");
+  const sessionToken = searchParams.get("session_token");
 
-export default function RejoindrePage() {
+  // Forward phone/session_token to sub-pages if present (coming from login OTP flow)
+  function buildHref(base: string) {
+    if (!phone || !sessionToken) return base;
+    const qs = new URLSearchParams({ phone, session_token: sessionToken }).toString();
+    return `${base}?${qs}`;
+  }
+
   return (
     <main className="min-h-screen px-4 py-24 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--color-orange)_0%,_transparent_58%)] opacity-[0.05]" />
@@ -62,6 +70,13 @@ export default function RejoindrePage() {
             Retour à l&apos;accueil
           </Link>
         </div>
+
+        {phone && sessionToken && (
+          <div className="mb-8 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
+            Numéro WhatsApp vérifié — choisis ton type de profil pour finaliser ton inscription.
+          </div>
+        )}
 
         <div className="max-w-2xl mb-14">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange/20 bg-orange/5 text-orange text-sm mb-6">
@@ -79,15 +94,16 @@ export default function RejoindrePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {registrationOptions.map((option) => {
             const Icon = option.icon;
+            const href = option.disabled ? "#" : buildHref(option.href);
 
             return (
               <Link
                 key={option.href}
-                href={option.disabled ? "#" : option.href}
+                href={href}
                 aria-disabled={option.disabled}
                 className={`group rounded-3xl border border-border bg-surface/60 backdrop-blur-sm p-7 transition-all ${option.disabled
-                    ? "opacity-50 grayscale pointer-events-none cursor-not-allowed"
-                    : "hover:-translate-y-1 hover:border-orange/30 hover:shadow-xl hover:shadow-orange/10"
+                  ? "opacity-50 grayscale pointer-events-none cursor-not-allowed"
+                  : "hover:-translate-y-1 hover:border-orange/30 hover:shadow-xl hover:shadow-orange/10"
                   }`}
               >
                 <div className="flex items-start justify-between mb-5">
@@ -116,5 +132,13 @@ export default function RejoindrePage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function RejoindrePage() {
+  return (
+    <Suspense>
+      <RejoindrePageInner />
+    </Suspense>
   );
 }
