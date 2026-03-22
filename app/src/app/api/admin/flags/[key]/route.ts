@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,16 +17,15 @@ export async function PUT(req: NextRequest, { params }: Params) {
     coming_soon_msg?: string | null;
   };
 
-  const supabase = await createClient();
 
   // Récupère l'ancienne valeur pour historique
-  const { data: oldFlag } = await supabase
+  const { data: oldFlag } = await supabaseAdmin
     .from(TABLES.feature_flags)
     .select("state")
     .eq("key", key)
     .single();
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(TABLES.feature_flags)
     .update({
       state: body.state,
@@ -43,7 +42,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   // Historique du changement
   if (oldFlag && oldFlag.state !== body.state) {
-    await supabase.from(TABLES.flag_history).insert({
+    await supabaseAdmin.from(TABLES.flag_history).insert({
       flag_key: key,
       changed_by: guard.userId,
       old_state: oldFlag.state,
@@ -51,7 +50,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     });
   }
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     admin_id: guard.userId,
     action: "flag_updated",
     target_type: "feature_flag",

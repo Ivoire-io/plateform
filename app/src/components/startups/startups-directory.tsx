@@ -1,5 +1,6 @@
 "use client";
 
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import type { Startup } from "@/lib/types";
 import {
   ArrowUpRight,
@@ -15,7 +16,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-const SECTORS = [
+const SECTORS_FALLBACK = [
   { value: "", label: "Tous les secteurs" },
   { value: "tech", label: "Tech" },
   { value: "fintech", label: "Fintech" },
@@ -24,17 +25,17 @@ const SECTORS = [
   { value: "edtech", label: "Edtech" },
   { value: "ecommerce", label: "E-commerce" },
   { value: "logistics", label: "Logistique" },
-  { value: "media", label: "Média" },
-  { value: "energy", label: "Énergie" },
+  { value: "media", label: "Media" },
+  { value: "energy", label: "Energie" },
   { value: "other", label: "Autre" },
 ];
 
-const STAGES = [
-  { value: "", label: "Toutes les étapes" },
-  { value: "idea", label: "Idée" },
+const STAGES_FALLBACK = [
+  { value: "", label: "Toutes les etapes" },
+  { value: "idea", label: "Idee" },
   { value: "mvp", label: "MVP" },
   { value: "seed", label: "Seed" },
-  { value: "series_a", label: "Série A" },
+  { value: "series_a", label: "Serie A" },
   { value: "growth", label: "Croissance" },
   { value: "profitable", label: "Rentable" },
 ];
@@ -137,6 +138,14 @@ export function StartupsDirectory({ startups: initialStartups }: StartupsDirecto
   const [sector, setSector] = useState("");
   const [stage, setStage] = useState("");
   const [sort, setSort] = useState<"upvotes" | "recent">("upvotes");
+  const { options: sectorOpts } = useDynamicFields("sector");
+  const { options: stageOpts } = useDynamicFields("stage");
+  const SECTORS = sectorOpts.length > 0
+    ? [{ value: "", label: "Tous les secteurs" }, ...sectorOpts.map((s) => ({ value: s.value, label: s.label }))]
+    : SECTORS_FALLBACK;
+  const STAGES = stageOpts.length > 0
+    ? [{ value: "", label: "Toutes les etapes" }, ...stageOpts.map((s) => ({ value: s.value, label: s.label }))]
+    : STAGES_FALLBACK;
 
   const filtered = useMemo(() => {
     let result = startups;

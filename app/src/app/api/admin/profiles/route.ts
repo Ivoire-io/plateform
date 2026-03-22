@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,9 +17,7 @@ export async function GET(req: NextRequest) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const supabase = await createClient();
-
-  let query = supabase
+  let query = supabaseAdmin
     .from(TABLES.profiles)
     .select("*", { count: "exact" })
     .range(from, to)

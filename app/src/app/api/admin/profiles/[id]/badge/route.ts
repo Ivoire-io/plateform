@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -11,16 +11,15 @@ export async function POST(_req: NextRequest, { params }: Params) {
   if (!guard.authorized) return guard.response;
 
   const { id } = await params;
-  const supabase = await createClient();
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from(TABLES.profiles)
     .update({ verified_badge: true, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     admin_id: guard.userId,
     action: "badge_granted",
     target_type: "profile",
@@ -36,16 +35,15 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (!guard.authorized) return guard.response;
 
   const { id } = await params;
-  const supabase = await createClient();
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from(TABLES.profiles)
     .update({ verified_badge: false, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     admin_id: guard.userId,
     action: "badge_revoked",
     target_type: "profile",

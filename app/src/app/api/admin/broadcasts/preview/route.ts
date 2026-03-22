@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,9 +12,8 @@ export async function POST(req: NextRequest) {
     target_plan?: string;
   };
 
-  const supabase = await createClient();
 
-  let query = supabase
+  let query = supabaseAdmin
     .from(TABLES.profiles)
     .select("*", { count: "exact", head: true })
     .eq("is_suspended", false);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import { Loader2, Rocket } from "lucide-react";
 import { Suspense, useState } from "react";
 import { BaseFields } from "./base-fields";
@@ -11,22 +12,13 @@ type StartupRegistrationFormProps = {
   showHeader?: boolean;
 };
 
-const SECTORS = [
-  "Fintech",
-  "EdTech",
-  "HealthTech",
-  "AgriTech",
-  "E-commerce",
-  "SaaS",
-  "Marketplace",
-  "Logistique",
-  "Media",
-  "Energie",
-  "Autre",
+const SECTORS_FALLBACK = [
+  "Fintech", "EdTech", "HealthTech", "AgriTech", "E-commerce",
+  "SaaS", "Marketplace", "Logistique", "Media", "Energie", "Autre",
 ];
 
-const STAGES = [
-  { value: "idea", label: "Idée" },
+const STAGES_FALLBACK = [
+  { value: "idea", label: "Idee" },
   { value: "mvp", label: "MVP" },
   { value: "seed", label: "Lancement" },
   { value: "growth", label: "Croissance" },
@@ -34,6 +26,10 @@ const STAGES = [
 
 function StartupFormInner({ compact = false, showHeader = true }: StartupRegistrationFormProps) {
   const form = useRegistrationForm();
+  const { options: sectorOptions } = useDynamicFields("sector");
+  const { options: stageOptions } = useDynamicFields("stage");
+  const sectors = sectorOptions.length > 0 ? sectorOptions.map((s) => ({ value: s.value, label: s.label })) : SECTORS_FALLBACK.map((s) => ({ value: s.toLowerCase(), label: s }));
+  const stages = stageOptions.length > 0 ? stageOptions.map((s) => ({ value: s.value, label: s.label })) : STAGES_FALLBACK;
   const [startupName, setStartupName] = useState("");
   const [tagline, setTagline] = useState("");
   const [sector, setSector] = useState("");
@@ -174,9 +170,9 @@ function StartupFormInner({ compact = false, showHeader = true }: StartupRegistr
                 <option value="" disabled>
                   Choisir un secteur
                 </option>
-                {SECTORS.map((s) => (
-                  <option key={s} value={s.toLowerCase()}>
-                    {s}
+                {sectors.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
                   </option>
                 ))}
               </select>
@@ -195,7 +191,7 @@ function StartupFormInner({ compact = false, showHeader = true }: StartupRegistr
                 <option value="" disabled>
                   Choisir un stade
                 </option>
-                {STAGES.map((s) => (
+                {stages.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>

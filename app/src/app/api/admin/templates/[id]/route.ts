@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,7 +16,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
     allowed_types?: string[];
   };
 
-  const supabase = await createClient();
 
   const allowed = ["state", "plan", "allowed_types"];
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -24,7 +23,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     if (key in body) updates[key] = (body as Record<string, unknown>)[key];
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(TABLES.templates)
     .update(updates)
     .eq("id", id)
@@ -33,7 +32,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     admin_id: guard.userId,
     action: "template_updated",
     target_type: "template",

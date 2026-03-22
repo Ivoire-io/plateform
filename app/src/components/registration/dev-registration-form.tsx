@@ -1,5 +1,6 @@
 "use client";
 
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import { Code, Loader2, Rocket } from "lucide-react";
 import { Suspense, useState } from "react";
 import { BaseFields } from "./base-fields";
@@ -11,34 +12,18 @@ type DevRegistrationFormProps = {
   showHeader?: boolean;
 };
 
-const SKILLS_OPTIONS = [
-  "React",
-  "Next.js",
-  "Node.js",
-  "TypeScript",
-  "Python",
-  "Flutter",
-  "Go",
-  "PHP",
-  "Laravel",
-  "Django",
-  "Vue.js",
-  "Angular",
-  "PostgreSQL",
-  "MongoDB",
-  "Docker",
-  "AWS",
-  "Firebase",
-  "Figma",
-  "TailwindCSS",
-  "Swift",
-  "React Native",
-  "Java",
-  "Kotlin",
+const SKILLS_FALLBACK = [
+  "React", "Next.js", "Node.js", "TypeScript", "Python", "Flutter", "Go",
+  "PHP", "Laravel", "Django", "Vue.js", "Angular", "PostgreSQL", "MongoDB",
+  "Docker", "AWS", "Firebase", "Figma", "TailwindCSS", "Swift",
+  "React Native", "Java", "Kotlin",
 ];
 
 function DevFormInner({ compact = false, showHeader = true }: DevRegistrationFormProps) {
   const form = useRegistrationForm();
+  const { options: skillOptions } = useDynamicFields("skill");
+  const { options: cityOptions } = useDynamicFields("city");
+  const skillLabels = skillOptions.length > 0 ? skillOptions.map((s) => s.label) : SKILLS_FALLBACK;
   const [title, setTitle] = useState("");
   const [city, setCity] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
@@ -150,12 +135,26 @@ function DevFormInner({ compact = false, showHeader = true }: DevRegistrationFor
               <label className="text-xs font-medium text-muted uppercase tracking-wider">
                 Ville
               </label>
-              <input
-                placeholder="Abidjan"
+              <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04]"
-              />
+                className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04]"
+              >
+                <option value="">Selectionner une ville</option>
+                {cityOptions.length > 0 ? (
+                  cityOptions.map((c) => (
+                    <option key={c.value} value={c.label}>{c.label}</option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Abidjan">Abidjan</option>
+                    <option value="Bouake">Bouake</option>
+                    <option value="Daloa">Daloa</option>
+                    <option value="Yamoussoukro">Yamoussoukro</option>
+                    <option value="Autre">Autre</option>
+                  </>
+                )}
+              </select>
             </div>
           </div>
 
@@ -165,7 +164,7 @@ function DevFormInner({ compact = false, showHeader = true }: DevRegistrationFor
               Compétences principales
             </label>
             <div className="flex flex-wrap gap-2">
-              {SKILLS_OPTIONS.map((skill) => (
+              {skillLabels.map((skill) => (
                 <button
                   key={skill}
                   type="button"

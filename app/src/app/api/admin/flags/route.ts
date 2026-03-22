@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
@@ -7,9 +7,8 @@ export async function GET() {
   const guard = await adminGuard();
   if (!guard.authorized) return guard.response;
 
-  const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(TABLES.feature_flags)
     .select("*")
     .order("category")

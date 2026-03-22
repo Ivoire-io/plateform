@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,13 +14,12 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type") ?? "";
   const period = searchParams.get("period") ?? "7d";
 
-  const supabase = await createClient();
 
   const now = new Date();
   const days = period === "1d" ? 1 : period === "30d" ? 30 : period === "90d" ? 90 : 7;
   const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
 
-  let query = supabase
+  let query = supabaseAdmin
     .from(TABLES.admin_logs)
     .select("*, admin:admin_id(full_name)", { count: "exact" })
     .gte("created_at", since)

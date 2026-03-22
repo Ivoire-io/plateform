@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,9 +15,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
     action?: "suspend_target";
   };
 
-  const supabase = await createClient();
 
-  const { data: report, error: fetchError } = await supabase
+  const { data: report, error: fetchError } = await supabaseAdmin
     .from(TABLES.reports)
     .select("target_id")
     .eq("id", id)
@@ -27,7 +26,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Report not found" }, { status: 404 });
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from(TABLES.reports)
     .update({ status, reviewed_by: guard.userId, reviewed_at: new Date().toISOString() })
     .eq("id", id);
@@ -36,13 +35,13 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   // Si action = suspendre la cible
   if (action === "suspend_target" && report.target_id) {
-    await supabase
+    await supabaseAdmin
       .from(TABLES.profiles)
       .update({ is_suspended: true, updated_at: new Date().toISOString() })
       .eq("id", report.target_id);
   }
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     admin_id: guard.userId,
     action: `report_${status}`,
     target_type: "report",

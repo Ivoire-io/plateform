@@ -1,5 +1,6 @@
 "use client";
 
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import { Briefcase, Loader2 } from "lucide-react";
 import { Suspense, useState } from "react";
 import { BaseFields } from "./base-fields";
@@ -11,25 +12,19 @@ type EnterpriseRegistrationFormProps = {
   showHeader?: boolean;
 };
 
-const SECTORS = [
-  "Tech",
-  "Fintech",
-  "Banque",
-  "Telecom",
-  "Consulting",
-  "Industrie",
-  "E-commerce",
-  "Logistique",
-  "Énergie",
-  "Santé",
-  "Éducation",
-  "Autre",
+const SECTORS_FALLBACK = [
+  "Tech", "Fintech", "Banque", "Telecom", "Consulting", "Industrie",
+  "E-commerce", "Logistique", "Energie", "Sante", "Education", "Autre",
 ];
 
-const SIZES = ["1-10", "11-50", "51-200", "200+"];
+const SIZES_FALLBACK = ["1-10", "11-50", "51-200", "200+"];
 
 function EnterpriseFormInner({ compact = false, showHeader = true }: EnterpriseRegistrationFormProps) {
   const form = useRegistrationForm();
+  const { options: sectorOptions } = useDynamicFields("sector");
+  const { options: sizeOptions } = useDynamicFields("company_size");
+  const sectors = sectorOptions.length > 0 ? sectorOptions.map((s) => ({ value: s.value, label: s.label })) : SECTORS_FALLBACK.map((s) => ({ value: s.toLowerCase(), label: s }));
+  const sizes = sizeOptions.length > 0 ? sizeOptions.map((s) => s.label) : SIZES_FALLBACK;
   const [companyName, setCompanyName] = useState("");
   const [sector, setSector] = useState("");
   const [companySize, setCompanySize] = useState("");
@@ -146,9 +141,9 @@ function EnterpriseFormInner({ compact = false, showHeader = true }: EnterpriseR
                 className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04] appearance-none"
               >
                 <option value="">Choisir un secteur</option>
-                {SECTORS.map((s) => (
-                  <option key={s} value={s.toLowerCase()}>
-                    {s}
+                {sectors.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
                   </option>
                 ))}
               </select>
@@ -164,9 +159,9 @@ function EnterpriseFormInner({ compact = false, showHeader = true }: EnterpriseR
                 className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04] appearance-none"
               >
                 <option value="">Nombre d&apos;employés</option>
-                {SIZES.map((s) => (
+                {sizes.map((s) => (
                   <option key={s} value={s}>
-                    {s} employés
+                    {s} employes
                   </option>
                 ))}
               </select>

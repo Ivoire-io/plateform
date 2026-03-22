@@ -58,6 +58,8 @@ export const TABLES = {
   appointments: "ivoireio_appointments",
   // Migration 017
   blog_posts: "ivoireio_blog_posts",
+  // Migration 019
+  dynamic_fields: "ivoireio_dynamic_fields",
 } as const;
 
 // ─── Sous-domaines réservés ───

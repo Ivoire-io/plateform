@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,9 +7,7 @@ export async function GET() {
   const guard = await adminGuard();
   if (!guard.authorized) return guard.response;
 
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(TABLES.platform_config)
     .select("*");
 
@@ -23,7 +21,6 @@ export async function PUT(req: NextRequest) {
   if (!guard.authorized) return guard.response;
 
   const body = await req.json();
-  const supabase = await createClient();
 
   // Support both formats: { entries: [...] } and flat { key: value }
   let upsertData: Array<{ key: string; value: unknown; updated_by: string; updated_at: string }>;
@@ -44,13 +41,13 @@ export async function PUT(req: NextRequest) {
     }));
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from(TABLES.platform_config)
     .upsert(upsertData, { onConflict: "key" });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     type: "system",
     description: `Configuration mise a jour (${upsertData.length} cle(s))`,
     actor_id: guard.userId,

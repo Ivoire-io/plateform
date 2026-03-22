@@ -32,6 +32,7 @@ import {
   Code,
   Cpu,
   CreditCard,
+  Database,
   FileText,
   Flag,
   Gift,
@@ -53,6 +54,7 @@ import { useEffect, useState } from "react";
 import { AdminAIUsageTab } from "./tabs/ai-usage-tab";
 import { AdminBlogTab } from "./tabs/blog-tab";
 import { AdminDevPipelineTab } from "./tabs/dev-pipeline-tab";
+import { AdminDynamicFieldsTab } from "./tabs/dynamic-fields-tab";
 import { AdminPaymentProvidersTab } from "./tabs/payment-providers-tab";
 import { AdminPaymentsTab } from "./tabs/payments-tab";
 import { AdminReferralsTab } from "./tabs/referrals-tab";
@@ -79,7 +81,8 @@ export type AdminTab =
   | "referrals"
   | "dev-pipeline"
   | "payment-providers"
-  | "blog";
+  | "blog"
+  | "dynamic-fields";
 
 interface AdminShellProps {
   adminEmail: string;
@@ -110,6 +113,7 @@ const tabTitles: Record<AdminTab, string> = {
   "dev-pipeline": "Dev Outsourcing",
   "payment-providers": "Providers Paiement",
   blog: "Blog",
+  "dynamic-fields": "Champs Dynamiques",
 };
 
 interface NavItemProps {
@@ -167,6 +171,7 @@ function tabFromPath(pathname: string): AdminTab {
     "dev-pipeline",
     "payment-providers",
     "blog",
+    "dynamic-fields",
   ]);
   return allowed.has(segment as AdminTab) ? (segment as AdminTab) : "overview";
 }
@@ -332,6 +337,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
                 <NavItem id="packs" label="Packs" Icon={ShoppingBag} href="/admin/packs" activeTab={activeTab} />
                 <NavItem id="payment-providers" label="Providers" Icon={Wallet} href="/admin/payment-providers" activeTab={activeTab} />
                 <NavItem id="config" label="Configuration" Icon={Settings} href="/admin/config" activeTab={activeTab} />
+                <NavItem id="dynamic-fields" label="Champs Dynamiques" Icon={Database} href="/admin/dynamic-fields" activeTab={activeTab} />
                 <NavItem id="logs" label="Logs d&apos;activité" Icon={ShieldAlert} href="/admin/logs" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
@@ -386,6 +392,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
           {activeTab === "dev-pipeline" && <AdminDevPipelineTab />}
           {activeTab === "payment-providers" && <AdminPaymentProvidersTab />}
           {activeTab === "blog" && <AdminBlogTab />}
+          {activeTab === "dynamic-fields" && <AdminDynamicFieldsTab />}
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -82,54 +82,21 @@ describe("GET /api/admin/stats", () => {
   });
 
   it("renvoie les statistiques correctement typées", async () => {
-    const supabaseMock = {
-      from: vi.fn().mockImplementation(() => ({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        gte: vi.fn().mockReturnThis(),
-        // Simule count: 42 pour chaque requête
-        then: vi.fn(),
-        count: 42,
-        data: null,
-        error: null,
-      })),
-    };
-
-    // Simule Promise.all avec 8 requêtes comptant chacune 5
+    // Each call to .from().select() returns a thenable chain with .eq() and .gte()
     const countResult = { count: 5, data: null, error: null };
-    const fromMock = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        ...countResult,
-        eq: vi.fn().mockReturnValue({
-          ...countResult,
-          gte: vi.fn().mockResolvedValue(countResult),
-        }),
-        gte: vi.fn().mockResolvedValue(countResult),
-        [Symbol.iterator]: undefined,
-      }),
-    });
-
-    // Approche simplifiée: mock complet basé sur les requêtes séquentielles
-    let callIndex = 0;
-    const counts = [12, 3, 2, 50, 10, 5, 1, 0]; // totalProfiles, startups, enterprises, waitlistTotal, waitlistPending, messages, reports, suspended
-    const chain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      gte: vi.fn().mockReturnThis(),
+    const makeChain = () => {
+      const c: Record<string, unknown> = {};
+      for (const m of ["select", "eq", "gte"]) {
+        c[m] = vi.fn().mockReturnValue(c);
+      }
+      c.then = (
+        resolve: (v: typeof countResult) => void,
+        reject: (e: unknown) => void
+      ) => Promise.resolve(countResult).then(resolve, reject);
+      return c;
     };
 
-    supabaseMock.from.mockImplementation(() => {
-      const idx = callIndex++;
-      return {
-        ...chain,
-        // Resolved value simulant un count Supabase
-        then: undefined,
-        count: counts[idx] ?? 0,
-        error: null,
-      };
-    });
-
-    mockCreateClient.mockResolvedValue(supabaseMock as unknown as Awaited<ReturnType<typeof createClient>>);
+    mockAdminFrom.mockImplementation(() => makeChain());
 
     const { GET } = await import("@/app/api/admin/stats/route");
     const res = await GET();
@@ -195,9 +162,7 @@ describe("GET /api/admin/profiles", () => {
     const resolvedQuery = { data: fakeProfiles, count: 1, error: null };
     queryChain.order.mockResolvedValue(resolvedQuery);
 
-    mockCreateClient.mockResolvedValue({
-      from: vi.fn().mockReturnValue(queryChain),
-    } as unknown as Awaited<ReturnType<typeof createClient>>);
+    mockAdminFrom.mockReturnValue(queryChain);
 
     const { GET } = await import("@/app/api/admin/profiles/route");
     const req = makeRequest("http://localhost/api/admin/profiles?page=1&limit=20");
@@ -230,9 +195,7 @@ describe("GET /api/admin/profiles", () => {
     (queryChain.order as ReturnType<typeof vi.fn>).mockReturnValue(queryChain);
     (queryChain.eq as ReturnType<typeof vi.fn>).mockReturnValue(queryChain);
 
-    mockCreateClient.mockResolvedValue({
-      from: vi.fn().mockReturnValue(queryChain),
-    } as unknown as Awaited<ReturnType<typeof createClient>>);
+    mockAdminFrom.mockReturnValue(queryChain);
 
     const { GET } = await import("@/app/api/admin/profiles/route");
     const req = makeRequest("http://localhost/api/admin/profiles?type=startup");
@@ -278,14 +241,10 @@ describe("POST /api/admin/profiles/[id]/suspend", () => {
       insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
-    const fromMock = vi.fn().mockImplementation((table: string) => {
+    mockAdminFrom.mockImplementation((table: string) => {
       if (table === "ivoireio_admin_logs") return insertChain;
       return updateChain;
     });
-
-    mockCreateClient.mockResolvedValue({
-      from: fromMock,
-    } as unknown as Awaited<ReturnType<typeof createClient>>);
 
     const { POST } = await import("@/app/api/admin/profiles/[id]/suspend/route");
     const req = makeRequest("http://localhost/api/admin/profiles/user123/suspend", { method: "POST" });
@@ -338,11 +297,9 @@ describe("POST /api/admin/profiles/[id]/badge", () => {
       insert: vi.fn().mockResolvedValue({ error: null }),
     };
 
-    mockCreateClient.mockResolvedValue({
-      from: vi.fn().mockImplementation((table: string) => {
-        return table === "ivoireio_admin_logs" ? insertChain : updateChain;
-      }),
-    } as unknown as Awaited<ReturnType<typeof createClient>>);
+    mockAdminFrom.mockImplementation((table: string) => {
+      return table === "ivoireio_admin_logs" ? insertChain : updateChain;
+    });
 
     const { POST } = await import("@/app/api/admin/profiles/[id]/badge/route");
     const req = makeRequest("http://localhost/api/admin/profiles/user123/badge", { method: "POST" });
@@ -397,9 +354,7 @@ describe("GET /api/admin/logs", () => {
     };
     queryChain.order.mockResolvedValue({ data: fakeLogs, count: 1, error: null });
 
-    mockCreateClient.mockResolvedValue({
-      from: vi.fn().mockReturnValue(queryChain),
-    } as unknown as Awaited<ReturnType<typeof createClient>>);
+    mockAdminFrom.mockReturnValue(queryChain);
 
     const { GET } = await import("@/app/api/admin/logs/route");
     const req = makeRequest("http://localhost/api/admin/logs?period=7d&limit=7");

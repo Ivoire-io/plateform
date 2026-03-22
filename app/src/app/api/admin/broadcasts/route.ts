@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,9 +12,8 @@ export async function GET(req: NextRequest) {
   const limit = 20;
   const from = (page - 1) * limit;
 
-  const supabase = await createClient();
 
-  const { data, count, error } = await supabase
+  const { data, count, error } = await supabaseAdmin
     .from(TABLES.broadcasts)
     .select("*, sender:sender_id(full_name)", { count: "exact" })
     .range(from, from + limit - 1)
@@ -42,9 +41,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Subject and message are required" }, { status: 400 });
   }
 
-  const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(TABLES.broadcasts)
     .insert({
       sender_id: guard.userId,
@@ -61,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     admin_id: guard.userId,
     action: body.scheduled_at ? "broadcast_scheduled" : "broadcast_sent",
     target_type: "broadcast",

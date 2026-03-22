@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,7 +10,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (!guard.authorized) return guard.response;
 
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
 
   const { data, error } = await supabase
     .from(TABLES.profiles)
@@ -29,12 +29,12 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   const { id } = await params;
   const body = await req.json();
-  const supabase = await createClient();
+  const supabase = supabaseAdmin;
 
   // Champs autorisés à modifier par l'admin
   const allowed = [
     "full_name", "bio", "type", "plan", "admin_notes",
-    "verified_badge", "is_admin",
+    "verified_badge", "is_admin", "is_suspended",
   ];
   const updates: Record<string, unknown> = {};
   for (const key of allowed) {
@@ -68,7 +68,16 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (!guard.authorized) return guard.response;
 
   const { id } = await params;
-  const supabase = await createClient();
+
+  // Cannot delete yourself
+  if (id === guard.userId) {
+    return NextResponse.json(
+      { error: "Vous ne pouvez pas supprimer votre propre compte" },
+      { status: 400 }
+    );
+  }
+
+  const supabase = supabaseAdmin;
 
   const { error } = await supabase.from(TABLES.profiles).delete().eq("id", id);
 

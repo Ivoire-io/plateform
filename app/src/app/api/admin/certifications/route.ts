@@ -1,5 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
-import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,9 +10,8 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") ?? "pending";
 
-  const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from(TABLES.certifications)
     .select("*, profile:profile_id(full_name, slug, profile_type)")
     .eq("status", status)
@@ -32,11 +31,10 @@ export async function POST(req: NextRequest) {
     action: "approve" | "reject";
   };
 
-  const supabase = await createClient();
 
   const newStatus = action === "approve" ? "approved" : "rejected";
 
-  const { data: cert, error: certErr } = await supabase
+  const { data: cert, error: certErr } = await supabaseAdmin
     .from(TABLES.certifications)
     .update({ status: newStatus, reviewed_by: guard.userId, reviewed_at: new Date().toISOString() })
     .eq("id", certificationId)
@@ -49,13 +47,13 @@ export async function POST(req: NextRequest) {
 
   // Si approuvé, on met le badge sur le profil
   if (action === "approve") {
-    await supabase
+    await supabaseAdmin
       .from(TABLES.profiles)
       .update({ verified_badge: true, updated_at: new Date().toISOString() })
       .eq("id", cert.profile_id);
   }
 
-  await supabase.from(TABLES.admin_logs).insert({
+  await supabaseAdmin.from(TABLES.admin_logs).insert({
     admin_id: guard.userId,
     action: `certification_${action}d`,
     target_type: "certification",
