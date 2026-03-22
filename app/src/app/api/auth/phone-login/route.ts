@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     }
 
     // Update the password to the derived one (idempotent)
-    await supabaseAdmin.auth.admin.updateUser(authUser.id, { password });
+    await supabaseAdmin.auth.admin.updateUserById(authUser.id, { password });
 
     // Sign in with the derived password to get tokens
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
