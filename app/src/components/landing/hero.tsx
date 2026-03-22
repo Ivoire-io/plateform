@@ -1,196 +1,72 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Check, Loader2, Rocket, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-type AvailabilityStatus =
-  | "idle"
-  | "checking"
-  | "available"
-  | "taken"
-  | "reserved"
-  | "invalid"
-  | "too_short";
-
-const STATUS_CONFIG: Record<
-  Exclude<AvailabilityStatus, "idle" | "checking" | "too_short">,
-  { label: string; color: string }
-> = {
-  available: { label: "Disponible !", color: "text-green-400" },
-  taken: { label: "Déjà réservé", color: "text-red-400" },
-  reserved: { label: "Nom réservé", color: "text-red-400" },
-  invalid: {
-    label: "3–30 caractères, commence et finit par une lettre ou chiffre",
-    color: "text-yellow-400",
-  },
-};
-
-function formatSlug(raw: string): string {
-  return raw
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "") // supprimer les caractères non autorisés
-    .replace(/-{2,}/g, "-") // pas de doubles tirets
-    .slice(0, 30);
-}
+import { ArrowRight, Briefcase, Code, Rocket } from "lucide-react";
+import Link from "next/link";
 
 export function HeroSection() {
-  const [slug, setSlug] = useState("");
-  const [status, setStatus] = useState<AvailabilityStatus>("idle");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const checkAvailability = useCallback(async (value: string) => {
-    if (!value || value.length < 3) {
-      setStatus(value.length > 0 ? "too_short" : "idle");
-      return;
-    }
-    setStatus("checking");
-    try {
-      const res = await fetch(`/api/check-slug?slug=${encodeURIComponent(value)}`);
-      const data = await res.json();
-      if (data.available === true) setStatus("available");
-      else if (data.reason === "reserved") setStatus("reserved");
-      else if (data.reason === "invalid_format") setStatus("invalid");
-      else setStatus("taken");
-    } catch {
-      setStatus("idle");
-    }
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatSlug(e.target.value);
-    setSlug(formatted);
-    setStatus("idle");
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => checkAvailability(formatted), 400);
-  };
-
-  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
-
-  const handleClaim = () => {
-    const el = document.getElementById("rejoindre");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-      if (slug) {
-        const slugInput = document.getElementById("waitlist-slug") as HTMLInputElement | null;
-        if (slugInput) {
-          slugInput.value = slug;
-          slugInput.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      }
-    }
-  };
-
-  const borderColor =
-    status === "available"
-      ? "border-green-400/60"
-      : status === "taken" || status === "reserved" || status === "invalid"
-        ? "border-red-400/60"
-        : "border-border";
-
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center px-4 pt-16 relative overflow-hidden">
+    <section className="min-h-[85vh] flex flex-col items-center justify-center px-4 pt-16 relative overflow-hidden">
       {/* Gradient background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--color-orange)_0%,_transparent_50%)] opacity-[0.07]" />
 
-      <div className="relative z-10 max-w-3xl mx-auto text-center">
+      <div className="relative z-10 max-w-4xl mx-auto text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-surface/50 text-sm text-muted mb-8">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-border bg-surface/50 text-sm text-muted mb-8 backdrop-blur-sm shadow-sm">
           <span className="text-base">🇨🇮</span>
-          <span>L&apos;OS Digital de la Côte d&apos;Ivoire</span>
+          <span>L&apos;Écosystème Digital de la Côte d&apos;Ivoire</span>
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight mb-6">
-          La porte d&apos;entrée digitale
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight mb-8">
+          La tech ivoirienne.
           <br />
-          <span className="text-orange">de la tech ivoirienne</span>
+          <span className="text-orange">Rassemblée.</span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-muted text-lg md:text-xl max-w-xl mx-auto mb-10">
-          Le hub des développeurs, startups et services de Côte d&apos;Ivoire.
-          Réclame ton espace.
+        <p className="text-muted text-lg md:text-xl max-w-2xl mx-auto mb-16 leading-relaxed">
+          Le hub central pour trouver les meilleurs développeurs, lancer votre startup ou recruter votre prochaine équipe tech.
         </p>
 
-        {/* Subdomain input */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-3">
-          <div
-            className={cn(
-              "flex items-center bg-surface border rounded-lg overflow-hidden w-full sm:w-auto transition-colors duration-200",
-              borderColor
-            )}
-          >
-            <input
-              type="text"
-              placeholder="ton-nom"
-              value={slug}
-              onChange={handleChange}
-              className="bg-transparent px-4 py-3 text-white placeholder:text-muted focus:outline-none w-full sm:w-48 font-mono"
-              maxLength={30}
-              spellCheck={false}
-              autoCorrect="off"
-              autoCapitalize="none"
-            />
-            <span className="text-muted px-3 py-3 bg-border/30 font-mono text-sm whitespace-nowrap border-l border-border/40">
-              .ivoire.io
+        {/* Choix du parcours */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full max-w-4xl mx-auto mb-10">
+          <Link href="/developpeurs/landing" className="group text-left p-6 sm:p-8 rounded-3xl bg-surface/60 backdrop-blur-sm border border-border hover:border-orange/40 hover:shadow-xl hover:shadow-orange/5 transition-all hover:-translate-y-1 block">
+            <div className="w-12 h-12 rounded-xl bg-orange/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <Code size={24} className="text-orange" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Développeurs</h3>
+            <p className="text-muted text-sm mb-6">Crée ton portfolio, sois visible, et reçois des opportunités tech.</p>
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-white group-hover:text-orange transition-colors">
+              Ton espace <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </span>
-            {/* Status icon — après le suffixe */}
-            {status !== "idle" && (
-              <span className="pl-2 pr-3 flex items-center">
-                {status === "checking" && (
-                  <Loader2 size={15} className="text-muted animate-spin" />
-                )}
-                {status === "available" && (
-                  <Check size={15} className="text-green-400" />
-                )}
-                {(status === "taken" ||
-                  status === "reserved" ||
-                  status === "invalid") && (
-                    <X size={15} className="text-red-400" />
-                  )}
-              </span>
-            )}
+          </Link>
+
+          <Link href="/startups/landing" className="group text-left p-6 sm:p-8 rounded-3xl bg-surface/60 backdrop-blur-sm border border-border hover:border-orange/40 hover:shadow-xl hover:shadow-orange/5 transition-all hover:-translate-y-1 block">
+            <div className="w-12 h-12 rounded-xl bg-orange/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+              <Rocket size={24} className="text-orange" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Startups</h3>
+            <p className="text-muted text-sm mb-6">Lance ton idée, gagne en visibilité et trouve ton talent ou CTO.</p>
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-white group-hover:text-orange transition-colors">
+              Lancer le projet <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+
+          <div className="group text-left p-6 sm:p-8 rounded-3xl bg-surface/40 backdrop-blur-sm border border-border/50 opacity-60 cursor-not-allowed block relative overflow-hidden">
+            <div className="absolute top-4 right-4 bg-white/5 border border-white/10 text-xs px-2.5 py-1 rounded-full text-white/50 backdrop-blur-md">
+              Bientôt
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-5">
+              <Briefcase size={24} className="text-white/40" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2 text-white/70">Entreprises</h3>
+            <p className="text-muted/60 text-sm mb-6">Trouve ton prochain talent tech sans chercher pendant des mois.</p>
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-white/40">
+              Recruter
+            </span>
           </div>
-          <Button
-            size="default"
-            onClick={handleClaim}
-            disabled={status === "taken" || status === "reserved"}
-            className="w-full sm:w-auto"
-          >
-            <Rocket size={18} className="mr-2" />
-            Réclamer mon domaine
-          </Button>
         </div>
 
-        {/* Availability feedback */}
-        <div className="h-5 mb-4">
-          {status !== "idle" && status !== "checking" && status !== "too_short" && (
-            <p
-              className={cn(
-                "text-sm font-medium transition-opacity duration-200",
-                STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color
-              )}
-            >
-              {slug && (
-                <span className="font-mono text-white/60">{slug}.ivoire.io </span>
-              )}
-              {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
-            </p>
-          )}
-          {status === "too_short" && (
-            <p className="text-sm text-muted">
-              Minimum 3 caractères
-            </p>
-          )}
-        </div>
-
-        {/* Counter */}
-        <p className="text-muted text-sm">
-          Rejoins les premiers bâtisseurs 🚀
-        </p>
       </div>
     </section>
   );

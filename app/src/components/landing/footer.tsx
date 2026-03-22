@@ -78,7 +78,7 @@ export function Footer() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-surface border border-border rounded-xl hover:border-orange/30 transition-colors">
             <span className="text-muted text-sm">Dev ou startup en Côte d&apos;Ivoire ?</span>
-            <Link href="/#waitlist" className="text-orange text-sm font-medium hover:underline">
+            <Link href="/rejoindre" className="text-orange text-sm font-medium hover:underline">
               Crée ton portfolio gratuitement →
             </Link>
           </div>

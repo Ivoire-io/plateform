@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const navLinks = [
@@ -16,6 +17,14 @@ const navLinks = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const joinHref =
+    pathname === "/developpeurs/landing"
+      ? "/rejoindre/developpeur"
+      : pathname === "/startups/landing"
+        ? "/rejoindre/startup"
+        : "/rejoindre";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -62,7 +71,7 @@ export function Navbar() {
           >
             Connexion
           </Link>
-          <a href="#rejoindre">
+          <a href={joinHref}>
             <Button size="sm">Rejoindre</Button>
           </a>
         </div>
@@ -97,7 +106,7 @@ export function Navbar() {
           >
             Connexion
           </Link>
-          <a href="#rejoindre" onClick={() => setMobileOpen(false)}>
+          <a href={joinHref} onClick={() => setMobileOpen(false)}>
             <Button size="sm" className="w-full">
               Rejoindre
             </Button>

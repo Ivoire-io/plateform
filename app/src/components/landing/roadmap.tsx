@@ -1,4 +1,4 @@
-import { Briefcase, Check, Code2, Heart, Rocket, Users } from "lucide-react";
+import { Briefcase, Check, Code2, Lock, Rocket, Users } from "lucide-react";
 
 type StepStatus = "done" | "current" | "next" | "future";
 
@@ -11,43 +11,43 @@ const steps: {
 }[] = [
     {
       phase: "Phase 1",
-      label: "Portfolios devs",
+      label: "Portfolios Devs",
       description:
-        "Un espace professionnel à ton nom. Réclame ton.ivoire.io et présente ton travail au monde.",
+        "Un espace pro à ton nom (.ivoire.io) pour présenter simplement ton vrai niveau.",
       icon: Code2,
       status: "done",
     },
     {
       phase: "Phase 2",
-      label: "Annuaire devs",
+      label: "Annuaire public",
       description:
-        "devs.ivoire.io — trouve les meilleurs talents ivoiriens, par compétence, ville, disponibilité.",
+        "La liste claire pour trouver les talents tech ivoiriens, sans chercher partout.",
       icon: Users,
       status: "done",
     },
     {
       phase: "Phase 3",
-      label: "Startups CI",
+      label: "Startups",
       description:
-        "Un Product Hunt made in Côte d'Ivoire. Découvre et soutiens les projets tech locaux.",
+        "Un espace pour lancer ton projet, le rendre visible et trouver tes premiers utilisateurs.",
       icon: Rocket,
-      status: "done",
+      status: "current",
     },
     {
       phase: "Phase 4",
-      label: "Jobs & Missions",
+      label: "Emplois & Freelance",
       description:
-        "Marketplace de freelance et offres d'emploi tech, connectant recruteurs et talents locaux.",
+        "Des offres de missions et de jobs qui viennent directement à toi.",
       icon: Briefcase,
-      status: "done",
+      status: "next",
     },
     {
       phase: "Phase 5",
-      label: "Services publics",
+      label: "Confidentiel 🤫",
       description:
-        "Santé, éducation, logement — des services digitaux adaptés aux réalités ivoiriennes.",
-      icon: Heart,
-      status: "current",
+        "Comme Coca-Cola, on ne dévoile pas toute la recette secrète d'un seul coup...",
+      icon: Lock,
+      status: "next",
     },
   ];
 
@@ -59,8 +59,7 @@ export function RoadmapSection() {
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Ce qui arrive</h2>
           <p className="text-muted max-w-lg mx-auto">
-            Une vision étape par étape pour structurer l&apos;écosystème tech
-            ivoirien.
+            On construit les choses étape par étape, pour que la plateforme grandisse avec vous.
           </p>
         </div>
 

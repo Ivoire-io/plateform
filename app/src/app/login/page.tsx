@@ -116,7 +116,7 @@ function LoginForm() {
 
             <p className="text-center text-muted/60 text-xs mt-6">
               Pas encore de compte ?{" "}
-              <Link href="/#waitlist" className="text-orange hover:underline">
+              <Link href="/rejoindre" className="text-orange hover:underline">
                 Rejoindre la liste d&apos;attente →
               </Link>
             </p>

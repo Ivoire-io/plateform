@@ -3,6 +3,8 @@ import { isValidSlug, RESERVED_SUBDOMAINS, TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
+type RegistrationType = "developer" | "startup" | "enterprise" | "other";
+
 function generateReferralCode(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let code = "";
@@ -51,6 +53,75 @@ async function validateSlug(
   return { valid: true };
 }
 
+function sanitizeString(value: unknown, maxLength: number): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  return trimmed.slice(0, maxLength);
+}
+
+function sanitizeStringArray(value: unknown, maxItems: number, maxLength: number): string[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, maxItems)
+    .map((item) => item.slice(0, maxLength));
+}
+
+function getRegistrationMetadata(
+  type: RegistrationType,
+  extra: unknown
+): Record<string, unknown> {
+  const payload = extra && typeof extra === "object" ? extra : {};
+
+  if (type === "developer") {
+    const developerPayload = payload as Record<string, unknown>;
+    const metadata = {
+      skills: sanitizeStringArray(developerPayload.skills, 25, 40),
+      title: sanitizeString(developerPayload.title, 80),
+      city: sanitizeString(developerPayload.city, 80),
+      github_url: sanitizeString(developerPayload.github_url, 255),
+    };
+
+    return Object.fromEntries(
+      Object.entries(metadata).filter(([, value]) => {
+        if (Array.isArray(value)) return value.length > 0;
+        return value !== undefined;
+      })
+    );
+  }
+
+  if (type === "startup") {
+    const startupPayload = payload as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries({
+        startup_name: sanitizeString(startupPayload.startup_name, 120),
+        tagline: sanitizeString(startupPayload.tagline, 120),
+        sector: sanitizeString(startupPayload.sector, 60),
+        stage: sanitizeString(startupPayload.stage, 40),
+        problem_statement: sanitizeString(startupPayload.problem_statement, 300),
+      }).filter(([, value]) => value !== undefined)
+    );
+  }
+
+  if (type === "enterprise") {
+    const enterprisePayload = payload as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries({
+        company_name: sanitizeString(enterprisePayload.company_name, 120),
+        sector: sanitizeString(enterprisePayload.sector, 60),
+        company_size: sanitizeString(enterprisePayload.company_size, 40),
+        hiring_needs: sanitizeString(enterprisePayload.hiring_needs, 300),
+      }).filter(([, value]) => value !== undefined)
+    );
+  }
+
+  return {};
+}
+
 export async function POST(request: Request) {
   try {
     let body: Record<string, unknown>;
@@ -76,12 +147,13 @@ export async function POST(request: Request) {
     const type =
       typeof body.type === "string" &&
         ["developer", "startup", "enterprise", "other"].includes(body.type)
-        ? (body.type as "developer" | "startup" | "enterprise" | "other")
+        ? (body.type as RegistrationType)
         : "developer";
     const referralCode =
       typeof body.referral_code === "string"
         ? body.referral_code.trim()
         : null;
+    const registrationMetadata = getRegistrationMetadata(type, body.extra);
 
     // Basic validation
     if (!email || !fullName || !desiredSlug) {
@@ -172,6 +244,22 @@ export async function POST(request: Request) {
           email,
           full_name: fullName,
           type,
+          title:
+            type === "developer" && typeof registrationMetadata.title === "string"
+              ? registrationMetadata.title
+              : null,
+          city:
+            type === "developer" && typeof registrationMetadata.city === "string"
+              ? registrationMetadata.city
+              : null,
+          skills:
+            type === "developer" && Array.isArray(registrationMetadata.skills)
+              ? registrationMetadata.skills
+              : [],
+          github_url:
+            type === "developer" && typeof registrationMetadata.github_url === "string"
+              ? registrationMetadata.github_url
+              : null,
           referral_code: newReferralCode,
           verified_phone: whatsapp || null,
           phone_verified: false,
@@ -263,6 +351,7 @@ export async function POST(request: Request) {
             converted_profile_id: userId,
             converted_at: new Date().toISOString(),
             referral_code: referralCode,
+            registration_metadata: registrationMetadata,
           });
       } catch {
         // Non-blocking: waitlist insert may fail on duplicate
@@ -328,6 +417,7 @@ export async function POST(request: Request) {
         whatsapp: whatsapp || null,
         type,
         referral_code: referralCode,
+        registration_metadata: registrationMetadata,
       });
 
     if (insertError) {

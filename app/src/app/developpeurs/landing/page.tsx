@@ -1,7 +1,7 @@
-import { DevLanding } from "@/components/devs/dev-landing";
 import { Footer } from "@/components/landing/footer";
 import { Navbar } from "@/components/landing/navbar";
 import type { Metadata } from "next";
+import { DevLanding } from "../../../components/devs/dev-landing";
 
 export const metadata: Metadata = {
   title: "Développeurs — Ton portfolio pro en Côte d'Ivoire | ivoire.io",

@@ -266,8 +266,8 @@ export function DevsDirectory() {
               updateParams({ available: currentAvailable ? null : "true" })
             }
             className={`px-4 py-3 rounded-lg border text-sm transition-all cursor-pointer whitespace-nowrap ${currentAvailable
-                ? "border-green bg-green/10 text-green"
-                : "border-border text-muted hover:border-border/80"
+              ? "border-green bg-green/10 text-green"
+              : "border-border text-muted hover:border-border/80"
               }`}
           >
             <Filter size={14} className="inline mr-1" />
@@ -431,8 +431,8 @@ export function DevsDirectory() {
                       key={p}
                       onClick={() => updateParams({ page: String(p) })}
                       className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${p === currentPage
-                          ? "bg-orange text-white"
-                          : "border border-border text-muted hover:text-white hover:border-orange/30"
+                        ? "bg-orange text-white"
+                        : "border border-border text-muted hover:text-white hover:border-orange/30"
                         }`}
                     >
                       {p}
@@ -463,7 +463,7 @@ export function DevsDirectory() {
             Rejoins la communaute des developpeurs ivoiriens et obtiens ton portfolio en ligne en quelques minutes.
           </p>
           <a
-            href="https://ivoire.io/#rejoindre"
+            href="/rejoindre/developpeur"
             className="inline-block px-8 py-3 rounded-lg bg-orange text-white font-semibold hover:bg-orange/90 transition-colors"
           >
             Commencer maintenant

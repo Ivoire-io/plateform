@@ -31,7 +31,7 @@ export function DevLanding() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/#rejoindre">
+            <Link href="/rejoindre/developpeur">
               <Button size="lg" className="gap-2">
                 <Rocket size={18} />
                 Réclamer mon domaine
@@ -160,7 +160,7 @@ export function DevLanding() {
           <p className="text-muted mb-8">
             Gratuit. En 2 minutes.
           </p>
-          <Link href="/#rejoindre">
+          <Link href="/rejoindre/developpeur">
             <Button size="lg" className="gap-2">
               <Rocket size={18} />
               Créer mon portfolio

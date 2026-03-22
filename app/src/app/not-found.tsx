@@ -12,7 +12,7 @@ export default function NotFound() {
           <br />
           Tu veux le réclamer ?
         </p>
-        <Link href="https://ivoire.io/#rejoindre">
+        <Link href="/rejoindre">
           <Button>Réclamer ce domaine</Button>
         </Link>
       </div>

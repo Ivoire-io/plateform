@@ -6,6 +6,11 @@ import { BaseFields } from "./base-fields";
 import { RegistrationSuccess } from "./registration-success";
 import { useRegistrationForm } from "./use-registration-form";
 
+type StartupRegistrationFormProps = {
+  compact?: boolean;
+  showHeader?: boolean;
+};
+
 const SECTORS = [
   "Fintech",
   "EdTech",
@@ -27,7 +32,7 @@ const STAGES = [
   { value: "growth", label: "Croissance" },
 ];
 
-function StartupFormInner() {
+function StartupFormInner({ compact = false, showHeader = true }: StartupRegistrationFormProps) {
   const form = useRegistrationForm();
   const [startupName, setStartupName] = useState("");
   const [tagline, setTagline] = useState("");
@@ -96,58 +101,62 @@ function StartupFormInner() {
   }
 
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
+    <section className={`px-4 relative overflow-hidden ${compact ? "py-4 md:py-6" : "py-24"}`}>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--color-orange)_0%,_transparent_60%)] opacity-[0.04]" />
-      <div className="relative max-w-2xl mx-auto">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange/20 bg-orange/5 text-orange text-sm mb-6">
-            <Rocket size={14} />
-            Startup
+      <div className="relative max-w-xl mx-auto">
+        {showHeader && (
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange/20 bg-orange/5 text-orange text-sm mb-6">
+              <Rocket size={14} />
+              Startup
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              Lance ta startup
+            </h1>
+            <p className="text-muted max-w-sm mx-auto">
+              Un projet structuré, une page en ligne, une communauté.
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Lance ta startup
-          </h1>
-          <p className="text-muted max-w-sm mx-auto">
-            Un projet structuré, une page en ligne, une communauté.
-          </p>
-        </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
-          className="bg-surface/60 backdrop-blur-sm border border-border rounded-3xl p-8 md:p-10 space-y-6"
+          className={`bg-surface/60 backdrop-blur-sm border border-border rounded-3xl ${compact ? "p-4 md:p-5" : "p-8 md:p-10"} space-y-6`}
         >
           <BaseFields form={form} />
 
-          {/* Nom de la startup */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted uppercase tracking-wider">
-              Nom de la startup *
-            </label>
-            <input
-              required
-              placeholder="TechCI, StockFacile..."
-              value={startupName}
-              onChange={(e) => setStartupName(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange transition-colors"
-            />
-          </div>
+          <hr className="border-white/5 my-2" />
 
-          {/* Tagline */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted uppercase tracking-wider">
-              Tagline{" "}
-              <span className="text-muted/50 normal-case">(optionnel)</span>
-            </label>
-            <input
-              placeholder="En une phrase, ce que vous faites"
-              value={tagline}
-              onChange={(e) => setTagline(e.target.value.slice(0, 120))}
-              maxLength={120}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange transition-colors"
-            />
-            <p className="text-xs text-muted/50 text-right">
-              {tagline.length}/120
-            </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                Nom de la startup *
+              </label>
+              <input
+                required
+                placeholder="TechCI, StockFacile..."
+                value={startupName}
+                onChange={(e) => setStartupName(e.target.value)}
+                className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04]"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted uppercase tracking-wider">
+                Tagline{" "}
+                <span className="text-muted/50 normal-case">(optionnel)</span>
+              </label>
+              <input
+                placeholder="En une phrase, ce que vous faites"
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value.slice(0, 120))}
+                maxLength={120}
+                className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04]"
+              />
+              <p className="text-xs text-muted/50 text-right">
+                {tagline.length}/120
+              </p>
+            </div>
           </div>
 
           {/* Secteur + Stade */}
@@ -160,7 +169,7 @@ function StartupFormInner() {
                 required
                 value={sector}
                 onChange={(e) => setSector(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange transition-colors appearance-none"
+                className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04] appearance-none"
               >
                 <option value="" disabled>
                   Choisir un secteur
@@ -181,7 +190,7 @@ function StartupFormInner() {
                 required
                 value={stage}
                 onChange={(e) => setStage(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange transition-colors appearance-none"
+                className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04] appearance-none"
               >
                 <option value="" disabled>
                   Choisir un stade
@@ -207,7 +216,7 @@ function StartupFormInner() {
               onChange={(e) => setProblem(e.target.value.slice(0, 300))}
               maxLength={300}
               rows={3}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange transition-colors resize-none"
+              className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04] resize-none"
             />
             <p className="text-xs text-muted/50 text-right">
               {problem.length}/300
@@ -226,7 +235,7 @@ function StartupFormInner() {
           <button
             type="submit"
             disabled={submitStatus === "loading" || !isFormValid}
-            className="w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-orange hover:bg-orange-hover text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-orange/20 hover:shadow-orange/30"
+            className="w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl bg-gradient-to-r from-orange to-orange-hover text-white font-semibold text-sm transition-all disabled:opacity-40 disabled:from-white/5 disabled:to-white/5 disabled:text-white/40 disabled:shadow-none shadow-lg shadow-orange/20 hover:shadow-orange/40 hover:scale-[1.02]"
           >
             {submitStatus === "loading" ? (
               <>
@@ -246,10 +255,10 @@ function StartupFormInner() {
   );
 }
 
-export function StartupRegistrationForm() {
+export function StartupRegistrationForm(props: StartupRegistrationFormProps) {
   return (
     <Suspense>
-      <StartupFormInner />
+      <StartupFormInner {...props} />
     </Suspense>
   );
 }

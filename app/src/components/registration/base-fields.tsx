@@ -20,12 +20,12 @@ type FormReturn = ReturnType<typeof useRegistrationForm>;
 export function BaseFields({ form }: { form: FormReturn }) {
   const slugBorder =
     form.slugStatus === "available"
-      ? "border-green-400/60 ring-1 ring-green-400/30"
+      ? "border-green-400/60 ring-4 ring-green-400/10"
       : form.slugStatus === "taken" ||
-          form.slugStatus === "reserved" ||
-          form.slugStatus === "invalid"
-        ? "border-red-400/60 ring-1 ring-red-400/20"
-        : "border-border focus-within:border-orange focus-within:ring-1 focus-within:ring-orange";
+        form.slugStatus === "reserved" ||
+        form.slugStatus === "invalid"
+        ? "border-red-400/60 ring-4 ring-red-400/10"
+        : "border-white/10 focus-within:border-orange focus-within:ring-4 focus-within:ring-orange/10";
 
   const slugMsg =
     form.slugStatus === "available"
@@ -36,9 +36,9 @@ export function BaseFields({ form }: { form: FormReturn }) {
           ? { ok: false, msg: "Ce nom est réservé par ivoire.io." }
           : form.slugStatus === "invalid"
             ? {
-                ok: false,
-                msg: "3–30 caractères, lettres et chiffres uniquement.",
-              }
+              ok: false,
+              msg: "3–30 caractères, lettres et chiffres uniquement.",
+            }
             : form.slugStatus === "too_short"
               ? { ok: false, msg: "Minimum 3 caractères." }
               : null;
@@ -61,7 +61,7 @@ export function BaseFields({ form }: { form: FormReturn }) {
               placeholder="John Koffi"
               value={form.fullName}
               onChange={(e) => form.setFullName(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange transition-colors"
+              className="w-full bg-white/[0.02] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none focus:border-orange focus:ring-4 focus:ring-orange/10 transition-all hover:bg-white/[0.04]"
             />
           </div>
           {form.fullName.length > 0 && form.fullName.trim().length < 2 && (
@@ -90,13 +90,12 @@ export function BaseFields({ form }: { form: FormReturn }) {
                 form.setEmailTouched(true);
               }}
               onBlur={() => form.setEmailTouched(true)}
-              className={`w-full bg-background border rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none transition-colors
-                ${
-                  form.emailTouched && form.emailOk === false
-                    ? "border-red-400/60 focus:border-red-400 focus:ring-1 focus:ring-red-400/30"
-                    : form.emailTouched && form.emailOk === true
-                      ? "border-green-400/60 focus:border-green-400"
-                      : "border-border focus:border-orange focus:ring-1 focus:ring-orange"
+              className={`w-full bg-white/[0.02] border rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-muted/50 focus:outline-none transition-all hover:bg-white/[0.04]
+                ${form.emailTouched && form.emailOk === false
+                  ? "border-red-400/60 focus:border-red-400 focus:ring-4 focus:ring-red-400/10"
+                  : form.emailTouched && form.emailOk === true
+                    ? "border-green-400/60 focus:border-green-400 focus:ring-4 focus:ring-green-400/10"
+                    : "border-white/10 focus:border-orange focus:ring-4 focus:ring-orange/10"
                 }`}
             />
           </div>
@@ -120,7 +119,7 @@ export function BaseFields({ form }: { form: FormReturn }) {
             Ton domaine
           </label>
           <div
-            className={`flex items-center bg-background border rounded-xl overflow-hidden transition-all ${slugBorder}`}
+            className={`flex items-center bg-white/[0.02] border rounded-xl overflow-hidden transition-all hover:bg-white/[0.04] ${slugBorder}`}
           >
             <input
               required
@@ -144,9 +143,9 @@ export function BaseFields({ form }: { form: FormReturn }) {
             {(form.slugStatus === "taken" ||
               form.slugStatus === "reserved" ||
               form.slugStatus === "invalid") && (
-              <X size={14} className="mr-2 text-red-400 shrink-0" />
-            )}
-            <span className="shrink-0 text-muted/60 pr-3 font-mono text-xs border-l border-border/60 pl-2.5 py-3">
+                <X size={14} className="mr-2 text-red-400 shrink-0" />
+              )}
+            <span className="shrink-0 text-muted/60 pr-3 font-mono text-xs border-l border-white/10 pl-2.5 py-3">
               .ivoire.io
             </span>
           </div>
@@ -158,16 +157,15 @@ export function BaseFields({ form }: { form: FormReturn }) {
             WhatsApp
           </label>
           <div
-            className={`flex items-center bg-background border rounded-xl overflow-hidden transition-all
-              ${
-                form.whatsappTouched && form.whatsappOk === false
-                  ? "border-red-400/60 ring-1 ring-red-400/20"
-                  : form.whatsappTouched && form.whatsappOk === true
-                    ? "border-green-400/60"
-                    : "border-border focus-within:border-orange focus-within:ring-1 focus-within:ring-orange"
+            className={`flex items-center bg-white/[0.02] border rounded-xl overflow-hidden transition-all hover:bg-white/[0.04]
+              ${form.whatsappTouched && form.whatsappOk === false
+                ? "border-red-400/60 ring-4 ring-red-400/10"
+                : form.whatsappTouched && form.whatsappOk === true
+                  ? "border-green-400/60 ring-4 ring-green-400/10"
+                  : "border-white/10 focus-within:border-orange focus-within:ring-4 focus-within:ring-orange/10"
               }`}
           >
-            <span className="shrink-0 pl-3 pr-2 text-sm border-r border-border/60 py-3 flex items-center gap-1.5">
+            <span className="shrink-0 pl-3 pr-2 text-sm border-r border-white/10 py-3 flex items-center gap-1.5">
               <Phone size={13} className="text-muted/50" />
               <span className="text-muted/60 text-xs font-mono">+225</span>
             </span>

@@ -34,7 +34,7 @@ export function StartupLanding() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/#rejoindre">
+            <Link href="/rejoindre/startup">
               <Button size="lg" className="gap-2">
                 <Rocket size={18} />
                 Commencer
@@ -68,7 +68,7 @@ export function StartupLanding() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
             {/* Mode A */}
-            <Link href="/#rejoindre" className="block">
+            <Link href="/rejoindre/startup" className="block">
               <div className="bg-surface border border-border rounded-2xl p-7 hover:border-green-400/30 transition-colors h-full">
                 <div className="w-10 h-10 rounded-xl bg-green-400/10 flex items-center justify-center mb-5">
                   <FolderUp size={20} className="text-green-400" />
@@ -81,7 +81,7 @@ export function StartupLanding() {
             </Link>
 
             {/* Mode B */}
-            <Link href="/#rejoindre" className="block">
+            <Link href="/rejoindre/startup" className="block">
               <div className="bg-surface border border-border rounded-2xl p-7 hover:border-orange/30 transition-colors h-full">
                 <div className="w-10 h-10 rounded-xl bg-orange/10 flex items-center justify-center mb-5">
                   <PenLine size={20} className="text-orange" />
@@ -94,7 +94,7 @@ export function StartupLanding() {
             </Link>
 
             {/* Mode C */}
-            <Link href="/#rejoindre" className="block">
+            <Link href="/rejoindre/startup" className="block">
               <div className="bg-surface border border-orange/20 rounded-2xl p-7 hover:border-purple-400/30 transition-colors h-full relative">
                 <span className="absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded-full bg-orange/10 text-orange font-medium">
                   Populaire
@@ -179,7 +179,7 @@ export function StartupLanding() {
         <div className="max-w-xl mx-auto text-center p-12 rounded-3xl bg-orange/5 border border-orange/20">
           <h2 className="text-3xl font-bold mb-4">Une idée suffit.</h2>
           <p className="text-muted mb-8">On s&apos;occupe du reste.</p>
-          <Link href="/#rejoindre">
+          <Link href="/rejoindre/startup">
             <Button size="lg" className="gap-2">
               <Rocket size={18} />
               Créer ma startup
