@@ -83,6 +83,16 @@ export function FeaturesSection() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-8 flex justify-center lg:justify-start">
+              <a
+                href="/rejoindre/developpeur"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-8 py-2 bg-blue-600 hover:bg-blue-600/90 text-white gap-2 w-full sm:w-auto"
+              >
+                <Code2 size={16} />
+                Créer mon portfolio dev
+              </a>
+            </div>
           </div>
 
           {/* Côté Startups */}
@@ -113,6 +123,16 @@ export function FeaturesSection() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-8 flex justify-center lg:justify-start">
+              <a
+                href="/rejoindre/startup"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-8 py-2 bg-orange hover:bg-orange/90 text-white gap-2 w-full sm:w-auto"
+              >
+                <Rocket size={16} />
+                Lancer ma startup
+              </a>
             </div>
           </div>
         </div>
