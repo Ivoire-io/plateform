@@ -41,6 +41,7 @@ import {
   MessageSquare,
   Package,
   Palette,
+  Phone,
   Settings,
   ShieldAlert,
   ShoppingBag,
@@ -58,6 +59,7 @@ import { AdminDynamicFieldsTab } from "./tabs/dynamic-fields-tab";
 import { AdminPaymentProvidersTab } from "./tabs/payment-providers-tab";
 import { AdminPaymentsTab } from "./tabs/payments-tab";
 import { AdminReferralsTab } from "./tabs/referrals-tab";
+import { AdminWhatsAppTab } from "./tabs/whatsapp-tab";
 
 export type AdminTab =
   | "overview"
@@ -82,7 +84,8 @@ export type AdminTab =
   | "dev-pipeline"
   | "payment-providers"
   | "blog"
-  | "dynamic-fields";
+  | "dynamic-fields"
+  | "whatsapp";
 
 interface AdminShellProps {
   adminEmail: string;
@@ -114,6 +117,7 @@ const tabTitles: Record<AdminTab, string> = {
   "payment-providers": "Providers Paiement",
   blog: "Blog",
   "dynamic-fields": "Champs Dynamiques",
+  whatsapp: "WhatsApp",
 };
 
 interface NavItemProps {
@@ -172,6 +176,7 @@ function tabFromPath(pathname: string): AdminTab {
     "payment-providers",
     "blog",
     "dynamic-fields",
+    "whatsapp",
   ]);
   return allowed.has(segment as AdminTab) ? (segment as AdminTab) : "overview";
 }
@@ -323,6 +328,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
               <SidebarMenu>
                 <NavItem id="flags" label="Feature Flags" Icon={Flag} href="/admin/flags" activeTab={activeTab} />
                 <NavItem id="broadcasting" label="Broadcasting" Icon={Bell} href="/admin/broadcasting" activeTab={activeTab} />
+                <NavItem id="whatsapp" label="WhatsApp" Icon={Phone} href="/admin/whatsapp" activeTab={activeTab} />
                 <NavItem id="templates" label="Templates" Icon={Palette} href="/admin/templates" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
@@ -393,6 +399,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
           {activeTab === "payment-providers" && <AdminPaymentProvidersTab />}
           {activeTab === "blog" && <AdminBlogTab />}
           {activeTab === "dynamic-fields" && <AdminDynamicFieldsTab />}
+          {activeTab === "whatsapp" && <AdminWhatsAppTab />}
         </div>
       </SidebarInset>
     </SidebarProvider>

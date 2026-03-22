@@ -60,6 +60,10 @@ export const TABLES = {
   blog_posts: "ivoireio_blog_posts",
   // Migration 019
   dynamic_fields: "ivoireio_dynamic_fields",
+  // Migration 021
+  notifications: "ivoireio_notifications",
+  whatsapp_logs: "ivoireio_whatsapp_logs",
+  whatsapp_templates: "ivoireio_whatsapp_templates",
 } as const;
 
 // ─── Sous-domaines réservés ───

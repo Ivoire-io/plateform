@@ -67,6 +67,8 @@ export interface Profile {
   notif_messages: boolean;
   notif_weekly_report: boolean;
   notif_news: boolean;
+  notif_whatsapp: boolean;
+  notif_inapp: boolean;
   privacy_visible_in_directory: boolean;
   privacy_show_email: boolean;
   template_id: string;
@@ -663,14 +665,55 @@ export interface PlanLimits {
 
 export interface PhoneVerification {
   id: string;
-  profile_id: string;
+  profile_id: string | null;
   phone_number: string;
   otp_code: string;
   status: "pending" | "verified" | "expired" | "failed";
   attempts: number;
+  session_token: string | null;
+  purpose: "settings" | "registration" | "login";
   expires_at: string;
   verified_at: string | null;
   created_at: string;
+}
+
+// ─── Notifications ───
+
+export interface Notification {
+  id: string;
+  profile_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read: boolean;
+  channel: "inapp" | "whatsapp" | "email";
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+// ─── WhatsApp Logs ───
+
+export interface WhatsAppLog {
+  id: string;
+  phone: string;
+  message_type: "text" | "otp" | "notification" | "broadcast";
+  content: string | null;
+  status: "sent" | "failed" | "delivered" | "read";
+  profile_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+// ─── WhatsApp Templates ───
+
+export interface WhatsAppTemplate {
+  id: string;
+  name: string;
+  content: string;
+  variables: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 // ─── Job Applications ───

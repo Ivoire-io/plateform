@@ -1,3 +1,4 @@
+import { createNotification } from "@/lib/notifications";
 import { createClient } from "@/lib/supabase/server";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
@@ -109,6 +110,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 500 }
     );
   }
+
+  // Notify job poster about new application (non-blocking)
+  createNotification({
+    profile_id: job.profile_id,
+    type: "new_application",
+    title: "Nouvelle candidature recue",
+    body: "Un developpeur a postule a ton offre d'emploi.",
+    link: `/dashboard/jobs`,
+    channels: ["inapp", "whatsapp", "email"],
+  }).catch(() => { });
 
   return NextResponse.json({ success: true, data: application }, { status: 201 });
 }

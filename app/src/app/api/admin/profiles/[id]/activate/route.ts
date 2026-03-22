@@ -1,4 +1,5 @@
 import { adminGuard } from "@/lib/admin-guard";
+import { createNotification } from "@/lib/notifications";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
@@ -24,6 +25,16 @@ export async function POST(_req: NextRequest, { params }: Params) {
     actor_id: guard.userId,
     target_id: id,
   });
+
+  // Notify user about reactivation (non-blocking)
+  createNotification({
+    profile_id: id,
+    type: "account_status",
+    title: "Ton compte a ete reactive !",
+    body: "Ton profil est de nouveau visible dans l'annuaire. Bienvenue !",
+    link: "/dashboard",
+    channels: ["inapp", "whatsapp", "email"],
+  }).catch(() => { });
 
   return NextResponse.json({ success: true });
 }

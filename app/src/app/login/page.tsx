@@ -1,19 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PhoneOtpInline } from "@/components/auth/phone-otp-inline";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, Mail } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
-  const [error, setError] = useState<string | null>(null);
+  const [phoneLoginStatus, setPhoneLoginStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [phoneLoginError, setPhoneLoginError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
+  const router = useRouter();
 
   // Capture referral code from URL if present
   useEffect(() => {
@@ -23,24 +22,54 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setStatus("loading");
+  // Handle WhatsApp OTP verified → phone login
+  async function handlePhoneVerified(data: { phone: string; session_token: string }) {
+    setPhoneLoginStatus("loading");
+    setPhoneLoginError(null);
 
-    const supabase = createClient();
-    const { error: sbError } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const res = await fetch("/api/auth/phone-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone_number: data.phone,
+          session_token: data.session_token,
+        }),
+      });
+      const result = await res.json();
 
-    if (sbError) {
-      setError(sbError.message);
-      setStatus("error");
-    } else {
-      setStatus("sent");
+      if (!res.ok || !result.success) {
+        setPhoneLoginError(result.error || "Erreur de connexion.");
+        setPhoneLoginStatus("error");
+        return;
+      }
+
+      if (result.action === "login" && result.access_token && result.refresh_token) {
+        // Existing user → set Supabase session directly
+        const supabase = createClient();
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: result.access_token,
+          refresh_token: result.refresh_token,
+        });
+
+        if (sessionError) {
+          setPhoneLoginError("Erreur lors de la connexion. Reessayez.");
+          setPhoneLoginStatus("error");
+          return;
+        }
+
+        router.push("/dashboard");
+        router.refresh();
+      } else if (result.action === "register") {
+        // New user → redirect to registration with phone info
+        const phoneDigits = data.phone.replace("+225", "");
+        router.push(
+          `/rejoindre?phone=${encodeURIComponent(phoneDigits)}&session_token=${encodeURIComponent(data.session_token)}`
+        );
+      }
+    } catch {
+      setPhoneLoginError("Erreur reseau. Reessayez.");
+      setPhoneLoginStatus("error");
     }
   }
 
@@ -55,78 +84,47 @@ function LoginForm() {
           </Link>
         </div>
 
-        {status === "sent" ? (
-          <div className="flex flex-col items-center text-center gap-5 p-8 bg-surface border border-green/20 rounded-2xl">
-            <div className="w-14 h-14 rounded-full bg-green/10 flex items-center justify-center">
-              <CheckCircle size={28} className="text-green" />
+        <div className="bg-surface border border-border rounded-2xl p-8">
+          <h1 className="text-xl font-bold mb-1">Connexion</h1>
+          <p className="text-muted text-sm mb-6">
+            Connectez-vous avec votre numero WhatsApp.
+          </p>
+
+          {/* Auth error banners */}
+          {authError === "account_suspended" && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
+              Votre compte a ete suspendu. Contactez l&apos;equipe ivoire.io pour plus d&apos;informations.
             </div>
-            <div>
-              <p className="font-semibold text-lg">Vérifiez votre email !</p>
-              <p className="text-muted text-sm mt-2 leading-relaxed">
-                Un lien de connexion vient d&apos;être envoyé à<br />
-                <span className="text-white font-medium">{email}</span>
-              </p>
+          )}
+          {authError && authError !== "account_suspended" && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
+              Session expiree ou invalide. Reconnectez-vous.
             </div>
-            <button
-              onClick={() => setStatus("idle")}
-              className="text-orange text-sm hover:underline focus:outline-none focus-visible:underline"
-            >
-              Changer d&apos;email
-            </button>
-          </div>
-        ) : (
-          <div className="bg-surface border border-border rounded-2xl p-8">
-            <h1 className="text-xl font-bold mb-1">Connexion</h1>
-            <p className="text-muted text-sm mb-6">
-              Entrez votre email pour vous connecter à votre dashboard.
+          )}
+
+          {/* WhatsApp OTP Login */}
+          <PhoneOtpInline purpose="login" onVerified={handlePhoneVerified} />
+
+          {phoneLoginStatus === "loading" && (
+            <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted">
+              <Loader2 size={16} className="animate-spin" />
+              Connexion en cours...
+            </div>
+          )}
+
+          {phoneLoginError && (
+            <p className="mt-3 text-red-400 text-sm text-center" role="alert">
+              {phoneLoginError}
             </p>
+          )}
 
-            {authError === "account_suspended" && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
-                Votre compte a été suspendu. Contactez l&apos;équipe ivoire.io pour plus d&apos;informations.
-              </div>
-            )}
-            {authError && authError !== "account_suspended" && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
-                Lien expiré ou invalide. Réessayez.
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="email" className="text-xs font-semibold uppercase tracking-widest text-muted/70">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="vous@exemple.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="bg-background"
-                />
-              </div>
-
-              {status === "error" && error && (
-                <p className="text-red-400 text-sm" role="alert">{error}</p>
-              )}
-
-              <Button type="submit" size="default" className="w-full gap-2" disabled={status === "loading"}>
-                <Mail size={16} />
-                {status === "loading" ? "Envoi en cours…" : "Recevoir le lien de connexion"}
-              </Button>
-            </form>
-
-            <p className="text-center text-muted/60 text-xs mt-6">
-              Pas encore de compte ?{" "}
-              <Link href="/rejoindre" className="text-orange hover:underline">
-                Rejoindre la liste d&apos;attente →
-              </Link>
-            </p>
-          </div>
-        )}
+          <p className="text-center text-muted/60 text-xs mt-6">
+            Pas encore de compte ?{" "}
+            <Link href="/rejoindre" className="text-orange hover:underline">
+              Rejoindre la communaute &rarr;
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -39,6 +39,8 @@ interface NotifPrefs {
   notif_messages: boolean;
   notif_weekly_report: boolean;
   notif_news: boolean;
+  notif_whatsapp: boolean;
+  notif_inapp: boolean;
   privacy_visible_in_directory: boolean;
   privacy_show_email: boolean;
 }
@@ -87,6 +89,8 @@ export function SettingsTab({ profile, userEmail, onNavigate }: SettingsTabProps
     notif_messages: true,
     notif_weekly_report: false,
     notif_news: true,
+    notif_whatsapp: true,
+    notif_inapp: true,
     privacy_visible_in_directory: true,
     privacy_show_email: false,
   });
@@ -239,6 +243,20 @@ export function SettingsTab({ profile, userEmail, onNavigate }: SettingsTabProps
           <CardTitle className="text-sm font-semibold">📨 Notifications</CardTitle>
         </CardHeader>
         <CardContent className="divide-y divide-border">
+          <Toggle
+            label="Notifications in-app"
+            description="Affiche les notifications dans le dashboard"
+            checked={prefs.notif_inapp}
+            onChange={(v) => updatePref("notif_inapp", v)}
+            disabled={saving}
+          />
+          <Toggle
+            label="Notifications WhatsApp"
+            description="Recois les alertes importantes sur WhatsApp"
+            checked={prefs.notif_whatsapp}
+            onChange={(v) => updatePref("notif_whatsapp", v)}
+            disabled={saving}
+          />
           <Toggle
             label="Nouveau message reçu"
             description="Reçois un email quand un visiteur t'envoie un message"

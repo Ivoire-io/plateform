@@ -1,7 +1,9 @@
 "use client";
 
 import { useDynamicFields } from "@/hooks/use-dynamic-fields";
+import { createClient } from "@/lib/supabase/client";
 import { Briefcase, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { BaseFields } from "./base-fields";
 import { RegistrationSuccess } from "./registration-success";
@@ -21,6 +23,7 @@ const SIZES_FALLBACK = ["1-10", "11-50", "51-200", "200+"];
 
 function EnterpriseFormInner({ compact = false, showHeader = true }: EnterpriseRegistrationFormProps) {
   const form = useRegistrationForm();
+  const router = useRouter();
   const { options: sectorOptions } = useDynamicFields("sector");
   const { options: sizeOptions } = useDynamicFields("company_size");
   const sectors = sectorOptions.length > 0 ? sectorOptions.map((s) => ({ value: s.value, label: s.label })) : SECTORS_FALLBACK.map((s) => ({ value: s.toLowerCase(), label: s }));
@@ -60,6 +63,7 @@ function EnterpriseFormInner({ compact = false, showHeader = true }: EnterpriseR
               : "",
           type: "enterprise",
           referral_code: referralCode,
+          session_token: form.sessionToken || undefined,
           extra: {
             company_name: companyName.trim(),
             sector: sector || undefined,
@@ -73,6 +77,18 @@ function EnterpriseFormInner({ compact = false, showHeader = true }: EnterpriseR
       if (!res.ok || !json.success) {
         setErrorMsg(json.error || "Une erreur est survenue. Réessaie.");
         setSubmitStatus("error");
+        return;
+      }
+
+      // Phone-verified users get tokens → set session and redirect to dashboard
+      if (json.access_token && json.refresh_token) {
+        const supabase = createClient();
+        await supabase.auth.setSession({
+          access_token: json.access_token,
+          refresh_token: json.refresh_token,
+        });
+        router.push("/dashboard");
+        router.refresh();
         return;
       }
 

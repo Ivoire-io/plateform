@@ -1,7 +1,9 @@
 "use client";
 
 import { useDynamicFields } from "@/hooks/use-dynamic-fields";
+import { createClient } from "@/lib/supabase/client";
 import { Code, Loader2, Rocket } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { BaseFields } from "./base-fields";
 import { RegistrationSuccess } from "./registration-success";
@@ -21,6 +23,7 @@ const SKILLS_FALLBACK = [
 
 function DevFormInner({ compact = false, showHeader = true }: DevRegistrationFormProps) {
   const form = useRegistrationForm();
+  const router = useRouter();
   const { options: skillOptions } = useDynamicFields("skill");
   const { options: cityOptions } = useDynamicFields("city");
   const skillLabels = skillOptions.length > 0 ? skillOptions.map((s) => s.label) : SKILLS_FALLBACK;
@@ -63,6 +66,7 @@ function DevFormInner({ compact = false, showHeader = true }: DevRegistrationFor
               : "",
           type: "developer",
           referral_code: referralCode,
+          session_token: form.sessionToken || undefined,
           extra: {
             skills,
             title: title.trim() || undefined,
@@ -76,6 +80,18 @@ function DevFormInner({ compact = false, showHeader = true }: DevRegistrationFor
       if (!res.ok || !json.success) {
         setErrorMsg(json.error || "Une erreur est survenue. Réessaie.");
         setSubmitStatus("error");
+        return;
+      }
+
+      // Phone-verified users get tokens → set session and redirect to dashboard
+      if (json.access_token && json.refresh_token) {
+        const supabase = createClient();
+        await supabase.auth.setSession({
+          access_token: json.access_token,
+          refresh_token: json.refresh_token,
+        });
+        router.push("/dashboard");
+        router.refresh();
         return;
       }
 

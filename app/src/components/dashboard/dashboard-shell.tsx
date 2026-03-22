@@ -57,6 +57,7 @@ import { ExperiencesTab } from "./experiences-tab";
 import { FundraisingTab } from "./fundraising-tab";
 import { JobsTab } from "./jobs-tab";
 import { MessagesTab } from "./messages-tab";
+import { NotificationBell } from "./notification-bell";
 import { OnboardingWizard } from "./onboarding-wizard";
 import { OverviewTab } from "./overview-tab";
 import { ProductsTab } from "./products-tab";
@@ -555,7 +556,8 @@ export function DashboardShell({
             <span className="text-muted-foreground mx-1">/</span>
             <span className="font-medium">{tabTitles[activeTab]}</span>
           </nav>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <NotificationBell />
             <button
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
               className="flex items-center justify-center w-8 h-8 rounded-lg border border-border hover:border-orange-400 transition-colors"

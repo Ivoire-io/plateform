@@ -1,3 +1,4 @@
+import { createNotification } from "@/lib/notifications";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
@@ -84,6 +85,16 @@ export async function POST(request: Request) {
         replyTo: sender_email,
       }).catch(() => { /* Email échoue silencieusement si Resend non configuré */ });
     }
+
+    // In-app + WhatsApp notification (non-blocking)
+    createNotification({
+      profile_id,
+      type: "new_message",
+      title: `Nouveau message de ${sender_name}`,
+      body: message.trim().slice(0, 200),
+      link: "/dashboard/messages",
+      channels: ["inapp", "whatsapp"],
+    }).catch(() => { });
 
     return NextResponse.json({ success: true });
   } catch {

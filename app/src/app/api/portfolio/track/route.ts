@@ -36,6 +36,18 @@ export async function POST(request: NextRequest) {
       user_agent_hint: user_agent_hint ?? null,
     });
 
+    // In-app notification for profile view (non-blocking, lazy import to keep tracking fast)
+    import("@/lib/notifications").then(({ createNotification }) => {
+      createNotification({
+        profile_id,
+        type: "profile_view",
+        title: "Quelqu'un a visite ton portfolio",
+        body: country_code ? `Visiteur depuis : ${country_code}` : undefined,
+        link: "/dashboard/analytics",
+        channels: ["inapp"],
+      }).catch(() => { });
+    }).catch(() => { });
+
     return NextResponse.json({ ok: true });
   } catch {
     // Silencieux — le tracking ne doit pas bloquer l'affichage du portfolio

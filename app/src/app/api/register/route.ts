@@ -1,3 +1,5 @@
+import { createNotification } from "@/lib/notifications";
+import { derivePhonePassword } from "@/lib/phone-auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isValidSlug, RESERVED_SUBDOMAINS, TABLES } from "@/lib/utils";
 import { NextResponse } from "next/server";
@@ -153,10 +155,54 @@ export async function POST(request: Request) {
       typeof body.referral_code === "string"
         ? body.referral_code.trim()
         : null;
+    const sessionToken =
+      typeof body.session_token === "string"
+        ? body.session_token.trim()
+        : null;
     const registrationMetadata = getRegistrationMetadata(type, body.extra);
 
+    // If session_token is provided, verify OTP and extract phone
+    let verifiedPhone: string | null = null;
+    let effectiveEmail = email;
+    if (sessionToken) {
+      const { data: verification } = await supabaseAdmin
+        .from(TABLES.phone_verifications)
+        .select("phone_number, verified_at, status")
+        .eq("session_token", sessionToken)
+        .eq("status", "verified")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!verification) {
+        return NextResponse.json(
+          { success: false, error: "Verification WhatsApp invalide ou expiree." },
+          { status: 403 }
+        );
+      }
+
+      // Check verification is recent (15 minutes)
+      const verifiedAt = verification.verified_at
+        ? new Date(verification.verified_at)
+        : new Date();
+      if (new Date().getTime() - verifiedAt.getTime() > 15 * 60 * 1000) {
+        return NextResponse.json(
+          { success: false, error: "Session expiree. Veuillez recommencer la verification." },
+          { status: 410 }
+        );
+      }
+
+      verifiedPhone = verification.phone_number;
+
+      // Generate synthetic email if none provided
+      if (!effectiveEmail) {
+        const phoneDigits = verifiedPhone!.replace(/\+/g, "");
+        effectiveEmail = `phone_${phoneDigits}@phone.ivoire.io`;
+      }
+    }
+
     // Basic validation
-    if (!email || !fullName || !desiredSlug) {
+    if (!effectiveEmail || !fullName || !desiredSlug) {
       return NextResponse.json(
         { success: false, error: "Champs requis manquants." },
         { status: 400 }
@@ -164,7 +210,7 @@ export async function POST(request: Request) {
     }
 
     // Email format validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(effectiveEmail)) {
       return NextResponse.json(
         { success: false, error: "Adresse email invalide." },
         { status: 400 }
@@ -196,7 +242,7 @@ export async function POST(request: Request) {
       const { data: existingEmail } = await supabaseAdmin
         .from(TABLES.profiles)
         .select("id")
-        .eq("email", email)
+        .eq("email", effectiveEmail)
         .maybeSingle();
 
       if (existingEmail) {
@@ -206,15 +252,34 @@ export async function POST(request: Request) {
         );
       }
 
-      // Create auth user with email confirmed
+      // If phone-verified, also check if phone is already taken
+      if (verifiedPhone) {
+        const { data: existingPhone } = await supabaseAdmin
+          .from(TABLES.profiles)
+          .select("id")
+          .eq("verified_phone", verifiedPhone)
+          .maybeSingle();
+
+        if (existingPhone) {
+          return NextResponse.json(
+            { success: false, error: "Ce numero est deja associe a un compte." },
+            { status: 409 }
+          );
+        }
+      }
+
+      // Create auth user with email confirmed (+ derived password if phone-verified)
+      const createUserPayload: { email: string; email_confirm: boolean; password?: string } = {
+        email: effectiveEmail,
+        email_confirm: true,
+      };
+      if (verifiedPhone) {
+        createUserPayload.password = derivePhonePassword(verifiedPhone);
+      }
       const { data: authData, error: authError } =
-        await supabaseAdmin.auth.admin.createUser({
-          email,
-          email_confirm: true,
-        });
+        await supabaseAdmin.auth.admin.createUser(createUserPayload);
 
       if (authError || !authData?.user) {
-        // If user already exists in auth, try to get existing
         if (authError?.message?.includes("already been registered")) {
           return NextResponse.json(
             { success: false, error: "Un compte existe deja avec cet email." },
@@ -236,7 +301,7 @@ export async function POST(request: Request) {
         .insert({
           id: userId,
           slug: desiredSlug,
-          email,
+          email: effectiveEmail,
           full_name: fullName,
           type,
           title:
@@ -256,8 +321,8 @@ export async function POST(request: Request) {
               ? registrationMetadata.github_url
               : null,
           referral_code: newReferralCode,
-          verified_phone: whatsapp || null,
-          phone_verified: false,
+          verified_phone: verifiedPhone || whatsapp || null,
+          phone_verified: !!verifiedPhone,
           onboarding_completed: false,
           is_suspended: false,
           registration_extra: Object.keys(registrationMetadata).length > 0 ? registrationMetadata : null,
@@ -276,23 +341,70 @@ export async function POST(request: Request) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ivoire.io";
       const redirectTo = `${siteUrl.replace(/\/+$/, "")}/auth/callback`;
 
-      const { data: linkData, error: linkError } =
-        await supabaseAdmin.auth.admin.generateLink({
-          type: "magiclink",
-          email,
-          options: { redirectTo },
-        });
-
-      let actionLink: string | undefined;
-      if (!linkError && linkData) {
-        actionLink = (
-          linkData as unknown as { properties?: { action_link?: string } }
-        )?.properties?.action_link;
+      // Link phone_verification record to the new profile
+      if (sessionToken && verifiedPhone) {
+        await supabaseAdmin
+          .from(TABLES.phone_verifications)
+          .update({ profile_id: userId })
+          .eq("session_token", sessionToken)
+          .eq("phone_number", verifiedPhone);
       }
 
-      // Send welcome email with magic link via Resend
+      // For phone-verified users: sign in with derived password to get tokens
+      let accessToken: string | undefined;
+      let refreshToken: string | undefined;
+      if (verifiedPhone) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        if (supabaseUrl && supabaseAnonKey) {
+          try {
+            const signInRes = await fetch(
+              `${supabaseUrl}/auth/v1/token?grant_type=password`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  apikey: supabaseAnonKey,
+                },
+                body: JSON.stringify({
+                  email: effectiveEmail,
+                  password: derivePhonePassword(verifiedPhone),
+                }),
+              }
+            );
+            const signInData = await signInRes.json();
+            if (signInRes.ok && signInData.access_token) {
+              accessToken = signInData.access_token;
+              refreshToken = signInData.refresh_token;
+            }
+          } catch {
+            // Fall back to magic link if sign-in fails
+          }
+        }
+      }
+
+      let actionLink: string | undefined;
+      if (!accessToken) {
+        const { data: linkData, error: linkError } =
+          await supabaseAdmin.auth.admin.generateLink({
+            type: "magiclink",
+            email: effectiveEmail,
+            options: { redirectTo },
+          });
+
+        if (!linkError && linkData) {
+          actionLink = (
+            linkData as unknown as { properties?: { action_link?: string } }
+          )?.properties?.action_link;
+        }
+      }
+
+      // Send welcome email with magic link via Resend (skip for synthetic emails)
       let emailSent = false;
+      const isSyntheticEmail = effectiveEmail.endsWith("@phone.ivoire.io");
       if (
+        !isSyntheticEmail &&
         actionLink &&
         process.env.RESEND_API_KEY &&
         process.env.RESEND_API_KEY !== "re_xxxxxxxxxxxxxxxxxxxxxxxx"
@@ -301,7 +413,7 @@ export async function POST(request: Request) {
           const resend = new Resend(process.env.RESEND_API_KEY);
           await resend.emails.send({
             from: "ivoire.io <noreply@ivoire.io>",
-            to: email,
+            to: effectiveEmail,
             subject: "Bienvenue sur ivoire.io - Connectez-vous",
             html: `
               <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background: #0A0A0A; color: #fff; padding: 40px; border-radius: 12px;">
@@ -337,10 +449,10 @@ export async function POST(request: Request) {
         await supabaseAdmin
           .from(TABLES.waitlist)
           .insert({
-            email,
+            email: effectiveEmail,
             full_name: fullName,
             desired_slug: desiredSlug,
-            whatsapp: whatsapp || null,
+            whatsapp: verifiedPhone || whatsapp || null,
             type,
             invited: true,
             invited_at: new Date().toISOString(),
@@ -378,11 +490,26 @@ export async function POST(request: Request) {
         }
       }
 
+      // Send welcome notification (non-blocking)
+      createNotification({
+        profile_id: userId,
+        type: "welcome",
+        title: "Bienvenue sur ivoire.io !",
+        body: `Ton portfolio ${desiredSlug}.ivoire.io est pret. Complete ton profil pour etre visible dans l'annuaire.`,
+        link: "/dashboard",
+        channels: ["inapp", "whatsapp"],
+      }).catch(() => { });
+
       return NextResponse.json({
         success: true,
         mode: "open",
-        message: "Un lien de connexion a ete envoye a votre adresse email.",
+        message: verifiedPhone
+          ? "Compte cree avec succes."
+          : "Un lien de connexion a ete envoye a votre adresse email.",
         email_sent: emailSent,
+        action_link: !accessToken ? actionLink : undefined,
+        access_token: accessToken,
+        refresh_token: refreshToken,
       });
     }
 
@@ -391,7 +518,7 @@ export async function POST(request: Request) {
     const { data: existingWaitlistEmail } = await supabaseAdmin
       .from(TABLES.waitlist)
       .select("id")
-      .eq("email", email)
+      .eq("email", effectiveEmail)
       .maybeSingle();
 
     if (existingWaitlistEmail) {
@@ -404,10 +531,10 @@ export async function POST(request: Request) {
     const { error: insertError } = await supabaseAdmin
       .from(TABLES.waitlist)
       .insert({
-        email,
+        email: effectiveEmail,
         full_name: fullName,
         desired_slug: desiredSlug,
-        whatsapp: whatsapp || null,
+        whatsapp: verifiedPhone || whatsapp || null,
         type,
         referral_code: referralCode,
         registration_metadata: registrationMetadata,
@@ -426,8 +553,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Send waitlist confirmation email via Resend
+    // Send waitlist confirmation email via Resend (skip for synthetic emails)
     if (
+      !effectiveEmail.endsWith("@phone.ivoire.io") &&
       process.env.RESEND_API_KEY &&
       process.env.RESEND_API_KEY !== "re_xxxxxxxxxxxxxxxxxxxxxxxx"
     ) {
@@ -439,7 +567,7 @@ export async function POST(request: Request) {
 
         await resend.emails.send({
           from: "ivoire.io <noreply@ivoire.io>",
-          to: email,
+          to: effectiveEmail,
           subject: `Bienvenue sur ivoire.io ! Tu es le ${count}eme`,
           html: `
             <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background: #0A0A0A; color: #fff; padding: 40px; border-radius: 12px;">
