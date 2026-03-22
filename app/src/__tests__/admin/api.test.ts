@@ -257,7 +257,7 @@ describe("POST /api/admin/profiles/[id]/suspend", () => {
       expect.objectContaining({ is_suspended: true })
     );
     expect(insertChain.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "profile_suspended", target_id: "user123" })
+      expect.objectContaining({ type: "profile", description: expect.any(String), actor_id: "admin-1", target_id: "user123" })
     );
   });
 });

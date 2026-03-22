@@ -81,7 +81,12 @@ function LoginForm() {
               Entrez votre email pour vous connecter à votre dashboard.
             </p>
 
-            {authError && (
+            {authError === "account_suspended" && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
+                Votre compte a été suspendu. Contactez l&apos;équipe ivoire.io pour plus d&apos;informations.
+              </div>
+            )}
+            {authError && authError !== "account_suspended" && (
               <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
                 Lien expiré ou invalide. Réessayez.
               </div>

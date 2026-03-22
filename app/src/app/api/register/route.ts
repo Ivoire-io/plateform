@@ -192,12 +192,7 @@ export async function POST(request: Request) {
 
     // ─── OPEN MODE ───
     if (registrationMode === "open") {
-      // Check if email already exists in auth
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers({
-        page: 1,
-        perPage: 1,
-      });
-      // More reliable: check profiles table for email
+      // Check if email already exists via profiles table
       const { data: existingEmail } = await supabaseAdmin
         .from(TABLES.profiles)
         .select("id")
@@ -265,6 +260,7 @@ export async function POST(request: Request) {
           phone_verified: false,
           onboarding_completed: false,
           is_suspended: false,
+          registration_extra: Object.keys(registrationMetadata).length > 0 ? registrationMetadata : null,
         });
 
       if (profileError) {
@@ -381,9 +377,6 @@ export async function POST(request: Request) {
           }
         }
       }
-
-      // Suppress unused variable warning
-      void existingUsers;
 
       return NextResponse.json({
         success: true,

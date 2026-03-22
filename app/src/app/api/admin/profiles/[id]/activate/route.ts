@@ -19,9 +19,9 @@ export async function POST(_req: NextRequest, { params }: Params) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await supabaseAdmin.from(TABLES.admin_logs).insert({
-    admin_id: guard.userId,
-    action: "profile_activated",
-    target_type: "profile",
+    type: "profile",
+    description: "Profil activé (suspension levée).",
+    actor_id: guard.userId,
     target_id: id,
   });
 

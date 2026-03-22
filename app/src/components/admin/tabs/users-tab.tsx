@@ -76,9 +76,11 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 const PLAN_LABELS: Record<string, { label: string; icon: string }> = {
-  free: { label: "Gratuit", icon: "🆓" },
-  premium: { label: "Premium", icon: "⭐" },
-  enterprise: { label: "Enterprise", icon: "🏢" },
+  free:       { label: "Gratuit",    icon: "⚡" },
+  builder:    { label: "Builder",    icon: "🎓" },
+  startup:    { label: "Startup",    icon: "🚀" },
+  pro:        { label: "Pro",        icon: "👑" },
+  growth:     { label: "Growth",     icon: "🛡️" },
 };
 
 const PAGE_SIZE = 20;
@@ -230,11 +232,11 @@ export function AdminUsersTab({ filterType, showJobsMode }: AdminUsersTabProps) 
       const res = await fetch(`/api/admin/profiles/${selectedUser.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "premium" }),
+        body: JSON.stringify({ plan: "pro" }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Plan premium appliqué");
-      setSelectedUser({ ...selectedUser, plan: "premium" });
+      toast.success("Plan Pro appliqué");
+      setSelectedUser({ ...selectedUser, plan: "pro" });
       fetchUsers(page, search, typeFilter, statusFilter, planFilter);
     } catch {
       toast.error("Erreur lors de la mise à jour");
@@ -302,8 +304,10 @@ export function AdminUsersTab({ filterType, showJobsMode }: AdminUsersTabProps) 
         <NativeSelect value={planFilter} onValueChange={(v) => { setPlanFilter(v); setPage(1); }} className="w-36">
           <NativeSelectOption value="all">Tous</NativeSelectOption>
           <NativeSelectOption value="free">Gratuit</NativeSelectOption>
-          <NativeSelectOption value="premium">Premium</NativeSelectOption>
-          <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
+          <NativeSelectOption value="builder">Builder</NativeSelectOption>
+          <NativeSelectOption value="startup">Startup</NativeSelectOption>
+          <NativeSelectOption value="pro">Pro</NativeSelectOption>
+          <NativeSelectOption value="growth">Growth</NativeSelectOption>
         </NativeSelect>
       </div>
 
@@ -485,10 +489,10 @@ export function AdminUsersTab({ filterType, showJobsMode }: AdminUsersTabProps) 
                     </Button>
                     <Button
                       variant="outline" size="sm" className="justify-start gap-2 h-9 text-xs font-normal hover:bg-white/5 transition-colors border-white/10"
-                      disabled={actionLoading || selectedUser.plan === "premium"}
+                      disabled={actionLoading || selectedUser.plan === "pro"}
                       onClick={handleForcePremium}
                     >
-                      <Star className="h-4 w-4 text-muted-foreground" /> Forcer Premium
+                      <Star className="h-4 w-4 text-muted-foreground" /> Forcer Pro
                     </Button>
                     <Button
                       variant="outline" size="sm" className="justify-start gap-2 h-9 text-xs font-normal hover:bg-white/5 transition-colors border-white/10"
@@ -596,8 +600,10 @@ export function AdminUsersTab({ filterType, showJobsMode }: AdminUsersTabProps) 
                 className="w-full"
               >
                 <NativeSelectOption value="free">Gratuit</NativeSelectOption>
-                <NativeSelectOption value="premium">Premium</NativeSelectOption>
-                <NativeSelectOption value="enterprise">Enterprise</NativeSelectOption>
+                <NativeSelectOption value="builder">Builder</NativeSelectOption>
+                <NativeSelectOption value="startup">Startup</NativeSelectOption>
+                <NativeSelectOption value="pro">Pro</NativeSelectOption>
+                <NativeSelectOption value="growth">Growth</NativeSelectOption>
               </NativeSelect>
             </div>
           </div>

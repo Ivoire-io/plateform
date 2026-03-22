@@ -61,6 +61,8 @@ export interface Profile {
   phone_verified: boolean;
   verified_phone: string | null;
   onboarding_completed: boolean;
+  // Données spécifiques capturées à l'inscription (pre-fill onboarding)
+  registration_extra: Record<string, unknown> | null;
   // Notifications & confidentialité
   notif_messages: boolean;
   notif_weekly_report: boolean;

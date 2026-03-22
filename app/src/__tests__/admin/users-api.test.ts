@@ -263,7 +263,7 @@ describe("PUT /api/admin/profiles/[id]", () => {
       expect.objectContaining({ full_name: "Updated Name", plan: "premium" })
     );
     expect(logChain.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "profile_updated", target_id: "user-1" })
+      expect.objectContaining({ type: "profile", description: expect.any(String), actor_id: "admin-1", target_id: "user-1" })
     );
   });
 
@@ -361,7 +361,7 @@ describe("DELETE /api/admin/profiles/[id]", () => {
     expect(json.success).toBe(true);
     expect(deleteChain.delete).toHaveBeenCalled();
     expect(logChain.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "profile_deleted", target_id: "user-99" })
+      expect.objectContaining({ type: "profile", description: expect.any(String), actor_id: "admin-1", target_id: "user-99" })
     );
   });
 
@@ -419,7 +419,7 @@ describe("POST /api/admin/profiles/[id]/suspend", () => {
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
     expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ is_suspended: true }));
-    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ action: "profile_suspended" }));
+    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ type: "profile", description: expect.any(String), actor_id: expect.any(String) }));
   });
 });
 
@@ -452,7 +452,7 @@ describe("POST /api/admin/profiles/[id]/activate", () => {
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
     expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ is_suspended: false }));
-    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ action: "profile_activated" }));
+    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ type: "profile", description: expect.any(String), actor_id: expect.any(String) }));
   });
 });
 
@@ -475,7 +475,7 @@ describe("POST /api/admin/profiles/[id]/badge", () => {
 
     expect(res.status).toBe(200);
     expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ verified_badge: true }));
-    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ action: "badge_granted" }));
+    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ type: "profile", description: expect.any(String), actor_id: expect.any(String) }));
   });
 });
 
@@ -508,7 +508,7 @@ describe("DELETE /api/admin/profiles/[id]/badge", () => {
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
     expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ verified_badge: false }));
-    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ action: "badge_revoked" }));
+    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ type: "profile", description: expect.any(String), actor_id: expect.any(String) }));
   });
 });
 
@@ -541,7 +541,7 @@ describe("POST /api/admin/profiles/[id]/promote", () => {
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
     expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ is_admin: true }));
-    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ action: "profile_promoted_admin" }));
+    expect(logChain.insert).toHaveBeenCalledWith(expect.objectContaining({ type: "admin", description: expect.any(String), actor_id: expect.any(String) }));
   });
 
   it("empêche l'auto-promotion", async () => {

@@ -15,7 +15,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
   // Récupère l'entrée waitlist via service role (RLS bypass — adminGuard déjà validé)
   const { data: entry, error: fetchError } = await supabaseAdmin
     .from(TABLES.waitlist)
-    .select("email, invited, full_name, desired_slug, type, converted_profile_id")
+    .select("email, invited, full_name, desired_slug, type, converted_profile_id, registration_metadata")
     .eq("id", id)
     .single();
 
@@ -120,6 +120,9 @@ export async function POST(_req: NextRequest, { params }: Params) {
     // Crée le profil (id = auth.uid)
     const fullName = (entry.full_name ?? "").toString().trim() || email.split("@")[0];
     const type = (entry.type ?? "developer") as "developer" | "startup" | "enterprise" | "other";
+    const registrationExtra = entry.registration_metadata && typeof entry.registration_metadata === "object"
+      ? entry.registration_metadata
+      : null;
 
     const { error: upsertError } = await supabaseAdmin
       .from(TABLES.profiles)
@@ -131,6 +134,8 @@ export async function POST(_req: NextRequest, { params }: Params) {
           full_name: fullName,
           type,
           is_suspended: false,
+          onboarding_completed: false,
+          registration_extra: registrationExtra,
         },
         { onConflict: "id" }
       );

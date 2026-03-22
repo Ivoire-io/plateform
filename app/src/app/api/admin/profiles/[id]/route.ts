@@ -53,9 +53,9 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
   // Log admin action
   await supabase.from(TABLES.admin_logs).insert({
-    admin_id: guard.userId,
-    action: "profile_updated",
-    target_type: "profile",
+    type: "profile",
+    description: "Profil mis à jour par admin.",
+    actor_id: guard.userId,
     target_id: id,
     metadata: updates,
   });
@@ -84,9 +84,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await supabase.from(TABLES.admin_logs).insert({
-    admin_id: guard.userId,
-    action: "profile_deleted",
-    target_type: "profile",
+    type: "profile",
+    description: "Profil supprimé par admin.",
+    actor_id: guard.userId,
     target_id: id,
   });
 

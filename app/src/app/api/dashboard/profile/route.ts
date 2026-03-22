@@ -35,6 +35,11 @@ const FIELD_VALIDATORS: Record<string, (v: unknown) => ValidatorResult> = {
   linkedin_url: (v) => ({ value: sanitizeUrl(v) }),
   twitter_url: (v) => ({ value: sanitizeUrl(v) }),
   website_url: (v) => ({ value: sanitizeUrl(v) }),
+  registration_extra: (v) => {
+    if (v === null || v === undefined) return { value: null };
+    if (typeof v !== "object" || Array.isArray(v)) return { error: "Format invalide pour registration_extra." };
+    return { value: v };
+  },
 };
 
 // PATCH /api/dashboard/profile — mise à jour partielle du profil

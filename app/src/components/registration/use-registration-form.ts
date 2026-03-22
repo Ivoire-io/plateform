@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type SlugStatus =
   | "idle"
@@ -15,7 +15,7 @@ export type SlugStatus =
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const WHATSAPP_VALID = (v: string) => {
   const digits = v.replace(/\s/g, "");
-  return digits.length === 0 || /^(01|05|07)\d{8}$/.test(digits);
+  return /^(01|05|07)\d{8}$/.test(digits);
 };
 
 export function useRegistrationForm() {

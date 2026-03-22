@@ -22,9 +22,14 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from(TABLES.profiles)
-    .select("id,slug,email,full_name,title,city,bio,avatar_url,github_url,linkedin_url,twitter_url,website_url,skills,is_available,type,is_admin,is_suspended,plan,verified_badge,admin_notes,created_at,updated_at")
+    .select("id,slug,email,full_name,title,city,bio,avatar_url,github_url,linkedin_url,twitter_url,website_url,skills,is_available,type,is_admin,is_suspended,plan,verified_badge,admin_notes,registration_extra,created_at,updated_at")
     .eq("id", user.id)
     .single();
+
+  // Compte suspendu → déconnexion et redirect
+  if (profile?.is_suspended) {
+    redirect("/login?error=account_suspended");
+  }
 
   let projects: Project[] = [];
   let experiences: Experience[] = [];

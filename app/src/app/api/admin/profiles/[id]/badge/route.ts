@@ -20,9 +20,9 @@ export async function POST(_req: NextRequest, { params }: Params) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await supabaseAdmin.from(TABLES.admin_logs).insert({
-    admin_id: guard.userId,
-    action: "badge_granted",
-    target_type: "profile",
+    type: "profile",
+    description: "Badge vérifié accordé.",
+    actor_id: guard.userId,
     target_id: id,
   });
 
@@ -44,9 +44,9 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await supabaseAdmin.from(TABLES.admin_logs).insert({
-    admin_id: guard.userId,
-    action: "badge_revoked",
-    target_type: "profile",
+    type: "profile",
+    description: "Badge vérifié retiré.",
+    actor_id: guard.userId,
     target_id: id,
   });
 

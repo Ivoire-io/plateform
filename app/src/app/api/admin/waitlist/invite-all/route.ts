@@ -11,7 +11,7 @@ export async function POST(_req: NextRequest) {
   // Récupère tous les non-invités via service role (RLS bypass — adminGuard déjà validé)
   const { data: pending, error: fetchError } = await supabaseAdmin
     .from(TABLES.waitlist)
-    .select("id, email, full_name, desired_slug, type")
+    .select("id, email, full_name, desired_slug, type, registration_metadata")
     .eq("invited", false);
 
   if (fetchError) {
@@ -68,6 +68,9 @@ export async function POST(_req: NextRequest) {
 
       const fullName = (entry.full_name ?? "").toString().trim() || email.split("@")[0];
       const type = (entry.type ?? "developer") as "developer" | "startup" | "enterprise" | "other";
+      const registrationExtra = entry.registration_metadata && typeof entry.registration_metadata === "object"
+        ? entry.registration_metadata
+        : null;
 
       const { error: upsertError } = await supabaseAdmin
         .from(TABLES.profiles)
@@ -79,6 +82,8 @@ export async function POST(_req: NextRequest) {
             full_name: fullName,
             type,
             is_suspended: false,
+            onboarding_completed: false,
+            registration_extra: registrationExtra,
           },
           { onConflict: "id" }
         );
