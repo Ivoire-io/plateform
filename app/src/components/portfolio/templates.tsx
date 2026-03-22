@@ -3,6 +3,7 @@
 import type { Experience, Profile, Project } from "@/lib/types";
 import {
   ArrowLeft,
+  Calendar,
   CheckCircle,
   ExternalLink,
   Github,
@@ -17,11 +18,14 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { ReviewsSection } from "./reviews-section";
 
 interface TemplateProps {
   profile: Profile;
   projects: Project[];
   experiences: Experience[];
+  fromDevs?: boolean;
+  devsUrl?: string;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -147,7 +151,7 @@ function BackLink({ fromDevs, devsUrl }: { fromDevs: boolean; devsUrl: string })
 // TEMPLATE 1 : Minimal Dark (default)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export function MinimalDarkTemplate({ profile, projects, experiences }: TemplateProps) {
+export function MinimalDarkTemplate({ profile, projects, experiences, fromDevs, devsUrl }: TemplateProps) {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white">
       <style>{`
@@ -159,7 +163,11 @@ export function MinimalDarkTemplate({ profile, projects, experiences }: Template
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0A0A0A]/80 border-b border-[#1a1a2e]/50 py-3 px-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <span className="font-mono text-sm font-semibold tracking-tight">{profile.slug}.ivoire.io</span>
+          {fromDevs ? (
+            <BackLink fromDevs={fromDevs} devsUrl={devsUrl || "https://devs.ivoire.io"} />
+          ) : (
+            <span className="font-mono text-sm font-semibold tracking-tight">{profile.slug}.ivoire.io</span>
+          )}
           <Link href="https://ivoire.io" className="text-xs text-[#A0A0A0] hover:text-white/60 transition-colors">🇨🇮 ivoire.io</Link>
         </div>
       </header>
@@ -255,10 +263,24 @@ export function MinimalDarkTemplate({ profile, projects, experiences }: Template
           </section>
         )}
 
+        {/* Reviews */}
+        <section className="mb-16">
+          <ReviewsSection slug={profile.slug} />
+        </section>
+
         {/* Contact */}
         <section id="contact" className="pt-16 border-t border-[#1a1a2e]/50">
           <h2 className="text-2xl font-bold mb-6">Travaillons <span className="text-[#FF6B00]">ensemble.</span></h2>
-          <ContactForm profile={profile} />
+          <div className="flex flex-col gap-4">
+            <Link
+              href={`/booking/${profile.slug}`}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[#FF6B00]/10 border border-[#FF6B00]/30 hover:bg-[#FF6B00]/20 text-[#FF6B00] font-medium rounded-lg transition-colors"
+            >
+              <Calendar size={18} />
+              Prendre un rendez-vous
+            </Link>
+            <ContactForm profile={profile} />
+          </div>
         </section>
       </main>
     </div>
@@ -269,7 +291,7 @@ export function MinimalDarkTemplate({ profile, projects, experiences }: Template
 // TEMPLATE 2 : Classic Light
 // ═══════════════════════════════════════════════════════════════════════════
 
-export function ClassicLightTemplate({ profile, projects, experiences }: TemplateProps) {
+export function ClassicLightTemplate({ profile, projects, experiences, fromDevs, devsUrl }: TemplateProps) {
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#1a1a1a]">
       <style>{`
@@ -280,7 +302,11 @@ export function ClassicLightTemplate({ profile, projects, experiences }: Templat
 
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#e5e5e5] py-3 px-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <span className="font-mono text-sm font-semibold text-[#2563eb]">{profile.slug}.ivoire.io</span>
+          {fromDevs ? (
+            <BackLink fromDevs={fromDevs} devsUrl={devsUrl || "https://devs.ivoire.io"} />
+          ) : (
+            <span className="font-mono text-sm font-semibold text-[#2563eb]">{profile.slug}.ivoire.io</span>
+          )}
           <Link href="https://ivoire.io" className="text-xs text-[#999] hover:text-[#666]">🇨🇮 ivoire.io</Link>
         </div>
       </header>
@@ -367,10 +393,22 @@ export function ClassicLightTemplate({ profile, projects, experiences }: Templat
           </section>
         )}
 
+        {/* Reviews */}
+        <section className="mb-14">
+          <ReviewsSection slug={profile.slug} />
+        </section>
+
         {/* Contact */}
         <section id="contact" className="pt-12 border-t border-[#e5e5e5]">
           <h2 className="text-xl font-bold mb-6">Me contacter</h2>
           <div className="bg-white border border-[#e5e5e5] rounded-xl p-6">
+            <Link
+              href={`/booking/${profile.slug}`}
+              className="flex items-center justify-center gap-2 mb-4 px-6 py-3 bg-[#2563eb]/10 border border-[#2563eb]/30 hover:bg-[#2563eb]/20 text-[#2563eb] font-medium rounded-lg transition-colors"
+            >
+              <Calendar size={18} />
+              Prendre un rendez-vous
+            </Link>
             <ContactForm profile={profile} />
           </div>
         </section>
@@ -383,7 +421,7 @@ export function ClassicLightTemplate({ profile, projects, experiences }: Templat
 // TEMPLATE 3 : Terminal
 // ═══════════════════════════════════════════════════════════════════════════
 
-export function TerminalTemplate({ profile, projects, experiences }: TemplateProps) {
+export function TerminalTemplate({ profile, projects, experiences, fromDevs, devsUrl }: TemplateProps) {
   return (
     <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] font-mono">
       <style>{`
@@ -400,7 +438,11 @@ export function TerminalTemplate({ profile, projects, experiences }: TemplatePro
             <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
             <span className="w-3 h-3 rounded-full bg-[#28c840]" />
           </div>
-          <span className="text-xs text-[#484f58]">~/{profile.slug}.ivoire.io</span>
+          {fromDevs ? (
+            <BackLink fromDevs={fromDevs} devsUrl={devsUrl || "https://devs.ivoire.io"} />
+          ) : (
+            <span className="text-xs text-[#484f58]">~/{profile.slug}.ivoire.io</span>
+          )}
           <Link href="https://ivoire.io" className="ml-auto text-xs text-[#484f58] hover:text-[#39d353]">ivoire.io</Link>
         </div>
       </header>
@@ -500,9 +542,21 @@ export function TerminalTemplate({ profile, projects, experiences }: TemplatePro
           </section>
         )}
 
+        {/* Reviews */}
+        <section className="mb-12">
+          <ReviewsSection slug={profile.slug} />
+        </section>
+
         {/* Contact */}
         <section id="contact" className="pt-12 border-t border-[#30363d]">
           <p className="text-[#39d353] text-sm mb-4">$ mail {profile.full_name.split(" ")[0].toLowerCase()}</p>
+          <Link
+            href={`/booking/${profile.slug}`}
+            className="flex items-center justify-center gap-2 mb-4 px-6 py-3 bg-[#238636]/20 border border-[#238636]/40 hover:bg-[#238636]/30 text-[#39d353] font-mono font-medium rounded transition-colors"
+          >
+            <Calendar size={18} />
+            book --appointment
+          </Link>
           <ContactForm profile={profile} />
         </section>
       </main>

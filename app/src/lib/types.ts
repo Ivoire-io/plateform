@@ -27,6 +27,10 @@ export interface Profile {
   referred_by: string | null;
   admin_notes: string | null;
   verified_badge: boolean;
+  // Phone verification
+  phone_verified: boolean;
+  verified_phone: string | null;
+  onboarding_completed: boolean;
   // Notifications & confidentialité
   notif_messages: boolean;
   notif_weekly_report: boolean;
@@ -578,6 +582,7 @@ export interface DynamicPlan {
   is_active: boolean;
   is_highlighted: boolean;
   sort_order: number;
+  target_type: "all" | "developer" | "startup" | "enterprise" | "talent";
   max_projects: number | null;
   max_team_members: number | null;
   max_products: number | null;
@@ -621,4 +626,137 @@ export interface PlanLimits {
     homepage_featured: boolean;
     dev_outsourcing: boolean;
   };
+}
+
+// ─── Phone Verification ───
+
+export interface PhoneVerification {
+  id: string;
+  profile_id: string;
+  phone_number: string;
+  otp_code: string;
+  status: "pending" | "verified" | "expired" | "failed";
+  attempts: number;
+  expires_at: string;
+  verified_at: string | null;
+  created_at: string;
+}
+
+// ─── Job Applications ───
+
+export interface JobApplication {
+  id: string;
+  job_id: string;
+  profile_id: string;
+  cover_letter: string | null;
+  cv_url: string | null;
+  status: "pending" | "reviewed" | "interview" | "accepted" | "rejected" | "withdrawn";
+  reviewer_notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  profile?: Pick<Profile, "full_name" | "slug" | "avatar_url" | "title" | "skills" | "city">;
+  job?: Pick<JobListing, "title" | "company">;
+}
+
+// ─── Reviews / Ratings ───
+
+export interface Review {
+  id: string;
+  reviewer_id: string;
+  reviewed_id: string;
+  project_ref: string | null;
+  rating: number;
+  comment: string | null;
+  status: "published" | "hidden" | "flagged";
+  created_at: string;
+  reviewer?: Pick<Profile, "full_name" | "slug" | "avatar_url">;
+}
+
+export interface ProfileRating {
+  profile_id: string;
+  review_count: number;
+  avg_rating: number;
+}
+
+// ─── Matching ───
+
+export interface Match {
+  id: string;
+  dev_id: string;
+  entity_type: "dev_request" | "job_listing" | "startup";
+  entity_id: string;
+  score: number;
+  match_reasons: string[];
+  status: "new" | "viewed" | "contacted" | "accepted" | "dismissed";
+  matched_at: string;
+  entity_title?: string;
+  entity_company?: string;
+}
+
+// ─── Internal Messaging ───
+
+export interface Conversation {
+  id: string;
+  type: "direct" | "group" | "support";
+  title: string | null;
+  context_type: string | null;
+  context_id: string | null;
+  created_at: string;
+  updated_at: string;
+  participants?: ConversationParticipant[];
+  last_message?: ChatMessage;
+  unread_count?: number;
+}
+
+export interface ConversationParticipant {
+  id: string;
+  conversation_id: string;
+  profile_id: string;
+  joined_at: string;
+  last_read_at: string | null;
+  profile?: Pick<Profile, "full_name" | "slug" | "avatar_url">;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  message_type: "text" | "file" | "system";
+  file_url: string | null;
+  created_at: string;
+  sender?: Pick<Profile, "full_name" | "slug" | "avatar_url">;
+}
+
+// ─── Availability & Appointments ───
+
+export interface AvailabilitySlot {
+  id: string;
+  profile_id: string;
+  day_of_week: number; // 0=Dimanche, 6=Samedi
+  start_time: string;  // HH:MM
+  end_time: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Appointment {
+  id: string;
+  host_id: string;
+  guest_profile_id: string | null;
+  guest_name: string;
+  guest_email: string;
+  guest_phone: string | null;
+  date: string;        // YYYY-MM-DD
+  start_time: string;  // HH:MM
+  end_time: string;
+  duration_minutes: number;
+  status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+  notes: string | null;
+  cancellation_reason: string | null;
+  reminder_sent: boolean;
+  created_at: string;
+  updated_at: string;
+  host?: Pick<Profile, "full_name" | "slug" | "avatar_url" | "title">;
 }

@@ -42,6 +42,20 @@ export const TABLES = {
   plans: "ivoireio_plans",
   packs: "ivoireio_packs",
   pack_purchases: "ivoireio_pack_purchases",
+  // Migration 013+
+  phone_verifications: "ivoireio_phone_verifications",
+  // Migration 014
+  job_applications: "ivoireio_job_applications",
+  reviews: "ivoireio_reviews",
+  profile_ratings: "ivoireio_profile_ratings",
+  matches: "ivoireio_matches",
+  // Migration 015
+  conversations: "ivoireio_conversations",
+  conversation_participants: "ivoireio_conversation_participants",
+  chat_messages: "ivoireio_chat_messages",
+  // Migration 016
+  availability_slots: "ivoireio_availability_slots",
+  appointments: "ivoireio_appointments",
 } as const;
 
 // ─── Sous-domaines réservés ───

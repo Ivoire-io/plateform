@@ -25,6 +25,7 @@ import {
   Blocks,
   Briefcase,
   BriefcaseBusiness,
+  Calendar,
   Clock,
   Code,
   CreditCard,
@@ -35,6 +36,7 @@ import {
   Lightbulb,
   LogOut,
   Mail,
+  MessageSquare,
   Moon,
   Rocket,
   Settings,
@@ -48,11 +50,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { AppointmentsTab } from "./appointments-tab";
+import { ConversationsTab } from "./conversations-tab";
 import { DevOutsourcingTab } from "./dev-outsourcing-tab";
 import { ExperiencesTab } from "./experiences-tab";
 import { FundraisingTab } from "./fundraising-tab";
 import { JobsTab } from "./jobs-tab";
 import { MessagesTab } from "./messages-tab";
+import { OnboardingWizard } from "./onboarding-wizard";
 import { OverviewTab } from "./overview-tab";
 import { ProductsTab } from "./products-tab";
 import { ProfileTab } from "./profile-tab";
@@ -83,7 +88,9 @@ type Tab =
   | "project-builder"
   | "subscription"
   | "referral"
-  | "dev-outsourcing";
+  | "dev-outsourcing"
+  | "conversations"
+  | "appointments";
 
 const tabTitles: Record<Tab, string> = {
   overview: "Tableau de bord",
@@ -103,6 +110,8 @@ const tabTitles: Record<Tab, string> = {
   subscription: "Abonnement",
   referral: "Parrainage",
   "dev-outsourcing": "Services Dev",
+  conversations: "Conversations",
+  appointments: "Rendez-vous",
 };
 
 interface DashboardShellProps {
@@ -195,6 +204,10 @@ export function DashboardShell({
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
+  }
+
+  if (profile && !profile.onboarding_completed) {
+    return <OnboardingWizard profile={profile} onComplete={() => setProfile({ ...profile, onboarding_completed: true })} />;
   }
 
   return (
@@ -319,6 +332,18 @@ export function DashboardShell({
                         Services Dev
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "conversations"} onClick={() => navigateTab("conversations")}>
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Conversations</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "appointments"} onClick={() => navigateTab("appointments")}>
+                        <Calendar className="h-4 w-4" />
+                        <span>Rendez-vous</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -429,6 +454,18 @@ export function DashboardShell({
                     <SidebarMenuItem>
                       <SidebarMenuButton isActive={activeTab === "stats"} onClick={() => navigateTab("stats")}>
                         <BarChart2 /><span>Statistiques</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "conversations"} onClick={() => navigateTab("conversations")}>
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Conversations</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton isActive={activeTab === "appointments"} onClick={() => navigateTab("appointments")}>
+                        <Calendar className="h-4 w-4" />
+                        <span>Rendez-vous</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   </SidebarMenu>
@@ -599,9 +636,11 @@ export function DashboardShell({
           {profile && activeTab === "settings" && (
             <SettingsTab profile={profile} userEmail={userEmail} onNavigate={(tab) => navigateTab(tab as Tab)} />
           )}
-          {profile && activeTab === "subscription" && <SubscriptionTab />}
+          {profile && activeTab === "subscription" && <SubscriptionTab profileType={profile.type} />}
           {profile && activeTab === "referral" && <ReferralTab />}
           {profile && activeTab === "dev-outsourcing" && profile.type === "startup" && <DevOutsourcingTab startupId={profile.id} onNavigate={(tab) => navigateTab(tab as Tab)} />}
+          {profile && activeTab === "conversations" && <ConversationsTab profileId={profile.id} />}
+          {profile && activeTab === "appointments" && <AppointmentsTab profileId={profile.id} />}
         </div>
       </SidebarInset>
     </SidebarProvider>

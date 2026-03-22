@@ -41,7 +41,7 @@ export async function PUT(
   const allowed = [
     "tier", "name", "tagline", "description", "price", "currency",
     "billing_type", "icon", "color", "is_active", "is_highlighted",
-    "sort_order", "max_projects", "max_team_members", "max_products",
+    "sort_order", "target_type", "max_projects", "max_team_members", "max_products",
     "max_job_listings", "max_ai_generations_per_day", "max_logo_variations",
     "max_regenerations", "allowed_templates", "features", "display_features",
   ];

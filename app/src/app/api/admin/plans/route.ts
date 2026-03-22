@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     is_active,
     is_highlighted,
     sort_order,
+    target_type,
     max_projects,
     max_team_members,
     max_products,
@@ -59,6 +60,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Validate target_type value
+  const validTargetTypes = ["all", "developer", "startup", "enterprise", "talent"];
+  const resolvedTargetType =
+    target_type && validTargetTypes.includes(target_type) ? target_type : "all";
+
   const { data: plan, error } = await supabaseAdmin
     .from(TABLES.plans)
     .insert({
@@ -74,6 +80,7 @@ export async function POST(req: NextRequest) {
       is_active: is_active ?? true,
       is_highlighted: is_highlighted ?? false,
       sort_order: sort_order ?? 99,
+      target_type: resolvedTargetType,
       max_projects: max_projects ?? null,
       max_team_members: max_team_members ?? null,
       max_products: max_products ?? null,
@@ -103,7 +110,7 @@ export async function POST(req: NextRequest) {
     type: "system",
     description: `Plan "${name}" (${tier}) cree`,
     actor_id: guard.userId,
-    metadata: { plan_id: plan.id, tier },
+    metadata: { plan_id: plan.id, tier, target_type: resolvedTargetType },
   });
 
   return NextResponse.json({ plan }, { status: 201 });

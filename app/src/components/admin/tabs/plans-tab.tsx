@@ -84,6 +84,7 @@ const EMPTY_PLAN: Omit<DynamicPlan, "id" | "created_at" | "updated_at"> = {
   billing_type: "monthly",
   icon: "Zap",
   color: "#6b7280",
+  target_type: "all",
   is_active: true,
   is_highlighted: false,
   sort_order: 99,
@@ -154,6 +155,7 @@ export function AdminPlansTab() {
       billing_type: plan.billing_type,
       icon: plan.icon,
       color: plan.color,
+      target_type: plan.target_type ?? "all",
       is_active: plan.is_active,
       is_highlighted: plan.is_highlighted,
       sort_order: plan.sort_order,
@@ -370,6 +372,11 @@ export function AdminPlansTab() {
 
                   {/* Limits summary */}
                   <div className="flex flex-wrap gap-1">
+                    {plan.target_type && plan.target_type !== "all" && (
+                      <Badge variant="outline" className="text-[10px]" style={{ borderColor: plan.color, color: plan.color }}>
+                        {plan.target_type === "developer" ? "Devs" : plan.target_type === "startup" ? "Startups" : plan.target_type === "enterprise" ? "Entreprises" : plan.target_type}
+                      </Badge>
+                    )}
                     <Badge variant="outline" className="text-[10px]">
                       {plan.max_projects === null ? "Projets: illimites" : `Projets: ${plan.max_projects}`}
                     </Badge>
@@ -536,6 +543,20 @@ export function AdminPlansTab() {
                     onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
                     className="h-8 text-sm mt-1"
                   />
+                </div>
+                <div>
+                  <Label className="text-xs">Type cible</Label>
+                  <NativeSelect
+                    value={form.target_type ?? "all"}
+                    onValueChange={(v) => setForm({ ...form, target_type: v as DynamicPlan["target_type"] })}
+                    className="mt-1"
+                  >
+                    <NativeSelectOption value="all">Tous</NativeSelectOption>
+                    <NativeSelectOption value="developer">Developpeurs</NativeSelectOption>
+                    <NativeSelectOption value="startup">Startups</NativeSelectOption>
+                    <NativeSelectOption value="enterprise">Entreprises</NativeSelectOption>
+                    <NativeSelectOption value="talent">Talents</NativeSelectOption>
+                  </NativeSelect>
                 </div>
               </div>
             </div>

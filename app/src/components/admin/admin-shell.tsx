@@ -287,11 +287,8 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
             <SidebarGroupContent>
               <SidebarMenu>
                 <NavItem id="analytics" label="Analytics" Icon={BarChart3} href="/admin/analytics" activeTab={activeTab} />
-                <NavItem id="plans" label="Plans & Offres" Icon={Package} href="/admin/plans" activeTab={activeTab} />
-                <NavItem id="packs" label="Packs" Icon={ShoppingBag} href="/admin/packs" activeTab={activeTab} />
                 <NavItem id="subscriptions" label="Abonnements" Icon={CreditCard} href="/admin/subscriptions" activeTab={activeTab} />
                 <NavItem id="payments" label="Paiements" Icon={CreditCard} href="/admin/payments" activeTab={activeTab} />
-                <NavItem id="payment-providers" label="Providers" Icon={Wallet} href="/admin/payment-providers" activeTab={activeTab} />
                 <NavItem id="ai-usage" label="Couts IA" Icon={Cpu} href="/admin/ai-usage" activeTab={activeTab} />
                 <NavItem id="referrals" label="Parrainage" Icon={Gift} href="/admin/referrals" activeTab={activeTab} />
               </SidebarMenu>
@@ -325,6 +322,9 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
             <SidebarGroupLabel>Système</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
+                <NavItem id="plans" label="Plans & Offres" Icon={Package} href="/admin/plans" activeTab={activeTab} />
+                <NavItem id="packs" label="Packs" Icon={ShoppingBag} href="/admin/packs" activeTab={activeTab} />
+                <NavItem id="payment-providers" label="Providers" Icon={Wallet} href="/admin/payment-providers" activeTab={activeTab} />
                 <NavItem id="config" label="Configuration" Icon={Settings} href="/admin/config" activeTab={activeTab} />
                 <NavItem id="logs" label="Logs d&apos;activité" Icon={ShieldAlert} href="/admin/logs" activeTab={activeTab} />
               </SidebarMenu>

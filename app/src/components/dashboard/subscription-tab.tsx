@@ -88,7 +88,7 @@ interface SubscriptionData {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function SubscriptionTab() {
+export function SubscriptionTab({ profileType }: { profileType?: string }) {
   const [data, setData] = useState<SubscriptionData | null>(null);
   const [plans, setPlans] = useState<DynamicPlan[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
@@ -101,9 +101,12 @@ export function SubscriptionTab() {
 
   async function fetchData() {
     try {
+      const plansUrl = profileType
+        ? `/api/plans?target_type=${encodeURIComponent(profileType)}`
+        : "/api/plans";
       const [subRes, plansRes, packsRes] = await Promise.all([
         fetch("/api/dashboard/subscription"),
-        fetch("/api/plans"),
+        fetch(plansUrl),
         fetch("/api/packs"),
       ]);
       if (!subRes.ok) throw new Error("Erreur chargement abonnement");

@@ -15,6 +15,7 @@ import type { Profile } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { PhoneVerification } from "./phone-verification";
 
 function memberSinceText(dateStr: string): string {
   const ms = Date.now() - new Date(dateStr).getTime();
@@ -333,6 +334,20 @@ export function SettingsTab({ profile, userEmail, onNavigate }: SettingsTabProps
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Phone Verification */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold">📱 Vérification WhatsApp</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PhoneVerification
+            profileId={profile.id}
+            verified={profile.phone_verified}
+            currentPhone={profile.verified_phone}
+          />
         </CardContent>
       </Card>
 

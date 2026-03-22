@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Experience, Profile, Project } from "@/lib/types";
+import type { Experience, Match, Profile, Project } from "@/lib/types";
 import {
   BarChart2,
   Blocks,
@@ -19,6 +19,7 @@ import {
   Rocket,
   Share2,
   Star,
+  Target,
   TrendingUp,
   Users
 } from "lucide-react";
@@ -57,25 +58,25 @@ function calcCompletion(profile: Profile, projects: Project[]): {
 
   const items = isStartup
     ? [
-        { label: "Logo de la startup", done: !!profile.avatar_url, action: "Ajouter un logo", tab: "startup" },
-        { label: "Description / pitch", done: !!profile.bio && profile.bio.length > 20, action: "Écrire votre pitch", tab: "startup" },
-        { label: "Ville & localisation", done: !!profile.city, action: "Indiquer votre ville", tab: "startup" },
-        { label: "Site web", done: !!profile.website_url, action: "Ajouter votre site web", tab: "startup" },
-        { label: "Secteur & stade", done: !!profile.title, action: "Choisir secteur et stade", tab: "startup" },
-      ]
+      { label: "Logo de la startup", done: !!profile.avatar_url, action: "Ajouter un logo", tab: "startup" },
+      { label: "Description / pitch", done: !!profile.bio && profile.bio.length > 20, action: "Écrire votre pitch", tab: "startup" },
+      { label: "Ville & localisation", done: !!profile.city, action: "Indiquer votre ville", tab: "startup" },
+      { label: "Site web", done: !!profile.website_url, action: "Ajouter votre site web", tab: "startup" },
+      { label: "Secteur & stade", done: !!profile.title, action: "Choisir secteur et stade", tab: "startup" },
+    ]
     : [
-        { label: "Photo de profil", done: !!profile.avatar_url, action: "Ajouter une photo", tab: "profile" },
-        { label: "Bio", done: !!profile.bio && profile.bio.length > 20, action: "Écrire ta bio", tab: "profile" },
-        { label: "Titre & ville", done: !!(profile.title && profile.city), action: "Ajouter titre et ville", tab: "profile" },
-        { label: "Compétences (3 min.)", done: profile.skills.length >= 3, action: "Ajouter des compétences", tab: "profile" },
-        {
-          label: "Liens sociaux (1 min.)",
-          done: !!(profile.github_url || profile.linkedin_url || profile.twitter_url || profile.website_url),
-          action: "Ajouter un lien social",
-          tab: "profile",
-        },
-        { label: "Projets (1 min.)", done: projects.length >= 1, action: "Ajouter un projet", tab: "projects" },
-      ];
+      { label: "Photo de profil", done: !!profile.avatar_url, action: "Ajouter une photo", tab: "profile" },
+      { label: "Bio", done: !!profile.bio && profile.bio.length > 20, action: "Écrire ta bio", tab: "profile" },
+      { label: "Titre & ville", done: !!(profile.title && profile.city), action: "Ajouter titre et ville", tab: "profile" },
+      { label: "Compétences (3 min.)", done: profile.skills.length >= 3, action: "Ajouter des compétences", tab: "profile" },
+      {
+        label: "Liens sociaux (1 min.)",
+        done: !!(profile.github_url || profile.linkedin_url || profile.twitter_url || profile.website_url),
+        action: "Ajouter un lien social",
+        tab: "profile",
+      },
+      { label: "Projets (1 min.)", done: projects.length >= 1, action: "Ajouter un projet", tab: "projects" },
+    ];
 
   const done = items.filter((i) => i.done).length;
   return { score: Math.round((done / items.length) * 100), items };
@@ -93,6 +94,7 @@ export function OverviewTab({
 
   const [statsData, setStatsData] = useState<StatsData | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [matches, setMatches] = useState<(Match & { entity_title?: string; entity_company?: string })[]>([]);
   const [projectScore, setProjectScore] = useState<{ global: number; statusLabel: string; statusColor: string; identity: { score: number }; vision: { score: number }; technique: { score: number }; financier: { score: number } } | null>(null);
 
   const isStartup = profile.type === "startup";
@@ -114,6 +116,16 @@ export function OverviewTab({
         .then((r) => r.json())
         .then((data) => {
           if (data.success) setProjectScore(data.data);
+        })
+        .catch(() => { });
+    }
+
+    // Fetch matches for developers
+    if (!isStartup) {
+      fetch("/api/dashboard/matches")
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.success) setMatches((data.matches ?? []).slice(0, 5));
         })
         .catch(() => { });
     }
@@ -181,21 +193,21 @@ export function OverviewTab({
     },
     ...(!isStartup
       ? [
-          {
-            icon: <Briefcase className="w-5 h-5" />,
-            label: "Projets publiés",
-            value: projects.length,
-            trend: null,
-            color: "#22c55e",
-          },
-          {
-            icon: <Clock className="w-5 h-5" />,
-            label: "Expériences listées",
-            value: experiences.length,
-            trend: null,
-            color: "#f59e0b",
-          },
-        ]
+        {
+          icon: <Briefcase className="w-5 h-5" />,
+          label: "Projets publiés",
+          value: projects.length,
+          trend: null,
+          color: "#22c55e",
+        },
+        {
+          icon: <Clock className="w-5 h-5" />,
+          label: "Expériences listées",
+          value: experiences.length,
+          trend: null,
+          color: "#f59e0b",
+        },
+      ]
       : []),
   ];
 
@@ -467,6 +479,49 @@ export function OverviewTab({
           )}
         </CardContent>
       </Card>
+
+      {/* Matching — dev only */}
+      {!isStartup && matches.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Target className="w-4 h-4" style={{ color: "var(--color-orange)" }} />
+              Projets qui correspondent a ton profil
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="flex flex-col gap-2">
+              {matches.map((m) => (
+                <li
+                  key={m.id}
+                  className="flex items-center justify-between gap-3 p-3 rounded-lg text-sm"
+                  style={{ background: "var(--color-surface)" }}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{m.entity_title || "Projet"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {m.entity_company || m.entity_type === "job_listing" ? "Offre d'emploi" : "Demande dev"} — Score : {m.score}%
+                    </p>
+                  </div>
+                  <Badge
+                    className="text-[10px] shrink-0"
+                    style={{ background: m.score >= 70 ? "#22c55e" : m.score >= 50 ? "#eab308" : "#6b7280", color: "#fff" }}
+                  >
+                    {m.score}%
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => onNavigate("jobs")}
+              className="mt-3 text-xs w-full text-center hover:underline"
+              style={{ color: "var(--color-orange)" }}
+            >
+              Voir toutes les opportunites →
+            </button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick actions */}
       <Card>

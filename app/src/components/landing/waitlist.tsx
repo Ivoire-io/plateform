@@ -1,13 +1,12 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import { TABLES } from "@/lib/utils";
 import { Check, CheckCircle2, Loader2, Mail, Phone, Rocket, User, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type FormType = "developer" | "startup" | "enterprise" | "other";
 type SlugStatus = "idle" | "checking" | "available" | "taken" | "reserved" | "invalid" | "too_short";
+type SuccessMode = "waitlist" | "open";
 
 const TYPES: { value: FormType; emoji: string; label: string; desc: string }[] = [
   { value: "developer", emoji: "🧑‍💻", label: "Développeur", desc: "Portfolio & projets" },
@@ -44,6 +43,7 @@ export function WaitlistSection() {
   const [type, setType] = useState<FormType>("developer");
   const [submitStatus, setSubmitStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMode, setSuccessMode] = useState<SuccessMode>("waitlist");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchParams = useSearchParams();
 
@@ -118,26 +118,29 @@ export function WaitlistSection() {
     setErrorMsg("");
 
     try {
-      const supabase = createClient();
       const referralCode = localStorage.getItem("ivoire_ref") || null;
-      const { error } = await supabase.from(TABLES.waitlist).insert({
-        email,
-        full_name: fullName.trim(),
-        desired_slug: slug,
-        whatsapp: whatsappDigits.length > 0 ? `+225${whatsappDigits}` : null,
-        type,
-        referral_code: referralCode,
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          full_name: fullName.trim(),
+          desired_slug: slug,
+          whatsapp: whatsappDigits.length > 0 ? `+225${whatsappDigits}` : "",
+          type,
+          referral_code: referralCode,
+        }),
       });
 
-      if (error) {
-        setErrorMsg(
-          error.code === "23505"
-            ? "Cet email ou ce domaine est déjà enregistré."
-            : "Une erreur est survenue. Réessaie."
-        );
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        setErrorMsg(json.error || "Une erreur est survenue. Réessaie.");
         setSubmitStatus("error");
         return;
       }
+
+      setSuccessMode(json.mode === "open" ? "open" : "waitlist");
       setSubmitStatus("success");
     } catch {
       setErrorMsg("Erreur de connexion. Réessaie.");
@@ -152,16 +155,33 @@ export function WaitlistSection() {
           <div className="relative bg-surface border border-green-500/20 rounded-3xl p-12 overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#00A651_0%,_transparent_70%)] opacity-[0.06]" />
             <CheckCircle2 className="mx-auto text-green-400 mb-5" size={56} strokeWidth={1.5} />
-            <h2 className="text-2xl font-bold mb-3">Tu es dans la liste 🎉</h2>
-            <p className="text-muted mb-6">
-              On te prévient dès que{" "}
-              <span className="font-mono text-orange font-medium">{slug}.ivoire.io</span>{" "}
-              est prêt à être activé.
-            </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange/10 border border-orange/20 text-orange text-sm">
-              <span className="w-2 h-2 rounded-full bg-orange animate-pulse" />
-              Lancement imminent
-            </div>
+            {successMode === "open" ? (
+              <>
+                <h2 className="text-2xl font-bold mb-3">Compte cree !</h2>
+                <p className="text-muted mb-6">
+                  Verifiez votre email pour vous connecter.{" "}
+                  <span className="font-mono text-orange font-medium">{slug}.ivoire.io</span>{" "}
+                  est pret.
+                </p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange/10 border border-orange/20 text-orange text-sm">
+                  <Mail size={14} />
+                  Lien de connexion envoye
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold mb-3">Tu es dans la liste !</h2>
+                <p className="text-muted mb-6">
+                  On te previent des que{" "}
+                  <span className="font-mono text-orange font-medium">{slug}.ivoire.io</span>{" "}
+                  est pret a etre active.
+                </p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange/10 border border-orange/20 text-orange text-sm">
+                  <span className="w-2 h-2 rounded-full bg-orange animate-pulse" />
+                  Lancement imminent
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>

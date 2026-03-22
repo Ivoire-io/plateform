@@ -30,6 +30,7 @@ const FIELD_VALIDATORS: Record<string, (v: unknown) => ValidatorResult> = {
       : [],
   }),
   is_available: (v) => ({ value: v === true }),
+  onboarding_completed: (v) => ({ value: v === true }),
   github_url: (v) => ({ value: sanitizeUrl(v) }),
   linkedin_url: (v) => ({ value: sanitizeUrl(v) }),
   twitter_url: (v) => ({ value: sanitizeUrl(v) }),

@@ -53,8 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${profile.full_name} — ${profile.title || "Développeur"}`;
   const description =
     profile.bio ||
-    `Portfolio de ${profile.full_name} sur ivoire.io — ${profile.title || "Développeur"} basé(e) à ${profile.city || "Côte d'Ivoire"
-    }.`;
+    `${profile.title || "Développeur"} basé(e) à ${profile.city || "Côte d'Ivoire"}.`;
   const profileUrl = `https://${profile.slug}.ivoire.io`;
   const avatarUrl = profile.avatar_url
     ? profile.avatar_url
