@@ -1,5 +1,6 @@
 "use client";
 
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import type { Profile } from "@/lib/types";
 import {
   Camera,
@@ -30,7 +31,7 @@ const STEPS = [
   { key: "template", label: "Template", icon: Layout },
 ] as const;
 
-const SUGGESTED_SKILLS = [
+const SUGGESTED_SKILLS_FALLBACK = [
   "React",
   "Next.js",
   "Node.js",
@@ -93,6 +94,15 @@ export function OnboardingWizard({
   profile,
   onComplete,
 }: OnboardingWizardProps) {
+  const { options: skillOpts } = useDynamicFields("skill");
+  const { options: cityOpts } = useDynamicFields("city");
+  const SUGGESTED_SKILLS = skillOpts.length > 0
+    ? skillOpts.map((s) => s.label)
+    : SUGGESTED_SKILLS_FALLBACK;
+  const CITIES = cityOpts.length > 0
+    ? cityOpts.map((c) => ({ value: c.label, label: c.label }))
+    : [];
+
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -457,13 +467,26 @@ export function OnboardingWizard({
                   <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
                     Ville
                   </label>
-                  <input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Abidjan"
-                    maxLength={50}
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
-                  />
+                  {CITIES.length > 0 ? (
+                    <select
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                    >
+                      <option value="">Selectionnez une ville</option>
+                      {CITIES.map((c) => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Abidjan"
+                      maxLength={50}
+                      className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                    />
+                  )}
                 </div>
 
                 {/* Bio */}

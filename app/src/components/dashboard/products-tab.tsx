@@ -22,6 +22,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import {
   BookOpen,
   Calendar,
@@ -60,14 +61,14 @@ interface Product {
   publishOnPortal: boolean;
 }
 
-const CATEGORIES = [
+const CATEGORIES_FALLBACK = [
   { value: "app_mobile", label: "App mobile" },
   { value: "api", label: "API" },
   { value: "saas", label: "SaaS" },
   { value: "autre", label: "Autre" },
 ];
 
-const CATEGORY_LABELS: Record<string, string> = {
+const CATEGORY_LABELS_FALLBACK: Record<string, string> = {
   app_mobile: "App mobile",
   api: "API",
   saas: "SaaS",
@@ -177,10 +178,12 @@ function ProductCard({
   product,
   onEdit,
   onDelete,
+  categoryLabels,
 }: {
   product: Product;
   onEdit: () => void;
   onDelete: () => void;
+  categoryLabels: Record<string, string>;
 }) {
   const hasLinks =
     product.websiteUrl ||
@@ -259,7 +262,7 @@ function ProductCard({
           <Badge
             className="text-xs border border-orange-500/30 bg-orange-500/10 text-orange-400"
           >
-            {CATEGORY_LABELS[product.category] ?? product.category}
+            {categoryLabels[product.category] ?? product.category}
           </Badge>
 
           <span className="flex items-center gap-1 text-muted-foreground">
@@ -327,11 +330,13 @@ function ProductFormSheet({
   onOpenChange,
   editingProduct,
   onSave,
+  categories,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingProduct: Product | null;
   onSave: (data: Omit<Product, "id" | "votes">) => void;
+  categories: { value: string; label: string }[];
 }) {
   const isEdit = !!editingProduct;
   const [form, setForm] = useState(emptyForm);
@@ -485,7 +490,7 @@ function ProductFormSheet({
             label="Categorie"
             value={form.category}
             onChange={(v) => setField("category", v)}
-            options={CATEGORIES}
+            options={categories}
           />
 
           {/* Tech stack */}
@@ -683,6 +688,14 @@ function DeleteConfirmDialog({
 // ---------------------------------------------------------------------------
 
 export function ProductsTab({ startupId }: { startupId: string }) {
+  const { options: productCatOpts } = useDynamicFields("product_category");
+  const CATEGORIES = productCatOpts.length > 0
+    ? productCatOpts.map((s) => ({ value: s.value, label: s.label }))
+    : CATEGORIES_FALLBACK;
+  const CATEGORY_LABELS: Record<string, string> = productCatOpts.length > 0
+    ? Object.fromEntries(productCatOpts.map((s) => [s.value, s.label]))
+    : CATEGORY_LABELS_FALLBACK;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -830,6 +843,7 @@ export function ProductsTab({ startupId }: { startupId: string }) {
               product={product}
               onEdit={() => handleEdit(product)}
               onDelete={() => handleDeleteRequest(product)}
+              categoryLabels={CATEGORY_LABELS}
             />
           ))}
         </div>
@@ -841,6 +855,7 @@ export function ProductsTab({ startupId }: { startupId: string }) {
         onOpenChange={setSheetOpen}
         editingProduct={editingProduct}
         onSave={handleSave}
+        categories={CATEGORIES}
       />
 
       {/* Delete confirmation dialog */}

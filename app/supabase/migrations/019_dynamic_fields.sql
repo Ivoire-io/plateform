@@ -125,3 +125,55 @@ ALTER TABLE ivoireio_dynamic_fields ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read active dynamic fields"
   ON ivoireio_dynamic_fields FOR SELECT
   USING (is_active = true);
+
+-- Seed: Countries (Afrique de l'Ouest + partenaires)
+INSERT INTO ivoireio_dynamic_fields (category, value, label, parent, sort_order) VALUES
+  ('country', 'cote-divoire',  'Cote d''Ivoire',  'Afrique Ouest', 1),
+  ('country', 'senegal',       'Senegal',         'Afrique Ouest', 2),
+  ('country', 'mali',          'Mali',            'Afrique Ouest', 3),
+  ('country', 'burkina-faso',  'Burkina Faso',    'Afrique Ouest', 4),
+  ('country', 'guinee',        'Guinee',          'Afrique Ouest', 5),
+  ('country', 'cameroun',      'Cameroun',        'Afrique Centrale', 6),
+  ('country', 'togo',          'Togo',            'Afrique Ouest', 7),
+  ('country', 'benin',         'Benin',           'Afrique Ouest', 8),
+  ('country', 'niger',         'Niger',           'Afrique Ouest', 9),
+  ('country', 'ghana',         'Ghana',           'Afrique Ouest', 10),
+  ('country', 'nigeria',       'Nigeria',         'Afrique Ouest', 11)
+ON CONFLICT (category, value) DO NOTHING;
+
+-- Seed: Looking for (startup needs)
+INSERT INTO ivoireio_dynamic_fields (category, value, label, parent, sort_order) VALUES
+  ('looking_for', 'cofounders',  'Cherche des co-fondateurs',       NULL, 1),
+  ('looking_for', 'developers',  'Cherche des developpeurs',        NULL, 2),
+  ('looking_for', 'investors',   'Cherche des investisseurs',       NULL, 3),
+  ('looking_for', 'customers',   'Cherche des clients / early adopters', NULL, 4),
+  ('looking_for', 'mentors',     'Cherche des mentors / advisors',  NULL, 5),
+  ('looking_for', 'partners',    'Cherche des partenaires business', NULL, 6)
+ON CONFLICT (category, value) DO NOTHING;
+
+-- Seed: Dev roles
+INSERT INTO ivoireio_dynamic_fields (category, value, label, parent, sort_order) VALUES
+  ('role', 'frontend',        'Frontend',         NULL, 1),
+  ('role', 'backend',         'Backend',          NULL, 2),
+  ('role', 'fullstack',       'Fullstack',        NULL, 3),
+  ('role', 'mobile',          'Mobile',           NULL, 4),
+  ('role', 'devops',          'DevOps',           NULL, 5),
+  ('role', 'design',          'Design',           NULL, 6),
+  ('role', 'data',            'Data',             NULL, 7),
+  ('role', 'project_manager', 'Chef de projet',   NULL, 8)
+ON CONFLICT (category, value) DO NOTHING;
+
+-- Seed: Seniority levels
+INSERT INTO ivoireio_dynamic_fields (category, value, label, parent, sort_order) VALUES
+  ('seniority', 'junior', 'Junior',        NULL, 1),
+  ('seniority', 'mid',    'Intermediaire', NULL, 2),
+  ('seniority', 'senior', 'Senior',        NULL, 3)
+ON CONFLICT (category, value) DO NOTHING;
+
+-- Seed: Product categories
+INSERT INTO ivoireio_dynamic_fields (category, value, label, parent, sort_order) VALUES
+  ('product_category', 'app_mobile', 'App mobile', NULL, 1),
+  ('product_category', 'api',        'API',        NULL, 2),
+  ('product_category', 'saas',       'SaaS',       NULL, 3),
+  ('product_category', 'autre',      'Autre',      NULL, 4)
+ON CONFLICT (category, value) DO NOTHING;

@@ -34,6 +34,11 @@ const CATEGORIES = [
   { value: "sector", label: "Secteurs" },
   { value: "stage", label: "Stades startup" },
   { value: "company_size", label: "Taille entreprise" },
+  { value: "looking_for", label: "Recherches startup" },
+  { value: "country", label: "Pays" },
+  { value: "role", label: "Roles dev" },
+  { value: "seniority", label: "Seniorite" },
+  { value: "product_category", label: "Categories produit" },
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -42,6 +47,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   sector: "#10b981",
   stage: "#f59e0b",
   company_size: "#ef4444",
+  looking_for: "#06b6d4",
+  country: "#14b8a6",
+  role: "#a855f7",
+  seniority: "#f97316",
+  product_category: "#ec4899",
 };
 
 export function AdminDynamicFieldsTab() {

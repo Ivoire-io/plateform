@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import {
   Camera,
   CheckCircle2,
@@ -24,7 +25,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-const SECTORS = [
+const SECTORS_FALLBACK = [
   { value: "fintech", label: "Fintech" },
   { value: "edtech", label: "Edtech" },
   { value: "healthtech", label: "Healthtech" },
@@ -40,7 +41,7 @@ const SECTORS = [
   { value: "other", label: "Autre" },
 ];
 
-const STAGES = [
+const STAGES_FALLBACK = [
   { value: "idea", label: "Id\u00e9e" },
   { value: "preseed", label: "Pr\u00e9-seed" },
   { value: "seed", label: "Seed" },
@@ -50,7 +51,7 @@ const STAGES = [
   { value: "acquired", label: "Acquise" },
 ];
 
-const LOOKING_FOR_OPTIONS = [
+const LOOKING_FOR_FALLBACK = [
   { value: "cofounders", label: "Cherche des co-fondateurs" },
   { value: "developers", label: "Cherche des d\u00e9veloppeurs" },
   { value: "investors", label: "Cherche des investisseurs" },
@@ -183,6 +184,23 @@ function teamSizeToNumber(s: string): number {
 }
 
 export function StartupTab() {
+  const { options: sectorOpts } = useDynamicFields("sector");
+  const { options: stageOpts } = useDynamicFields("stage");
+  const { options: lookingForOpts } = useDynamicFields("looking_for");
+  const { options: cityOpts } = useDynamicFields("city");
+  const SECTORS = sectorOpts.length > 0
+    ? sectorOpts.map((s) => ({ value: s.value, label: s.label }))
+    : SECTORS_FALLBACK;
+  const STAGES = stageOpts.length > 0
+    ? stageOpts.map((s) => ({ value: s.value, label: s.label }))
+    : STAGES_FALLBACK;
+  const LOOKING_FOR_OPTIONS = lookingForOpts.length > 0
+    ? lookingForOpts.map((s) => ({ value: s.value, label: s.label }))
+    : LOOKING_FOR_FALLBACK;
+  const CITIES = cityOpts.length > 0
+    ? cityOpts.map((s) => ({ value: s.label, label: s.label }))
+    : [];
+
   const [startup, setStartup] = useState<StartupData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -589,12 +607,26 @@ export function StartupTab() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="city">Ville</Label>
-              <Input
-                id="city"
-                value={form.city}
-                onChange={(e) => setField("city", e.target.value)}
-                placeholder="Abidjan"
-              />
+              {CITIES.length > 0 ? (
+                <select
+                  id="city"
+                  value={form.city}
+                  onChange={(e) => setField("city", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm focus:border-orange-400 focus:outline-none"
+                >
+                  <option value="">Selectionnez une ville</option>
+                  {CITIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <Input
+                  id="city"
+                  value={form.city}
+                  onChange={(e) => setField("city", e.target.value)}
+                  placeholder="Abidjan"
+                />
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="founded_year">Ann\u00e9e de cr\u00e9ation</Label>
@@ -820,8 +852,8 @@ export function StartupTab() {
               >
                 <div
                   className={`w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-colors ${form.looking_for.includes(opt.value)
-                      ? "border-orange-400 bg-orange-500"
-                      : "border-border bg-background"
+                    ? "border-orange-400 bg-orange-500"
+                    : "border-border bg-background"
                     }`}
                 >
                   {form.looking_for.includes(opt.value) && (

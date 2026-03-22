@@ -40,7 +40,7 @@ const STAGES_FALLBACK = [
   { value: "profitable", label: "Rentable" },
 ];
 
-const STAGE_LABELS: Record<string, string> = {
+const STAGE_LABELS_FALLBACK: Record<string, string> = {
   idea: "Idée",
   mvp: "MVP",
   seed: "Seed",
@@ -49,7 +49,7 @@ const STAGE_LABELS: Record<string, string> = {
   profitable: "Rentable",
 };
 
-function StartupCard({ startup, onUpvote }: { startup: Startup; onUpvote: (slug: string) => void }) {
+function StartupCard({ startup, onUpvote, stageLabels }: { startup: Startup; onUpvote: (slug: string) => void; stageLabels: Record<string, string> }) {
   return (
     <div className="bg-surface border border-border rounded-2xl p-5 hover:border-orange/30 transition-all group flex gap-4">
       {/* Logo */}
@@ -86,7 +86,7 @@ function StartupCard({ startup, onUpvote }: { startup: Startup; onUpvote: (slug:
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted">
           <span className="px-2 py-0.5 bg-orange/10 text-orange rounded-full font-medium">{startup.sector}</span>
-          <span className="px-2 py-0.5 bg-border/50 rounded-full">{STAGE_LABELS[startup.stage] || startup.stage}</span>
+          <span className="px-2 py-0.5 bg-border/50 rounded-full">{stageLabels[startup.stage] || startup.stage}</span>
           {startup.city && (
             <span className="flex items-center gap-1"><MapPin size={11} />{startup.city}</span>
           )}
@@ -146,6 +146,9 @@ export function StartupsDirectory({ startups: initialStartups }: StartupsDirecto
   const STAGES = stageOpts.length > 0
     ? [{ value: "", label: "Toutes les etapes" }, ...stageOpts.map((s) => ({ value: s.value, label: s.label }))]
     : STAGES_FALLBACK;
+  const STAGE_LABELS: Record<string, string> = stageOpts.length > 0
+    ? Object.fromEntries(stageOpts.map((s) => [s.value, s.label]))
+    : STAGE_LABELS_FALLBACK;
 
   const filtered = useMemo(() => {
     let result = startups;
@@ -271,7 +274,7 @@ export function StartupsDirectory({ startups: initialStartups }: StartupsDirecto
               <div key={startup.id} className="flex items-start gap-3">
                 <span className="text-sm font-mono text-muted w-6 pt-5 text-right flex-shrink-0">{i + 1}</span>
                 <div className="flex-1">
-                  <StartupCard startup={startup} onUpvote={handleUpvote} />
+                  <StartupCard startup={startup} onUpvote={handleUpvote} stageLabels={STAGE_LABELS} />
                 </div>
               </div>
             ))}

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import {
   ArrowLeft,
   Bot,
@@ -148,7 +149,7 @@ const PAYMENT_OPTIONS = [
   { value: "partenariat", label: "Partenariat" },
 ];
 
-const ROLE_LABELS: Record<string, string> = {
+const ROLE_LABELS_FALLBACK: Record<string, string> = {
   frontend: "Frontend",
   backend: "Backend",
   fullstack: "Fullstack",
@@ -159,7 +160,7 @@ const ROLE_LABELS: Record<string, string> = {
   project_manager: "Chef de projet",
 };
 
-const SENIORITY_LABELS: Record<string, string> = {
+const SENIORITY_LABELS_FALLBACK: Record<string, string> = {
   junior: "Junior",
   mid: "Intermediaire",
   senior: "Senior",
@@ -215,6 +216,15 @@ function formatCurrency(n: number): string {
 /* ------------------------------------------------------------------ */
 
 export function DevOutsourcingTab({ startupId, onNavigate }: { startupId: string; onNavigate?: (tab: string) => void }) {
+  const { options: roleOpts } = useDynamicFields("role");
+  const { options: seniorityOpts } = useDynamicFields("seniority");
+  const ROLE_LABELS: Record<string, string> = roleOpts.length > 0
+    ? Object.fromEntries(roleOpts.map((r) => [r.value, r.label]))
+    : ROLE_LABELS_FALLBACK;
+  const SENIORITY_LABELS: Record<string, string> = seniorityOpts.length > 0
+    ? Object.fromEntries(seniorityOpts.map((s) => [s.value, s.label]))
+    : SENIORITY_LABELS_FALLBACK;
+
   const [requests, setRequests] = useState<DevRequest[]>([]);
   const [projects, setProjects] = useState<DevProject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,7 +282,7 @@ export function DevOutsourcingTab({ startupId, onNavigate }: { startupId: string
           setRequests(data.requests || []);
           if (data.startup_exists === false) setHasStartup(false);
         })
-        .catch(() => {}),
+        .catch(() => { }),
       fetchProjects(),
     ]).finally(() => setLoading(false));
   }, [fetchProjects, startupId]);
@@ -1008,10 +1018,10 @@ export function DevOutsourcingTab({ startupId, onNavigate }: { startupId: string
                           >
                             <div
                               className={`w-2 h-2 rounded-full shrink-0 ${milestone.status === "completed"
-                                  ? "bg-green-400"
-                                  : milestone.status === "in_progress"
-                                    ? "bg-blue-400"
-                                    : "bg-gray-500"
+                                ? "bg-green-400"
+                                : milestone.status === "in_progress"
+                                  ? "bg-blue-400"
+                                  : "bg-gray-500"
                                 }`}
                             />
                             <span className="truncate">

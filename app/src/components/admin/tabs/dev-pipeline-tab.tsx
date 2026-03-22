@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import {
   ArrowLeft,
   CalendarDays,
@@ -173,7 +174,7 @@ const PROJECT_STATUS_CONFIG: Record<string, { label: string; color: string }> =
   },
 };
 
-const ROLE_LABELS: Record<string, string> = {
+const ROLE_LABELS_FALLBACK: Record<string, string> = {
   frontend: "Frontend",
   backend: "Backend",
   fullstack: "Fullstack",
@@ -184,13 +185,13 @@ const ROLE_LABELS: Record<string, string> = {
   project_manager: "Chef de projet",
 };
 
-const SENIORITY_LABELS: Record<string, string> = {
+const SENIORITY_LABELS_FALLBACK: Record<string, string> = {
   junior: "Junior",
   mid: "Intermediaire",
   senior: "Senior",
 };
 
-const TECH_STACK_OPTIONS = [
+const TECH_STACK_OPTIONS_FALLBACK = [
   "React",
   "Next.js",
   "Vue.js",
@@ -238,6 +239,19 @@ function formatCurrency(n: number): string {
 /* ------------------------------------------------------------------ */
 
 export function AdminDevPipelineTab() {
+  const { options: roleOpts } = useDynamicFields("role");
+  const { options: seniorityOpts } = useDynamicFields("seniority");
+  const { options: skillOpts } = useDynamicFields("skill");
+  const ROLE_LABELS: Record<string, string> = roleOpts.length > 0
+    ? Object.fromEntries(roleOpts.map((r) => [r.value, r.label]))
+    : ROLE_LABELS_FALLBACK;
+  const SENIORITY_LABELS: Record<string, string> = seniorityOpts.length > 0
+    ? Object.fromEntries(seniorityOpts.map((s) => [s.value, s.label]))
+    : SENIORITY_LABELS_FALLBACK;
+  const TECH_STACK_OPTIONS = skillOpts.length > 0
+    ? skillOpts.map((s) => s.label)
+    : TECH_STACK_OPTIONS_FALLBACK;
+
   // Requests
   const [requests, setRequests] = useState<DevRequest[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
@@ -826,12 +840,12 @@ export function AdminDevPipelineTab() {
                       <div className="flex items-center gap-2">
                         <Badge
                           className={`text-xs border ${quote.status === "draft"
-                              ? "text-gray-400 border-gray-500/30 bg-gray-500/10"
-                              : quote.status === "sent"
-                                ? "text-blue-400 border-blue-500/30 bg-blue-500/10"
-                                : quote.status === "accepted"
-                                  ? "text-green-400 border-green-500/30 bg-green-500/10"
-                                  : "text-red-400 border-red-500/30 bg-red-500/10"
+                            ? "text-gray-400 border-gray-500/30 bg-gray-500/10"
+                            : quote.status === "sent"
+                              ? "text-blue-400 border-blue-500/30 bg-blue-500/10"
+                              : quote.status === "accepted"
+                                ? "text-green-400 border-green-500/30 bg-green-500/10"
+                                : "text-red-400 border-red-500/30 bg-red-500/10"
                             }`}
                         >
                           {quote.status === "draft"
@@ -979,8 +993,8 @@ export function AdminDevPipelineTab() {
                         type="button"
                         onClick={() => toggleTechStack(tech)}
                         className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors ${quoteTechStack.includes(tech)
-                            ? "border-orange-400 bg-orange-500/15 text-orange-400"
-                            : "border-border bg-background text-muted-foreground hover:text-foreground"
+                          ? "border-orange-400 bg-orange-500/15 text-orange-400"
+                          : "border-border bg-background text-muted-foreground hover:text-foreground"
                           }`}
                       >
                         {tech}
@@ -1587,10 +1601,10 @@ export function AdminDevPipelineTab() {
                             >
                               <div
                                 className={`w-2 h-2 rounded-full shrink-0 ${milestone.status === "completed"
-                                    ? "bg-green-400"
-                                    : milestone.status === "in_progress"
-                                      ? "bg-blue-400"
-                                      : "bg-gray-500"
+                                  ? "bg-green-400"
+                                  : milestone.status === "in_progress"
+                                    ? "bg-blue-400"
+                                    : "bg-gray-500"
                                   }`}
                               />
                               <span className="truncate">

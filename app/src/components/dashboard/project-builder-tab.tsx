@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useDynamicFields } from "@/hooks/use-dynamic-fields";
 import type { Profile } from "@/lib/types";
 import {
   ArrowLeft,
@@ -83,13 +84,13 @@ interface ProjectBuilderTabProps {
   onNavigate: (tab: string) => void;
 }
 
-// ─── Constantes ───
-const SECTORS = [
+// ─── Constantes (fallbacks) ───
+const SECTORS_FALLBACK = [
   "Fintech", "Edtech", "Healthtech", "Agritech", "Logistique",
   "E-commerce", "SaaS", "IA", "Énergie", "Immobilier", "Médias", "Tech", "Autre",
 ];
 
-const COUNTRIES = [
+const COUNTRIES_FALLBACK = [
   "Côte d'Ivoire", "Sénégal", "Mali", "Burkina Faso", "Guinée",
   "Cameroun", "Togo", "Bénin", "Niger", "Ghana", "Nigeria",
 ];
@@ -200,6 +201,15 @@ function ModeCard({
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════
 export function ProjectBuilderTab({ profile, onNavigate }: ProjectBuilderTabProps) {
+  const { options: sectorOpts } = useDynamicFields("sector");
+  const { options: countryOpts } = useDynamicFields("country");
+  const SECTORS = sectorOpts.length > 0
+    ? sectorOpts.map((s) => s.label)
+    : SECTORS_FALLBACK;
+  const COUNTRIES = countryOpts.length > 0
+    ? countryOpts.map((c) => c.label)
+    : COUNTRIES_FALLBACK;
+
   const [mode, setMode] = useState<BuilderMode>(null);
   const [currentStep, setCurrentStep] = useState<StepKey>("welcome");
   const [score, setScore] = useState<ProjectScore | null>(null);

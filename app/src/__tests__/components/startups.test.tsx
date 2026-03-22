@@ -22,6 +22,10 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+vi.mock("@/hooks/use-dynamic-fields", () => ({
+  useDynamicFields: () => ({ options: [], grouped: {}, loading: false }),
+}));
+
 const mockStartups: Startup[] = [
   {
     id: "1",
