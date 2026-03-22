@@ -32,6 +32,7 @@ import {
   Code,
   Cpu,
   CreditCard,
+  FileText,
   Flag,
   Gift,
   LayoutDashboard,
@@ -50,6 +51,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminAIUsageTab } from "./tabs/ai-usage-tab";
+import { AdminBlogTab } from "./tabs/blog-tab";
 import { AdminDevPipelineTab } from "./tabs/dev-pipeline-tab";
 import { AdminPaymentProvidersTab } from "./tabs/payment-providers-tab";
 import { AdminPaymentsTab } from "./tabs/payments-tab";
@@ -76,7 +78,8 @@ export type AdminTab =
   | "ai-usage"
   | "referrals"
   | "dev-pipeline"
-  | "payment-providers";
+  | "payment-providers"
+  | "blog";
 
 interface AdminShellProps {
   adminEmail: string;
@@ -106,6 +109,7 @@ const tabTitles: Record<AdminTab, string> = {
   referrals: "Parrainage",
   "dev-pipeline": "Dev Outsourcing",
   "payment-providers": "Providers Paiement",
+  blog: "Blog",
 };
 
 interface NavItemProps {
@@ -162,6 +166,7 @@ function tabFromPath(pathname: string): AdminTab {
     "referrals",
     "dev-pipeline",
     "payment-providers",
+    "blog",
   ]);
   return allowed.has(segment as AdminTab) ? (segment as AdminTab) : "overview";
 }
@@ -267,6 +272,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
                 <NavItem id="startups" label="Startups" Icon={Activity} href="/admin/startups" badge={stats?.startups || undefined} activeTab={activeTab} />
                 <NavItem id="jobs" label="Offres d&apos;emploi" Icon={Briefcase} href="/admin/jobs" activeTab={activeTab} />
                 <NavItem id="messages" label="Messages" Icon={MessageSquare} href="/admin/messages" badge={stats?.messages || undefined} activeTab={activeTab} />
+                <NavItem id="blog" label="Blog" Icon={FileText} href="/admin/blog" activeTab={activeTab} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -379,6 +385,7 @@ export function AdminShell({ adminEmail, adminProfile, children }: AdminShellPro
           {activeTab === "referrals" && <AdminReferralsTab />}
           {activeTab === "dev-pipeline" && <AdminDevPipelineTab />}
           {activeTab === "payment-providers" && <AdminPaymentProvidersTab />}
+          {activeTab === "blog" && <AdminBlogTab />}
         </div>
       </SidebarInset>
     </SidebarProvider>

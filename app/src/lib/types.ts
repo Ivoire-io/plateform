@@ -1,3 +1,33 @@
+// ─── Registration Extra Fields ───
+
+export interface DevRegistrationExtra {
+  skills: string[];
+  title?: string;
+  city?: string;
+  github_url?: string;
+  is_available?: boolean;
+}
+
+export interface StartupRegistrationExtra {
+  startup_name: string;
+  tagline?: string;
+  sector: string;
+  stage: string;
+  problem_statement?: string;
+}
+
+export interface EnterpriseRegistrationExtra {
+  company_name: string;
+  sector?: string;
+  company_size?: string;
+  hiring_needs?: string;
+}
+
+export type RegistrationExtra =
+  | DevRegistrationExtra
+  | StartupRegistrationExtra
+  | EnterpriseRegistrationExtra;
+
 // ─── Plan Tiers ───
 
 export type PlanTier = "free" | "builder" | "startup" | "pro" | "growth" | string;
@@ -228,9 +258,8 @@ export interface WaitlistEntry {
   converted_profile_id?: string | null;
   converted_at?: string | null;
   created_at: string;
+  registration_metadata?: Record<string, unknown>;
 }
-
-// ─── Contact Messages ───
 
 export interface ContactMessage {
   id: string;
@@ -759,4 +788,25 @@ export interface Appointment {
   created_at: string;
   updated_at: string;
   host?: Pick<Profile, "full_name" | "slug" | "avatar_url" | "title">;
+}
+
+// ─── Blog Posts ───
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  cover_image_url: string | null;
+  author_id: string | null;
+  category: string;
+  tags: string[];
+  is_published: boolean;
+  published_at: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_keywords: string[];
+  created_at: string;
+  updated_at: string;
 }

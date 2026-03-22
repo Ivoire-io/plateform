@@ -7,6 +7,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+const navLinks = [
+  { label: "Développeurs", href: "/developpeurs/landing" },
+  { label: "Startups", href: "/startups/landing" },
+  { label: "Blog", href: "/blog" },
+];
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,18 +47,21 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6">
-          <a
-            href="#features"
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-muted hover:text-white transition-colors text-sm"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link
+            href="/login"
             className="text-muted hover:text-white transition-colors text-sm"
           >
-            À propos
-          </a>
-          <a
-            href="#roadmap"
-            className="text-muted hover:text-white transition-colors text-sm"
-          >
-            Roadmap
-          </a>
+            Connexion
+          </Link>
           <a href="#rejoindre">
             <Button size="sm">Rejoindre</Button>
           </a>
@@ -71,20 +80,23 @@ export function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border px-4 pb-4 flex flex-col gap-4">
-          <a
-            href="#features"
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-muted hover:text-white transition-colors"
+              onClick={() => setMobileOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link
+            href="/login"
             className="text-muted hover:text-white transition-colors"
             onClick={() => setMobileOpen(false)}
           >
-            À propos
-          </a>
-          <a
-            href="#roadmap"
-            className="text-muted hover:text-white transition-colors"
-            onClick={() => setMobileOpen(false)}
-          >
-            Roadmap
-          </a>
+            Connexion
+          </Link>
           <a href="#rejoindre" onClick={() => setMobileOpen(false)}>
             <Button size="sm" className="w-full">
               Rejoindre

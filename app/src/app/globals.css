@@ -209,3 +209,116 @@ html {
     @apply font-sans;
   }
 }
+
+/* ─── Blog article content styles ─── */
+.blog-content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+  color: var(--color-foreground);
+}
+
+.blog-content h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-foreground);
+}
+
+.blog-content p {
+  color: var(--color-muted);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+
+.blog-content ul,
+.blog-content ol {
+  color: var(--color-muted);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.blog-content ul {
+  list-style-type: disc;
+}
+
+.blog-content ol {
+  list-style-type: decimal;
+}
+
+.blog-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.7;
+}
+
+.blog-content li > ul,
+.blog-content li > ol {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.blog-content strong {
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+
+.blog-content a {
+  color: var(--color-orange);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.blog-content a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.blog-content cite {
+  display: inline;
+  font-style: italic;
+  color: color-mix(in srgb, var(--color-muted) 70%, transparent);
+  font-size: 0.875rem;
+}
+
+.blog-content blockquote {
+  border-left: 3px solid var(--color-orange);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.blog-content code {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: var(--font-mono);
+}
+
+.blog-content pre {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.blog-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.blog-content hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 2rem 0;
+}

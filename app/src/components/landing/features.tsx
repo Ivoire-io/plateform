@@ -1,23 +1,41 @@
-import { Building2, Code2, Rocket } from "lucide-react";
+import { Briefcase, Calendar, Code2, Rocket, Star, Users } from "lucide-react";
 
 const features = [
   {
     icon: Code2,
-    title: "Talents",
+    title: "Portfolio sous-domaine",
     description:
-      "Ton portfolio professionnel sur nom.ivoire.io. Montre tes compétences, projets et expériences au monde entier.",
+      "Ton espace pro sur nom.ivoire.io. 3 templates, projets, certifications, liens — ton CV augmenté accessible au monde entier.",
+  },
+  {
+    icon: Users,
+    title: "Annuaire développeurs",
+    description:
+      "devs.ivoire.io — Recherche par compétences, ville, disponibilité. Trouve le talent ivoirien qu'il te faut en 2 clics.",
   },
   {
     icon: Rocket,
-    title: "Startups",
+    title: "Startups directory",
     description:
-      "Lance ton produit devant toute la communauté tech CI. Le Product Hunt de la Côte d'Ivoire.",
+      "Le Product Hunt de la Côte d'Ivoire. Lance ta startup, reçois des upvotes, gagne en visibilité auprès de toute la communauté tech.",
   },
   {
-    icon: Building2,
-    title: "Services",
+    icon: Briefcase,
+    title: "Jobs & missions freelance",
     description:
-      "Accède aux services essentiels du pays, centralisés sur une plateforme unique et moderne.",
+      "Offres d'emploi tech, missions freelance, candidatures directes. Le pont entre recruteurs et développeurs ivoiriens.",
+  },
+  {
+    icon: Star,
+    title: "Matching dev-startup",
+    description:
+      "Un algorithme qui connecte les bons profils aux bons projets. Score de compatibilité, notifications, mise en relation directe.",
+  },
+  {
+    icon: Calendar,
+    title: "Reviews & rendez-vous",
+    description:
+      "Avis vérifiés sur les devs, prise de RDV en ligne. Construis ta réputation et laisse les clients te trouver.",
   },
 ];
 
@@ -33,7 +51,7 @@ export function FeaturesSection() {
           ses talents visibles au monde.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature) => (
             <div
               key={feature.title}

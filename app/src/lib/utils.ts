@@ -56,6 +56,8 @@ export const TABLES = {
   // Migration 016
   availability_slots: "ivoireio_availability_slots",
   appointments: "ivoireio_appointments",
+  // Migration 017
+  blog_posts: "ivoireio_blog_posts",
 } as const;
 
 // ─── Sous-domaines réservés ───

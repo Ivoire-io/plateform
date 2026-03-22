@@ -1,6 +1,6 @@
 import { Briefcase, Check, Code2, Heart, Rocket, Users } from "lucide-react";
 
-type StepStatus = "current" | "next" | "future";
+type StepStatus = "done" | "current" | "next" | "future";
 
 const steps: {
   phase: string;
@@ -15,7 +15,7 @@ const steps: {
       description:
         "Un espace professionnel à ton nom. Réclame ton.ivoire.io et présente ton travail au monde.",
       icon: Code2,
-      status: "current",
+      status: "done",
     },
     {
       phase: "Phase 2",
@@ -23,7 +23,7 @@ const steps: {
       description:
         "devs.ivoire.io — trouve les meilleurs talents ivoiriens, par compétence, ville, disponibilité.",
       icon: Users,
-      status: "next",
+      status: "done",
     },
     {
       phase: "Phase 3",
@@ -31,7 +31,7 @@ const steps: {
       description:
         "Un Product Hunt made in Côte d'Ivoire. Découvre et soutiens les projets tech locaux.",
       icon: Rocket,
-      status: "future",
+      status: "done",
     },
     {
       phase: "Phase 4",
@@ -39,7 +39,7 @@ const steps: {
       description:
         "Marketplace de freelance et offres d'emploi tech, connectant recruteurs et talents locaux.",
       icon: Briefcase,
-      status: "future",
+      status: "done",
     },
     {
       phase: "Phase 5",
@@ -47,7 +47,7 @@ const steps: {
       description:
         "Santé, éducation, logement — des services digitaux adaptés aux réalités ivoiriennes.",
       icon: Heart,
-      status: "future",
+      status: "current",
     },
   ];
 
@@ -72,6 +72,7 @@ export function RoadmapSection() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-4">
             {steps.map((step, i) => {
               const Icon = step.icon;
+              const isDone = step.status === "done";
               const isCurrent = step.status === "current";
               const isNext = step.status === "next";
 
@@ -88,30 +89,34 @@ export function RoadmapSection() {
                   {/* Icon bubble */}
                   <div
                     className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all
-                      ${isCurrent
-                        ? "bg-orange shadow-lg shadow-orange/30 text-white ring-4 ring-orange/20"
-                        : isNext
-                          ? "bg-surface border-2 border-orange/40 text-orange"
-                          : "bg-surface border border-border text-muted"
+                      ${isDone
+                        ? "bg-green-500/20 border-2 border-green-500/40 text-green-400"
+                        : isCurrent
+                          ? "bg-orange shadow-lg shadow-orange/30 text-white ring-4 ring-orange/20"
+                          : isNext
+                            ? "bg-surface border-2 border-orange/40 text-orange"
+                            : "bg-surface border border-border text-muted"
                       }`}
                   >
-                    {isCurrent ? <Check size={18} /> : <Icon size={16} />}
+                    {isDone ? <Check size={18} /> : isCurrent ? <Check size={18} /> : <Icon size={16} />}
                   </div>
 
                   {/* Card */}
                   <div
                     className={`md:mt-6 flex-1 md:flex-none w-full md:text-center rounded-xl p-4 border transition-all
-                      ${isCurrent
-                        ? "bg-orange/5 border-orange/30"
-                        : isNext
-                          ? "bg-surface border-border/80"
-                          : "bg-transparent border-transparent"
+                      ${isDone
+                        ? "bg-green-500/5 border-green-500/20"
+                        : isCurrent
+                          ? "bg-orange/5 border-orange/30"
+                          : isNext
+                            ? "bg-surface border-border/80"
+                            : "bg-transparent border-transparent"
                       }`}
                   >
                     {/* Phase label */}
                     <span
                       className={`text-xs font-mono mb-1.5 block
-                        ${isCurrent ? "text-orange" : "text-muted/60"}`}
+                        ${isDone ? "text-green-400" : isCurrent ? "text-orange" : "text-muted/60"}`}
                     >
                       {step.phase}
                     </span>
@@ -119,20 +124,18 @@ export function RoadmapSection() {
                     {/* Title */}
                     <p
                       className={`font-semibold text-sm leading-snug mb-2
-                        ${isCurrent ? "text-white" : isNext ? "text-white/80" : "text-muted/60"}`}
+                        ${isDone ? "text-white/80" : isCurrent ? "text-white" : isNext ? "text-white/80" : "text-muted/60"}`}
                     >
                       {step.label}
                     </p>
 
-                    {/* Description 
-                    <p
-                      className={`text-xs leading-relaxed
-                        ${isCurrent ? "text-muted" : isNext ? "text-muted/70" : "text-muted/40"}`}
-                    >
-                      {step.description}
-                    </p>*/}
-
                     {/* Status badge */}
+                    {isDone && (
+                      <span className="inline-flex items-center gap-1 mt-3 px-2.5 py-0.5 rounded-full bg-green-500/15 text-green-400 text-xs font-medium">
+                        <Check size={12} />
+                        Lancé
+                      </span>
+                    )}
                     {isCurrent && (
                       <span className="inline-flex items-center gap-1 mt-3 px-2.5 py-0.5 rounded-full bg-orange/15 text-orange text-xs font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-orange animate-pulse" />
